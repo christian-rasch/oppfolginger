@@ -60,7 +60,11 @@
   /* ---- oppfølgingskort + lightbox + knapper (uttrekk) ---- */
   /* ===== OPPFØLGINGER / ANNULLERINGER lists ===== */
   .vlist{flex:1;display:flex;flex-direction:column;gap:12px;overflow:auto;padding-right:4px}
-  .grp{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin:6px 0 -2px}
+  .grp{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);margin:24px 0 11px;padding-bottom:8px;border-bottom:1px solid var(--hair-2);display:flex;align-items:baseline;gap:8px}
+  .grp:first-child{margin-top:4px}
+  .grp .gcnt{color:var(--ink-faint);font-weight:700}
+  .grp.forfalt{color:var(--red);border-color:rgba(255,90,95,.28)}
+  .grp.forfalt .gcnt{color:var(--red)}
   .lcard{display:flex;align-items:center;gap:20px;padding:18px 22px;position:relative}
   .lcard .accent{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
   .lcard .when{display:flex;flex-direction:column;align-items:center;min-width:84px;padding-left:8px}
@@ -75,7 +79,7 @@
   /* Oppfølginger: .lcard brukes nå kun av Annulleringer-listen */
   .lcard .main .cn{font-size:18px;font-weight:800}
   /* ===== Oppfølgingskort v3 — roligere 3-kolonners oppsett ===== */
-  .opf-card{display:grid;grid-template-columns:96px 1fr 300px;gap:18px;padding:14px 18px;align-items:center}
+  .opf-card{display:grid;grid-template-columns:96px 1fr 240px;gap:18px;padding:16px 18px;align-items:center}
   .opf-card.waitreply{border-color:rgba(232,194,107,.32)}
   .opf-card.replied{border-color:rgba(61,245,197,.3)}
   /* KOL 1 — tid/dato-skinne */
@@ -83,29 +87,56 @@
   .opf-card .when-edit{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:7px 9px;border-radius:11px;transition:.15s;text-align:center}
   .opf-card .when-edit:hover{background:rgba(255,255,255,.06)}
   .opf-card .when-edit b{font-size:22px;font-weight:800;letter-spacing:-.015em;color:var(--ink);line-height:1}
-  .opf-card .when-edit .when-date{font-size:16px}
-  .opf-card .when-edit .when-none{font-size:14px;color:var(--gold);line-height:1.05}
+  /* mellomstor topp-linje (ukedag/dato/«I dag» for forfalt osv.) */
+  .opf-card .when-edit .when-mid{font-family:"Schibsted Grotesk",sans-serif;font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.05}
+  /* dempet under-linje */
+  .opf-card .when-edit .when-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--ink-dim);margin-top:4px;line-height:1.1}
+  .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub{margin-top:5px}
+  .opf-card.late .when-edit .when-sub,.opf-card.late .when-edit .when-mid,.opf-card.late .when-edit b{color:#ff9b9e}
+  .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink-faint);line-height:1}
   .nd-hide{display:none!important}
   .opf-meta .nd-why{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.12);border:1px solid rgba(232,194,107,.28);padding:3px 8px;border-radius:7px}
   .opf-meta .nd-why.sig{color:var(--mint);background:rgba(61,245,197,.1);border-color:rgba(61,245,197,.28)}
-  .opf-card .when-edit span{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:7px;line-height:1}
-  .opf-card .when-edit:hover span{color:var(--mint)}
-  /* KOL 2 — kundeinnhold */
-  .opf-body{min-width:0;display:flex;flex-direction:column;gap:8px}
+  /* KOL 2 — kundeinnhold: identitet til venstre, handling + kommentar i egen høyre kolonne */
+  .opf-body{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);grid-template-rows:auto auto;gap:10px 18px;align-items:start;
+    grid-template-areas:"ident action" "ident comment"}
+  .opf-ident{grid-area:ident;display:flex;flex-direction:column;gap:10px;min-width:0;align-self:center}
+  .opf-action{grid-area:action;display:flex;justify-content:flex-start;align-items:center;flex-wrap:wrap;gap:8px;min-width:0}
+  .opf-action .act-info{font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:600;letter-spacing:.02em;color:var(--ink-faint);white-space:nowrap}
+  .opf-body .opf-note{grid-area:comment;align-self:start}
   .opf-cust .cn{font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
   .opf-cust .addr{font-size:13px;color:var(--ink-dim);margin-top:3px}
   .cn-age{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;margin-left:9px;letter-spacing:0;padding:2px 8px;border-radius:6px;vertical-align:1px;white-space:nowrap}
-  .cn-age.age-purple{color:#c9b3ff;background:rgba(124,92,255,.16)}
+  .cn-age.age-purple{color:#e2d6ff;background:rgba(150,122,255,.24)}
   .cn-age.age-green{color:#6ee8a4;background:rgba(46,212,119,.15)}
   .cn-age.age-yellow{color:#f2c64e;background:rgba(244,183,64,.16)}
   .cn-age.age-brown{color:#d6a878;background:rgba(180,120,70,.18)}
-  /* identitetsstripe: type · salgsrunde · pin */
-  .opf-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .opf-meta .type-chip{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:800;letter-spacing:.05em;padding:6px 13px;border-radius:8px}
+  /* identitetsstripe: type · salgsrunde (tags) */
+  .opf-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+  .opf-meta .type-chip{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:800;letter-spacing:.05em;padding:6px 13px;border-radius:8px;flex:none}
   .opf-meta .type-hp{color:#06120e;background:#34E07F}
   .opf-meta .type-hc{color:#0b0d14;background:#eef2f7}
   .opf-meta .type-vula{color:#fff;background:#E0364B}
   .opf-meta .runde{font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--ink-dim);padding:6px 12px;border-radius:8px;border:1px solid var(--hair-2);background:rgba(255,255,255,.04)}
+  /* ===== Neste handling: trigger-knapp + valgt handling (actchip) ===== */
+  .act-next{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);background:rgba(255,255,255,.05);border:1px dashed var(--hair);border-radius:9px;padding:8px 13px;cursor:pointer;white-space:nowrap;transition:.15s}
+  .act-next:hover{color:var(--ink);border-color:var(--mint);background:rgba(61,245,197,.07)}
+  .actchip{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:7px 12px;border-radius:9px;border:1px solid;cursor:pointer;background:none;white-space:nowrap;transition:.15s}
+  .actchip .box{width:13px;height:13px;border-radius:4px;border:1.5px solid currentColor;display:grid;place-items:center;font-size:9px;line-height:1;flex:none}
+  .actchip:hover .box::after{content:"✓"}
+  .actchip .a-ico{font-size:12px;line-height:1}
+  .actchip.a-offer{color:var(--gold);border-color:rgba(232,194,107,.5);background:rgba(232,194,107,.1)}
+  .actchip.a-offer:hover{background:rgba(232,194,107,.18)}
+  .actchip.a-wait{color:var(--mint);border-color:rgba(61,245,197,.42);background:rgba(61,245,197,.08)}
+  .actchip.a-wait:hover{background:rgba(61,245,197,.15)}
+  .actchip.a-reach{color:#86b6ff;border-color:rgba(120,160,255,.46);background:rgba(120,160,255,.1)}
+  .actchip.a-reach:hover{background:rgba(120,160,255,.18)}
+  .actchip.a-call{color:var(--mint);border-color:rgba(61,245,197,.55);background:rgba(61,245,197,.1);box-shadow:0 0 16px -6px rgba(61,245,197,.8)}
+  .actchip.a-call:hover{background:rgba(61,245,197,.18)}
+  .actchip.a-visit{color:#cbb6ff;border-color:rgba(150,122,255,.55);background:rgba(150,122,255,.14);box-shadow:0 0 16px -6px rgba(150,122,255,.7)}
+  .actchip.a-visit:hover{background:rgba(150,122,255,.22)}
+  .actchip.a-lead{color:#ffb169;border-color:rgba(242,150,60,.6);background:rgba(242,150,60,.14);box-shadow:0 0 18px -5px rgba(242,150,60,.85)}
+  .actchip.a-lead:hover{background:rgba(242,150,60,.22)}
   .opf-meta .pinlink{color:var(--ink-faint);text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:7px;border:1px solid var(--hair-2);background:rgba(255,255,255,.04);transition:.15s}
   .opf-meta .pinlink:hover{color:var(--mint);border-color:rgba(61,245,197,.35);background:rgba(61,245,197,.06)}
   /* vurderingsstripe: sjanse-stjerner ··· signatur-status */
@@ -125,18 +156,12 @@
   .sigchk.on .box{background:var(--gold);border-color:var(--gold)}
   .sigchk.on .box::after{content:"✓";font-size:10px;font-weight:900;color:#0b0d14;line-height:1}
   /* full-bredde besøkskommentar — egen lesbar notatblokk */
-  .opf-note{position:relative;background:rgba(255,255,255,.03);border:1px solid var(--hair-2);border-left:3px solid rgba(255,255,255,.14);border-radius:0 11px 11px 0;padding:8px 36px 9px 13px;transition:border-color .15s}
+  /* fast størrelse — lik høyde på alle kort; lang tekst klippes (klikk for å redigere) */
+  .opf-note{position:relative;background:rgba(255,255,255,.03);border:1px solid var(--hair-2);border-left:3px solid rgba(255,255,255,.14);border-radius:0 11px 11px 0;padding:8px 13px;height:70px;overflow:hidden;cursor:text;transition:border-color .15s}
   .opf-note:hover{border-left-color:rgba(61,245,197,.5)}
-  .opf-note-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-  .opf-note-head .nh-lbl{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
-  .opf-note .note-edit{position:absolute;top:6px;right:8px;background:none;border:0;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink-faint);padding:1px 5px;border-radius:5px;transition:.15s;line-height:1}
-  .opf-note .note-edit:hover{color:var(--mint);background:rgba(61,245,197,.08)}
-  .opf-note-text{font-size:14px;font-weight:500;color:var(--ink);line-height:1.45;
+  .opf-note-text{font-size:12.5px;font-weight:500;color:var(--ink);line-height:1.42;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .opf-note-text.expanded{-webkit-line-clamp:unset;overflow:visible}
-  .opf-note .note-more{display:none;margin-top:7px;background:none;border:0;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--mint);padding:0}
-  .opf-note .note-more.show{display:inline-block}
-  .opf-note textarea{font-family:inherit;font-size:14.5px;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--mint);border-radius:8px;padding:9px 11px;width:100%;outline:none;line-height:1.5;resize:vertical}
+  .opf-note textarea{box-sizing:border-box;position:absolute;inset:5px;width:auto;height:auto;font-family:inherit;font-size:13.5px;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--mint);border-radius:8px;padding:6px 9px;outline:none;line-height:1.4;resize:none;overflow:auto}
   /* KOL 3 — kart + handlinger */
   .opf-side{display:flex;flex-direction:row;gap:10px;align-items:center}
   .side-btns{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
@@ -144,18 +169,7 @@
   .opf-thumb .thumb-lbl{position:absolute;left:0;right:0;bottom:0;text-align:center;font-family:"JetBrains Mono",monospace;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent);padding:10px 0 4px;z-index:2}
   .opf-thumb::after{content:"⤢";position:absolute;top:5px;right:6px;font-size:12px;color:#fff;background:rgba(0,0,0,.45);border-radius:5px;width:20px;height:20px;display:grid;place-items:center;z-index:2}
   .opf-thumb:hover{border-color:var(--mint)}
-  .opf-side .btn{width:100%;padding:8px 10px;font-size:12.5px}
-  .mailchk{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:5px 11px;border-radius:8px;border:1px solid;cursor:pointer;background:none;transition:.15s}
-  .mailchk .box{width:13px;height:13px;border-radius:4px;border:1.5px solid currentColor;display:grid;place-items:center;font-size:9px;line-height:1;flex:none}
-  .mailchk.pend{color:var(--gold);border-color:rgba(232,194,107,.42);background:rgba(232,194,107,.08)}
-  .mailchk.pend:hover{background:rgba(232,194,107,.15)}
-  .mailchk.sent{color:var(--mint);border-color:rgba(61,245,197,.32);background:rgba(61,245,197,.06);cursor:pointer}
-  .mailchk.sent:hover{background:rgba(61,245,197,.13)}
-  .mailchk.sent .box::after,.mailchk.done .box::after{content:"✓"}
-  .mailchk.wait{color:var(--gold);border-color:rgba(232,194,107,.42);background:rgba(232,194,107,.08)}
-  .mailchk.wait:hover{background:rgba(232,194,107,.15)}
-  .mailchk.done{color:var(--mint);border-color:rgba(61,245,197,.32);background:rgba(61,245,197,.06);cursor:pointer}
-  .mailchk.done:hover{background:rgba(61,245,197,.13)}
+  .opf-side .btn{width:100%;padding:7px 7px;font-size:11.5px}
   .filterrow{margin:-6px 0 14px}
   /* lightbox */
   .lightbox{position:fixed;inset:0;z-index:200;background:rgba(5,7,12,.86);display:none;align-items:center;justify-content:center;padding:40px;backdrop-filter:blur(4px)}
@@ -163,19 +177,16 @@
   .lightbox img{max-width:92vw;max-height:88vh;border-radius:14px;border:1px solid var(--line);box-shadow:0 40px 120px -20px rgba(0,0,0,.9)}
   .lightbox .lb-close{position:absolute;top:24px;right:28px;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:#fff;font-size:20px;cursor:pointer;display:grid;place-items:center}
   .lightbox .lb-close:hover{background:rgba(255,255,255,.16)}
+  .lightbox .lb-driv{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);text-decoration:none;padding:11px 20px}
+  .lightbox .lb-driv:hover{transform:translateX(-50%) translateY(-1px)}
   .btn{font-family:"Schibsted Grotesk",sans-serif;font-size:13px;font-weight:700;padding:10px 14px;border-radius:11px;border:1px solid var(--hair);background:rgba(255,255,255,.05);color:var(--ink);cursor:pointer;text-align:center;transition:transform .15s,background .15s}
   .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.09)}
   .btn.primary{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent;box-shadow:0 6px 18px -6px rgba(61,245,197,.6)}
   .btn.danger{color:#fff;border-color:rgba(255,90,95,.5);background:linear-gradient(135deg,rgba(255,90,95,.3),rgba(255,90,95,.12))}
   .btn.danger:hover{background:linear-gradient(135deg,rgba(255,90,95,.42),rgba(255,90,95,.2))}
+  .btn[disabled]{cursor:default;opacity:.42}
+  .btn[disabled]:hover{transform:none;background:rgba(255,255,255,.05)}
   /* ===== app v2 — praktiske tillegg ===== */
-  .today-notice{position:absolute;top:30px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:8px;
-    font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
-    color:var(--red);cursor:pointer;z-index:20;white-space:nowrap}
-  .today-notice.show{display:inline-flex}
-  .today-notice .dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 10px rgba(255,90,95,.85);animation:nblip 2.2s ease-in-out infinite}
-  @keyframes nblip{0%,100%{opacity:.45}50%{opacity:1}}
-  .opf-card.flash{border-color:rgba(255,90,95,.55);box-shadow:0 0 30px -10px rgba(255,90,95,.5)}
   .opf-card.late .when-edit b{color:#ff9b9e}
 
   .vfilter .cnt{margin-left:7px;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:16px;padding:0 5px;border-radius:8px;background:rgba(232,194,107,.16);color:var(--gold);font-size:9px;font-weight:800}
@@ -207,9 +218,16 @@
   .dpop.open{display:flex}
   .dpop button{text-align:left;font-family:"Schibsted Grotesk",sans-serif;font-size:13px;font-weight:600;color:var(--ink-dim);background:none;border:0;border-radius:8px;padding:8px 10px;cursor:pointer}
   .dpop button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
-  .dpop .dp-custom{display:flex;gap:6px;padding:4px 4px 2px}
-  .dpop input[type=datetime-local]{flex:1;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--hair);border-radius:8px;padding:6px;outline:none}
-  .dpop .dp-set{flex:none;font-size:11px;font-weight:700;color:#06120e;background:var(--mint);border:0;border-radius:8px;padding:0 11px;cursor:pointer;text-align:center}
+  .dpop .dp-custom{display:flex;flex-wrap:wrap;gap:6px;padding:4px 4px 2px}
+  .dpop input[type=date],.dpop select{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--hair);border-radius:8px;padding:6px;outline:none}
+  .dpop input[type=date]{flex:1 1 100%;cursor:pointer}
+  .dpop select{flex:1}
+  .dpop .dp-set{flex:none;font-size:11px;font-weight:700;color:#06120e;background:var(--mint);border:0;border-radius:8px;padding:6px 12px;cursor:pointer;text-align:center}
+  /* neste-handling-popover */
+  .napop{position:absolute;z-index:60;min-width:204px;background:#0f1320;border:1px solid var(--hair);border-radius:13px;padding:7px;display:none;flex-direction:column;gap:3px;box-shadow:0 24px 60px -18px rgba(0,0,0,.9)}
+  .napop.open{display:flex}
+  .napop button{text-align:left;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);background:none;border:0;border-radius:8px;padding:9px 11px;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .napop button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
 
   .modal{position:fixed;inset:0;z-index:180;background:rgba(5,7,12,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
   .modal.open{display:flex}
@@ -259,7 +277,6 @@
 </head>
 <body>
   <div class="scaler"><div class="stage">
-    <div class="today-notice" id="todayNotice" title="Gå til oppfølgingen"></div>
     <div class="app-head">
       <div class="ey">Min side</div>
       <h1>Oppfølginger</h1>
@@ -273,28 +290,40 @@
         <button class="btn primary" id="btnNy">+ Ny oppfølging</button>
       </div>
 
-      <div class="vfilter filterrow" id="pillbar">
-        <button data-f="idag" class="on">I dag</button>
-        <button data-f="uken">Denne uken</button>
-        <button data-f="alle">Alle</button>
-        <button data-f="handling">Handling kreves <span class="cnt" id="cntHandling">0</span></button>
-        <button data-f="mail">Mail <span class="cnt" id="cntMail">0</span></button>
-        <button data-f="uten">Uten dato <span class="cnt" id="cntUten">0</span></button>
+      <div class="vfilter filterrow" id="mainbar">
+        <button data-v="avtaler" class="on">Avtaler</button>
+        <button data-v="gjore">Må gjøres <span class="cnt" id="cntGjore">0</span></button>
+        <button data-v="uten">Uten tidspunkt <span class="cnt" id="cntUten">0</span></button>
+      </div>
+      <div class="vfilter filterrow" id="subbar">
+        <button data-s="idag" class="on">I dag</button>
+        <button data-s="imorgen">I morgen</button>
+        <button data-s="alle">Alle</button>
+        <button data-s="forfalte">Forfalte <span class="cnt" id="cntForf">0</span></button>
       </div>
 
       <div class="vlist" id="list"></div>
+
+      <div class="napop" id="napop">
+        <button data-na="send_offer">Husk å send tilbud</button>
+        <button data-na="waiting_reply">Tilbud er sendt ✅</button>
+        <button data-na="trying_to_reach">Prøver å nå</button>
+        <button data-na="call"><span class="a-ico">📞</span> Ring</button>
+        <button data-na="visit"><span class="a-ico">🚪</span> Besøk</button>
+        <button data-na="lead">🔥Lead</button>
+      </div>
 
       <div class="dpop" id="dpop">
         <button data-dp="senere">Senere i dag</button>
         <button data-dp="m13">I morgen 13:00</button>
         <button data-dp="m16">I morgen 16:00</button>
-        <div class="dp-custom"><input type="datetime-local" id="dpDt"><button class="dp-set" id="dpSet">Sett</button></div>
+        <div class="dp-custom"><input type="date" id="dpDate"><select id="dpHour"></select><select id="dpMin"><option>00</option><option>15</option><option>45</option></select><button class="dp-set" id="dpSet">Sett</button></div>
         <button data-dp="ingen">Ingen dato</button>
       </div>
     </section>
   </div></div>
 
-  <div class="lightbox" id="mapLightbox"><button class="lb-close" id="lbClose">✕</button><img id="lbImg" alt="Adresse i kart"></div>
+  <div class="lightbox" id="mapLightbox"><button class="lb-close" id="lbClose">✕</button><img id="lbImg" alt="Adresse i kart"><a class="btn lb-driv" id="lbDriv" target="_blank" rel="noopener">Vis i Driv.app</a></div>
 
   <div class="modal" id="formModal">
     <div class="m-card">
@@ -312,7 +341,7 @@
           <div class="seg" id="fKanal"><button data-v="mail">Mail</button><button data-v="ring">Ring</button><button data-v="besok" class="on">Besøk</button></div></div>
         <div class="f-field"><label>Sjanse</label>
           <span class="salgrate" id="fStars" data-rate="0"><span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span></span></div>
-        <div class="f-field"><label>Løfte</label><button class="chip gold" id="fLovet" type="button">Lovet å sende mail</button></div>
+        <div class="f-field"><label>Løfte</label><button class="chip gold" id="fLovet" type="button">Husk å send tilbud</button></div>
         <div class="f-field full"><label>Oppfølgingsdato</label>
           <div class="chips" id="fChips">
             <button class="chip" data-dp="senere" type="button">Senere i dag</button>
@@ -387,7 +416,9 @@
   const now=()=>new Date();
   const WD=['søn','man','tir','ons','tor','fre','lør'];
   const WDU=['Søn','Man','Tir','Ons','Tor','Fre','Lør'];
+  const WDFULL=['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
   const MO=['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+  const MOFULL=['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const p=s=>s?new Date(s):null;
   const dKey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -402,6 +433,25 @@
     if(sameDay(d,n))return 'i dag '+hhmm(d);
     const y=new Date(+startOfDay(n)-1); if(sameDay(d,y))return 'i går '+hhmm(d);
     return WD[d.getDay()]+' '+d.getDate()+'. '+MO[d.getMonth()]+' '+hhmm(d);}
+  // antall midnatt-kryssinger siden ts (ikke rullerende 24t)
+  const daysSince=ts=>Math.round((+startOfDay(now())-+startOfDay(new Date(ts)))/864e5);
+  const agoTxt=ts=>{const d=daysSince(ts);return d<=0?'i dag':'for '+d+' d siden';};
+  const dDM=d=>pad(d.getDate())+'.'+pad(d.getMonth()+1);
+  // relativ beskrivelse av oppfølgingstidspunkt (uten klokkeslett). Ukestart = mandag.
+  function formatFollowupTime(t){
+    const n=now(),d0=startOfDay(n),td=startOfDay(t);
+    const diff=Math.round((+td-+d0)/864e5);              // kalenderdager (negativ = fortid)
+    if(diff===0)return 'I dag';
+    if(diff===-1)return 'I går';
+    if(diff<-1)return diff+' dager siden';               // f.eks. «-3 dager siden»
+    if(diff===1)return 'I morgen';
+    const wk0=startOfWeek(n),wk1=new Date(+wk0+7*864e5),wk2=new Date(+wk0+14*864e5),wk3=new Date(+wk0+21*864e5);
+    const wd=WDFULL[t.getDay()];
+    if(td<wk1)return wd+', om '+diff+' dager';                       // denne uken
+    if(td<wk2)return wd+', Neste uke, om '+diff+' dager';            // neste uke
+    if(td<wk3)return wd+', om 2 uker, om '+diff+' dager';            // uken etter
+    return t.getDate()+'. '+MOFULL[t.getMonth()]+', om '+diff+' dager'; // lenger frem → dato
+  }
   function senereIdag(){let t=new Date(Date.now()+2*36e5);const m=t.getMinutes();
     if(m>0&&m<30)t.setMinutes(30);else if(m>30){t.setHours(t.getHours()+1);t.setMinutes(0);}
     t.setSeconds(0,0);const cap=new Date(t);cap.setHours(23,30,0,0);if(t>cap)t=cap;return toLocal(t);}
@@ -424,22 +474,36 @@
   function save(){store.set(KEY,JSON.stringify(items));}
 
   // ---------- datamodell + migrering (brukes ved innlasting OG import) ----------
+  // gyldige neste-handlinger
+  const NA_KEYS=['send_offer','waiting_reply','trying_to_reach','call','visit','lead'];
   function migrate(it){
+    const raw=it||{};const hadNA=('nextAction' in raw);
     it=Object.assign({id:uid(),navn:'',alder:null,telefon:'',adresse:'',salgsrunde:'',status:'HP',
-      kanal:'',kommentar:'',dato:null,state:'aktiv',stjerner:0,ringFelt:false,
-      handlinger:[],kontaktlogg:[],sistKontakt:null,svart:null,ventetFra:null,avgjort:null,opprettet:Date.now(),hasImg:false},it||{});
+      kanal:'',kommentar:'',dato:null,state:'aktiv',stjerner:0,ringFelt:false,salesforceUrl:'',nextAction:null,waitingSince:null,
+      handlinger:[],kontaktlogg:[],sistKontakt:null,svart:null,prover:false,ventetFra:null,avgjort:null,opprettet:Date.now(),hasImg:false},raw);
     if(!Array.isArray(it.handlinger))it.handlinger=[];
     if(!Array.isArray(it.kontaktlogg))it.kontaktlogg=[];
     if(it.lovetMail&&!it.handlinger.some(h=>h.t==='mail'))it.handlinger.push({t:'mail',done:false,ts:null});
     delete it.lovetMail;
+    // utled nextAction fra eldre data — kun første gang (før feltet er lagret)
+    if(!hadNA){
+      if(it.handlinger.some(h=>h.t==='mail'&&!h.done&&!h.closed))it.nextAction='send_offer';
+      else if(it.handlinger.some(h=>h.t==='mail'&&h.done&&!h.closed))it.nextAction='waiting_reply';
+      else if(it.prover)it.nextAction='trying_to_reach';
+    }
+    if(!NA_KEYS.includes(it.nextAction))it.nextAction=null;
+    // tidspunkt tilbud sendt: bruk eksisterende, ellers eldste sendte mail-handling, ellers trygg fallback
+    if(it.nextAction==='waiting_reply'&&!it.waitingSince){
+      const sent=it.handlinger.filter(h=>h.t==='mail'&&h.done&&h.ts).map(h=>h.ts).sort()[0];
+      it.waitingSince=sent||it.sistKontakt||it.opprettet||Date.now();
+    }
+    if(it.nextAction!=='waiting_reply')it.waitingSince=null;
     it.stjerner=Math.max(0,Math.min(3,+it.stjerner||0));
     if(!['HP','HC','Vula'].includes(it.status))it.status='HP';
     if(!['mail','ring','besok'].includes(it.kanal))
       it.kanal=it.handlinger.some(h=>h.t==='mail'&&!h.done)?'mail':(it.ringFelt?'ring':'besok');
     return it;
   }
-  const pendMail=it=>it.handlinger.some(h=>h.t==='mail'&&!h.done);
-  const mailSent=it=>it.handlinger.some(h=>h.t==='mail'&&h.done);
   function logKontakt(it,t){it.kontaktlogg.push({ts:Date.now(),t:t});it.sistKontakt=Date.now();}
   function popLastLog(it,t){const ts=it.kontaktlogg.map(x=>x.t);const i=ts.lastIndexOf(t);
     if(i>-1)it.kontaktlogg.splice(i,1);
@@ -447,183 +511,226 @@
 
   // ---------- demodata første gang (datoer relative til i dag) ----------
   function seed(){
-    const T=new Date();
-    const at=(base,h,m)=>{const x=new Date(base);x.setHours(h,m,0,0);return toLocal(x);};
-    const h3=Date.now()-3*36e5, d1=Date.now()-26*36e5;
-    return [
-      migrate({navn:'Yngve Halvorsen',alder:60,telefon:'912 34 567',adresse:'Storgata 14, 3. etg',salgsrunde:'Siljan 1',status:'HP',kanal:'mail',stjerner:3,dato:at(T,17,0),lovetMail:true,
-        kommentar:'Skulle sjekke med samboer — send tilbud på mail, ring etter 17.'}),
-      migrate({navn:'Ahmed Said',alder:34,telefon:'923 45 678',adresse:'Parkveien 8',salgsrunde:'Siljan 2',status:'HC',kanal:'mail',stjerner:2,dato:at(T,19,30),
-        handlinger:[{t:'mail',done:true,ts:h3}],kontaktlogg:[{ts:h3,t:'mail'}],sistKontakt:h3,
-        kommentar:'Tilbud sendt på mail — ringer tilbake etter jobb om pris etter kampanjeperioden.'}),
-      migrate({navn:'Margaretha Olsen',alder:71,telefon:'',adresse:'Lia 3',salgsrunde:'Skien Sentrum 1',status:'Vula',stjerner:3,kanal:'mail',dato:at(new Date(Date.now()+2*864e5),13,0),
-        handlinger:[{t:'mail',done:true,ts:d1}],kontaktlogg:[{ts:d1,t:'mail'}],sistKontakt:d1,svart:h3,
-        kommentar:'Fikk tilbudet på mail og har svart — vurderer, book demo av TV-løsningen.'}),
-      migrate({navn:'Per Kristiansen',alder:29,telefon:'934 56 789',adresse:'Bøkkerveien 12',salgsrunde:'Siljan 1',status:'HC',kanal:'ring',stjerner:2,dato:at(T,18,15),
-        kommentar:'Var usikker — vil tenke på det. Følg opp før uka er omme.'})
-    ];
+    return []; // ingen demodata — appen bruker ekte data fra localStorage
   }
 
   // ---------- kort ----------
   const ageCls=a=>a>=65?'age-brown':a>=50?'age-yellow':a>=30?'age-green':'age-purple';
   const typeCls=s=>({HP:'type-hp',HC:'type-hc',Vula:'type-vula'}[s]||'type-hc');
   function railHTML(it){
-    const n=now(),t=it.dato?p(it.dato):null;
-    if(!t)return '<b class="when-none">Ingen<br>dato</b>';
-    if(sameDay(t,n)||sameDay(t,new Date(+n+864e5)))return '<b class="tnum">'+hhmm(t)+'</b>';
-    return '<b class="when-date">'+WD[t.getDay()]+' '+t.getDate()+'.</b>';
-  }
-  function mailChip(it,mode){
-    if(mode==='mail'&&mailSent(it)){
-      return it.svart
-        ? '<button class="mailchk done" title="Trykk for å sette tilbake til «Venter på svar»"><span class="box"></span>Kunde svart ✅</button>'
-        : '<button class="mailchk wait" title="Huk av når kunden har svart"><span class="box"></span>Venter på svar</button>';
+    const t=it.dato?p(it.dato):null;
+    if(!t)return '<span class="when-dash">—</span>';   // ingen dato — nøytral strek
+    const n=now(),d0=startOfDay(n),td=startOfDay(t);
+    const big=s=>'<b class="tnum">'+s+'</b>';
+    const mid=s=>'<span class="when-mid">'+esc(s)+'</span>';
+    const sub=s=>'<span class="when-sub">'+esc(s)+'</span>';
+    const time=hhmm(t),wk0=startOfWeek(n);
+    if(t<n){ // ---------- forfalt ----------
+      const daysAgo=Math.round((+d0-+td)/864e5);
+      if(daysAgo===0)return mid('I dag')+big(time);
+      if(daysAgo===1)return mid('I går')+big(time);
+      const minus=sub('-'+daysAgo+' d siden');
+      const lastWk=new Date(+wk0-7*864e5);
+      if(+td>=+wk0)return mid(WDFULL[t.getDay()])+sub('Denne uken')+minus;
+      if(+td>=+lastWk)return mid('Forrige uke')+sub(WD[t.getDay()])+minus;
+      const weekIdx=Math.round((+wk0-+startOfWeek(t))/(7*864e5));
+      if(weekIdx===2)return mid('2 uker siden')+minus;
+      if(weekIdx===3)return mid('3 uker siden')+minus;
+      return mid(MO[t.getMonth()])+minus;
     }
-    if(pendMail(it))return '<button class="mailchk pend" title="Huk av når mail er sendt"><span class="box"></span>Kunde venter på mail</button>';
-    if(mailSent(it))return '<button class="mailchk sent" title="Trykk for å sette tilbake til «Kunde venter på mail»"><span class="box"></span>Mail sendt ✅</button>';
-    return '';
+    // ---------- kommende ----------
+    const diff=Math.round((+td-+d0)/864e5),wk2=new Date(+wk0+14*864e5);
+    if(diff===0)return big(time)+sub('I dag');                 // uendret: tid øverst, «I dag» under
+    if(diff===1)return sub('I morgen')+big(time);              // «I morgen» øverst, tid under
+    if(+td<+wk2)return sub(WDFULL[t.getDay()])+big(time);       // denne/neste uke: ukedag øverst, tid under
+    const rel=diff<=20?('Om '+Math.round(diff/7)+' uker'):('Om '+diff+' dager');
+    return mid(t.getDate()+'. '+MO[t.getMonth()])+sub(rel)+sub(time); // dato øverst, relativ + tid under
   }
-  function cardHTML(it,mode){
+  // ---------- neste handling (felles system) ----------
+  const NA_META={
+    send_offer:{label:'Husk å send tilbud',cls:'a-offer',ico:''},
+    waiting_reply:{label:'Venter på svar',cls:'a-wait',ico:''},
+    trying_to_reach:{label:'Prøver å nå',cls:'a-reach',ico:''},
+    call:{label:'Ring',cls:'a-call',ico:'📞'},
+    visit:{label:'Besøk',cls:'a-visit',ico:'🚪'},
+    lead:{label:'🔥Lead',cls:'a-lead',ico:''}
+  };
+  // dager siden tilbud sendt: «i dag» / «N d siden»
+  const sentAgo=ts=>{const d=daysSince(ts);return d<=0?'i dag':d+' d siden';};
+  function actionControl(it){
+    const na=NA_KEYS.includes(it.nextAction)?it.nextAction:null;
+    if(!na)return '<button class="act-next" title="Velg neste handling">Neste handling</button>';
+    const a=NA_META[na];
+    let info='';
+    if(na==='waiting_reply'){const ts=it.waitingSince||it.opprettet||Date.now();
+      info='<span class="act-info">Tilbud er sendt ✅ · '+sentAgo(ts)+'</span>';}
+    return '<button class="actchip '+a.cls+'" data-na="'+na+'" title="Huk av når handlingen er gjort">'
+      +'<span class="box"></span>'+(a.ico?'<span class="a-ico">'+a.ico+'</span>':'')+a.label+'</button>'+info;
+  }
+  function cardHTML(it){
     const n=now(),t=it.dato?p(it.dato):null;
     const late=(t&&t<n)?' late':'';
-    const edge=(mode==='mail'&&mailSent(it))?(it.svart?' replied':' waitreply'):'';
     const age=it.alder?' <span class="cn-age '+ageCls(it.alder)+'">'+it.alder+' år</span>':'';
     const runde=it.salgsrunde?'<span class="runde">'+esc(it.salgsrunde)+'</span>':'';
-    const pin=it.adresse?'<a class="pinlink" target="_blank" rel="noopener" href="https://maps.google.com/?q='+encodeURIComponent(it.adresse)+'" title="Åpne adressen i Google Maps">📍 Pin</a>':'';
-    const sk=it.sistKontakt?'<span class="sistk">Sist kontakt · '+fmtRel(it.sistKontakt)+'</span>':'';
-    const stars=[1,2,3].map(v=>'<span class="star'+(v<=(it.stjerner||0)?' lit':'')+'" data-v="'+v+'">★</span>').join('');
-    const tel=(it.telefon||'').replace(/\s/g,'');
-    const ringBtn=tel?'<a class="btn primary act-ring" href="tel:'+tel+'">Ring kunden</a>'
-      :'<button class="btn dim act-ring" title="Mangler telefonnummer — trykk for å legge inn">Ring kunden</button>';
+    const sf=(it.salesforceUrl||it.salesforceVisitUrl||'').trim();
+    const sfBtn=sf?'<a class="btn act-sf" target="_blank" rel="noopener" href="'+esc(sf)+'">Salesforce</a>'
+      :'<button class="btn dim act-sf" disabled title="Mangler Salesforce-lenke">Salesforce</button>';
     const navBtn=it.adresse?'<a class="btn act-nav" target="_blank" rel="noopener" href="https://maps.google.com/?q='+encodeURIComponent(it.adresse)+'">Naviger</a>'
-      :'<button class="btn dim act-navedit">Naviger</button>';
+      :'<button class="btn dim act-navedit" title="Mangler adresse — trykk for å legge inn">Naviger</button>';
     const kom=it.kommentar?'«'+esc(it.kommentar)+'»':'<span style="color:var(--ink-faint)">Ingen kommentar</span>';
-    return '<div class="card opf-card'+late+edge+'" data-id="'+it.id+'">'
-      +'<div class="opf-rail"><button class="when-edit" title="Endre dato/tid">'+railHTML(it)+'<span>Endre ✎</span></button></div>'
+    return '<div class="card opf-card'+late+'" data-id="'+it.id+'">'
+      +'<div class="opf-rail"><button class="when-edit" title="Endre dato/tid">'+railHTML(it)+'</button></div>'
       +'<div class="opf-body">'
+      +'<div class="opf-ident">'
       +'<div class="opf-cust"><div class="cn" title="Trykk for å redigere">'+(esc(it.navn)||'—')+age+'</div>'
       +'<div class="addr copyable" title="Trykk for å kopiere adressen">'+esc(it.adresse)+'</div></div>'
-      +'<div class="opf-meta"><span class="type-chip '+typeCls(it.status)+'">'+esc(it.status)+'</span>'+runde+pin+mailChip(it,mode)
-      +'<span class="salgrate" data-rate="'+(it.stjerner||0)+'">'+stars+'</span>'+sk+'</div>'
-      +'<div class="opf-note"><span class="opf-note-text">'+kom+'</span><button class="note-edit" title="Endre kommentar">✎</button><button class="note-more">Vis mer</button></div>'
+      +'<div class="opf-meta"><span class="type-chip '+typeCls(it.status)+'">'+esc(it.status)+'</span>'+runde+'</div>'
+      +'</div>'
+      +'<div class="opf-action">'+actionControl(it)+'</div>'
+      +'<div class="opf-note" title="Trykk for å redigere kommentar"><span class="opf-note-text">'+kom+'</span></div>'
       +'</div>'
       +'<div class="opf-side"><a class="opf-thumb" href="#" title="Se adresse i kart"><span class="thumb-lbl">Kart</span></a>'
-      +'<div class="side-btns">'+ringBtn+navBtn+'<button class="btn act-done">Fjern</button></div></div>'
+      +'<div class="side-btns">'+sfBtn+navBtn+'<button class="btn act-done">Fjern</button></div></div>'
       +'</div>';
   }
 
   // ---------- rendering + gruppering ----------
-  let filt='idag';
+  // view = hovedvisning: avtaler | gjore | uten | alle.  sub = Avtaler-underfilter: idag | imorgen | uken | alle
+  let view='avtaler', sub='idag';
+  function updateBars(){
+    Array.from($('mainbar').children).forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+    Array.from($('subbar').children).forEach(b=>b.classList.toggle('on',b.dataset.s===sub));
+    $('subbar').style.display=view==='avtaler'?'':'none';
+  }
   function render(){
     const n=now();
     const act=items.filter(i=>i.state!=='fulgt');
-    const uten=act.filter(i=>!i.dato).sort((a,b)=>(b.stjerner||0)-(a.stjerner||0));
-    const handling=act.filter(pendMail);
-    const mailWait=act.filter(i=>mailSent(i)&&!i.svart);
-    const mailDone=act.filter(i=>mailSent(i)&&i.svart);
-    $('cntUten').textContent=uten.length;
-    $('cntHandling').textContent=handling.length;$('cntHandling').classList.toggle('red',handling.length>0);
-    $('cntMail').textContent=mailWait.length;
-    const dated=act.filter(i=>i.dato).sort((a,b)=>p(a.dato)-p(b.dato));
-    const forf=dated.filter(i=>p(i.dato)<n);
-    const fut=dated.filter(i=>p(i.dato)>=n);
+    const P=i=>p(i.dato);
+    const overdue=i=>!!i.dato&&P(i)<n;
+    const naOf=i=>NA_KEYS.includes(i.nextAction)?i.nextAction:null;
+    // Hvilken Må gjøres-seksjon kunden hører til (neste handling vinner; ellers forfalt)
+    function bucket(i){
+      const na=naOf(i);
+      if(na)return na;
+      if(overdue(i))return 'forfalt';
+      return null;
+    }
+    const byDate=arr=>arr.slice().sort((a,b)=>(a.dato?+P(a):9e15)-(b.dato?+P(b):9e15));
+    const byKontakt=arr=>arr.slice().sort((a,b)=>(a.sistKontakt||0)-(b.sistKontakt||0));
+    const groupByDay=(arr,push)=>{const m=new Map();
+      arr.forEach(i=>{const k=dKey(P(i));if(!m.has(k))m.set(k,[]);m.get(k).push(i);});
+      Array.from(m.keys()).sort().forEach(k=>push([dayLabel(new Date(k+'T12:00')),m.get(k),'',false]));};
     const td0=startOfDay(n),tm0=new Date(+td0+864e5),tm1=new Date(+td0+2*864e5);
-    const wk1=new Date(+startOfWeek(n)+7*864e5);
-    const today=fut.filter(i=>p(i.dato)<tm0);
-    const tomorrow=fut.filter(i=>{const t=p(i.dato);return t>=tm0&&t<tm1;});
-    const byDate=arr=>arr.slice().sort((a,b)=>(a.dato?+p(a.dato):9e15)-(b.dato?+p(b.dato):9e15));
-    const groups=[];
-    if(filt==='uten'){groups.push(['Uten oppfølgingsdato',uten,'']);}
-    else if(filt==='handling'){groups.push(['Kunde venter på mail',byDate(handling),'']);}
-    else if(filt==='mail'){groups.push(['Venter på svar',byDate(mailWait),''],['Kunde svart',byDate(mailDone),'']);}
-    else{
-      if(forf.length)groups.push(['Forfalt',forf,'forfalt']);
-      groups.push(['I dag',today,'']);
-      if(filt!=='idag'){
-        groups.push(['I morgen',tomorrow,'']);
-        const later=fut.filter(i=>{const t=p(i.dato);return t>=tm1&&(filt==='alle'||t<wk1);});
+
+    // tellere på fanene (beholdes — kun seksjonsoverskrifter mister tall)
+    const muste=act.filter(i=>bucket(i));
+    $('cntGjore').textContent=muste.length;
+    $('cntGjore').classList.toggle('red',muste.some(i=>bucket(i)==='forfalt')); // rød kun ved forfalt
+    $('cntUten').textContent=act.filter(i=>!i.dato&&!naOf(i)).length;
+    const earlierForf=act.filter(i=>!!i.dato&&P(i)<td0); // forfalt før i dag = det «Forfalte»-fanen viser
+    $('cntForf').textContent=earlierForf.length;$('cntForf').classList.toggle('red',earlierForf.length>0);
+
+    const L=t=>t;   // seksjonsoverskrift uten antall
+    const groups=[]; // [label, arr, cls, force]
+    const G=(lab,arr,cls,force)=>groups.push([lab,arr,cls||'',!!force]);
+
+    if(view==='gjore'){
+      const sec=k=>byDate(act.filter(i=>bucket(i)===k));
+      [['send_offer','Husk å send tilbud'],['waiting_reply','Venter på svar'],['trying_to_reach','Prøver å nå'],
+       ['call','Ring'],['visit','Besøk'],['lead','🔥Lead']].forEach(function(p){
+        const arr=sec(p[0]);if(arr.length)G(L(p[1]),arr);
+      });
+      const forf=sec('forfalt');
+      if(forf.length)G(L('Forfalt / må følges opp nå'),forf,'forfalt');
+    } else if(view==='uten'){
+      const ut=byKontakt(act.filter(i=>!i.dato&&!naOf(i)));
+      if(ut.length)G(L('Uten tidspunkt'),ut);
+    } else { // avtaler (hovedfanen «Alle» er fjernet; ev. view==='alle' faller hit)
+      const dated=act.filter(i=>i.dato);
+      const fut=byDate(dated.filter(i=>!overdue(i)));
+      const forfIdag=byDate(dated.filter(i=>overdue(i)&&P(i)>=td0)); // dato i dag, tid passert
+      const forfEldre=byDate(dated.filter(i=>P(i)<td0));             // dato før i dag
+      if(sub==='idag'){
+        if(forfIdag.length)G(L('Forfalt i dag'),forfIdag,'forfalt');
+        const today=fut.filter(i=>P(i)<tm0);
+        G(L('I dag'),today,'',true);
+      } else if(sub==='imorgen'){
+        const tom=fut.filter(i=>P(i)>=tm0&&P(i)<tm1);
+        G(L('I morgen'),tom,'',true);
+      } else if(sub==='forfalte'){
+        if(forfEldre.length)G(L('Forfalte'),forfEldre,'forfalt');
+      } else { // alle (avtaler-subfane): kun kommende — Denne uken / Neste uke / Resten av {måned} / måned for måned (forfalte vises kun under Forfalte)
+        const wk0=startOfWeek(n),wk1=new Date(+wk0+7*864e5),wk2=new Date(+wk0+14*864e5);
+        const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
         const m=new Map();
-        later.forEach(i=>{const k=dKey(p(i.dato));if(!m.has(k))m.set(k,[]);m.get(k).push(i);});
-        Array.from(m.keys()).sort().forEach(k=>{groups.push([dayLabel(new Date(k+'T12:00')),m.get(k),'']);});
-        if(filt==='alle')groups.push(['Uten oppfølgingsdato',uten,'']);
+        fut.forEach(function(i){
+          const t=p(i.dato),td=+startOfDay(t);let key,lab;
+          if(td<+wk1){key='dw';lab='Denne uken';}
+          else if(td<+wk2){key='nw';lab='Neste uke';}
+          else if(t.getFullYear()===n.getFullYear()&&t.getMonth()===n.getMonth()){key='rm';lab='Resten av '+MOFULL[n.getMonth()];}
+          else{key='m'+t.getFullYear()+'-'+t.getMonth();lab=cap(MOFULL[t.getMonth()])+(t.getFullYear()!==n.getFullYear()?' '+t.getFullYear():'');}
+          if(!m.has(key))m.set(key,{lab:lab,arr:[]});
+          m.get(key).arr.push(i);
+        });
+        m.forEach(g=>G(L(g.lab),g.arr));
       }
     }
+
+    let empty='Ingen oppfølginger her';
+    if(view==='uten')empty='Ingen kunder uten tidspunkt';
+    else if(view==='gjore')empty='Ingenting å gjøre nå';
+    else if(view==='avtaler'&&sub==='forfalte')empty='Ingen forfalte avtaler';
+
     let html='',any=false;
     groups.forEach(g=>{
-      const lab=g[0],arr=g[1],cls=g[2];
-      if(!arr.length&&lab!=='I dag'&&lab!=='I morgen')return;
-      html+='<div class="grp '+cls+'">'+lab+'</div>'+arr.map(it=>cardHTML(it,filt)).join('');
+      const lab=g[0],arr=g[1],cls=g[2],force=g[3];
+      if(!arr.length&&!force)return;
+      html+='<div class="grp '+cls+'">'+lab+'</div>'+arr.map(it=>cardHTML(it)).join('');
       if(arr.length)any=true;
     });
-    if(!any)html+='<div class="empty">Ingen oppfølginger her</div>';
+    if(!any)html+='<div class="empty">'+empty+'</div>';
     $('list').innerHTML=html;
     document.querySelectorAll('#list .opf-thumb').forEach(t=>t.style.backgroundImage="url('"+THUMB+"')");
-    bindStarHover($('list'));
-    requestAnimationFrame(()=>document.querySelectorAll('#list .opf-note').forEach(refreshNote));
-    updNotice();
+    updateBars();
   }
-  function setFilt(f){filt=f;Array.from($('pillbar').children).forEach(b=>b.classList.toggle('on',b.dataset.f===f));render();}
-  $('pillbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setFilt(b.dataset.f);});
+  function setView(v){view=v;render();}
+  function setSub(s){sub=s;render();}
+  $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
+  $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
 
-  // ---------- mail-status ----------
-  function markMailSent(it){
-    const h=it.handlinger.find(x=>x.t==='mail'&&!x.done);
-    if(h){h.done=true;h.ts=Date.now();}else it.handlinger.push({t:'mail',done:true,ts:Date.now()});
-    logKontakt(it,'mail');save();render();
-    toastUndo('Mail markert sendt — '+(it.navn||''),function(){
-      const hh=it.handlinger.filter(x=>x.t==='mail'&&x.done).pop();
-      if(hh){hh.done=false;hh.ts=null;}
-      popLastLog(it,'mail');save();render();
-    });
-  }
-  function markSvart(it){
-    it.svart=Date.now();save();render();
-    toastUndo('Kunde svart ✅ — '+(it.navn||''),function(){it.svart=null;save();render();});
-  }
-  function unmarkMailSent(it){
-    const prevSvart=it.svart;
-    const hh=it.handlinger.filter(x=>x.t==='mail'&&x.done).pop();
-    if(hh){hh.done=false;hh.ts=null;}
-    popLastLog(it,'mail');
-    it.svart=null;
+  // ---------- neste handling: velg + huk av ----------
+  // Velg handling fra popup
+  function setAction(it,na){
+    if(!NA_KEYS.includes(na))return;
+    const prev=it.nextAction,prevWS=it.waitingSince;
+    it.nextAction=na;
+    if(na==='waiting_reply'){if(!it.waitingSince)it.waitingSince=Date.now();} // sett hvis mangler
+    else it.waitingSince=null;
     save();render();
-    toastUndo('Tilbake til «Kunde venter på mail» — '+(it.navn||''),function(){
-      const h=it.handlinger.find(x=>x.t==='mail'&&!x.done);
-      if(h){h.done=true;h.ts=Date.now();}
-      logKontakt(it,'mail');it.svart=prevSvart;save();render();
-    });
+    toastUndo((na==='waiting_reply'?'Tilbud er sendt ✅':NA_META[na].label)+' — '+(it.navn||''),
+      function(){it.nextAction=prev;it.waitingSince=prevWS;save();render();});
   }
-  function unmarkSvart(it){
-    it.svart=null;save();render();
-    toastUndo('Tilbake til «Venter på svar» — '+(it.navn||''),function(){it.svart=Date.now();save();render();});
+  // Huk av valgt handling: send_offer → waiting_reply, alle andre → null
+  function checkOffAction(it){
+    const prev=it.nextAction,prevWS=it.waitingSince;if(!NA_KEYS.includes(prev))return;
+    if(prev==='send_offer'){
+      it.nextAction='waiting_reply';it.waitingSince=Date.now(); // tilbud sendt nå
+      save();render();
+      toastUndo('Tilbud sendt → Venter på svar — '+(it.navn||''),
+        function(){it.nextAction='send_offer';it.waitingSince=prevWS;save();render();});
+    }else{
+      it.nextAction=null;if(prev==='waiting_reply')it.waitingSince=null; // nullstill ved avsluttet venting
+      save();render();
+      toastUndo((NA_META[prev].label)+' fullført — '+(it.navn||''),
+        function(){it.nextAction=prev;it.waitingSince=prevWS;save();render();});
+    }
   }
   function fullfor(it){
     it.state='fulgt';it.avgjort=Date.now();save();render();
     toastUndo('Fjernet — '+(it.navn||''),function(){it.state='aktiv';it.avgjort=null;save();render();});
   }
 
-  // ---------- rød «i dag»-linje øverst midt i (oppdateres hvert 20. sek) ----------
-  function updNotice(){
-    const n=now(),el=$('todayNotice');
-    const todays=items.filter(i=>i.state!=='fulgt'&&i.dato&&sameDay(p(i.dato),n));
-    const up=todays.filter(i=>p(i.dato)>=n).sort((a,b)=>p(a.dato)-p(b.dato))[0];
-    const od=todays.filter(i=>p(i.dato)<n).sort((a,b)=>p(b.dato)-p(a.dato))[0];
-    const pick=up||od;
-    if(!pick){el.classList.remove('show');el.dataset.id='';return;}
-    const t=p(pick.dato);
-    const verb={mail:'Mail',ring:'Ring',besok:'Besøk'}[pick.kanal];
-    el.innerHTML='<span class="dot"></span>'+(up?verb+' i dag '+hhmm(t):'Forfalt i dag '+hhmm(t))+' · '+esc(pick.navn);
-    el.dataset.id=pick.id;el.classList.add('show');
-  }
-  setInterval(updNotice,20000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();}});
-  $('todayNotice').addEventListener('click',function(){
-    const id=this.dataset.id;if(!id)return;
-    let card=document.querySelector('#list [data-id="'+id+'"]');
-    if(!card){setFilt('idag');card=document.querySelector('#list [data-id="'+id+'"]');}
-    if(card){card.scrollIntoView({behavior:'smooth',block:'center'});
-      card.classList.add('flash');setTimeout(()=>card.classList.remove('flash'),1600);}
-  });
 
   // ---------- kartbilder (dummy) ----------
     var THUMB="data:image/jpeg;base64,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";
@@ -634,36 +741,22 @@
     const card=e.target.closest('.opf-card');
     const we=e.target.closest('.when-edit');
     if(we&&card){e.stopPropagation();openDpop(byId(card.dataset.id),we);return;}
-    const star=e.target.closest('.salgrate .star');
-    if(star&&card){const it=byId(card.dataset.id);it.stjerner=+star.dataset.v;save();
-      paintStars(star.closest('.salgrate'),it.stjerner);return;}
-    const nm=e.target.closest('.note-more');
-    if(nm&&card){const note=nm.closest('.opf-note');const txt=note.querySelector('.opf-note-text');
-      const open=txt.classList.toggle('expanded');nm.textContent=open?'Vis mindre':'Vis mer';refreshNote(note);return;}
-    if(e.target.closest('.note-edit')&&card){inlineEditNote(card);return;}
+    // klikk i kommentarboksen → rediger direkte
+    if(e.target.closest('.opf-note')&&card){inlineEditNote(card);return;}
     const ad=e.target.closest('.addr.copyable');
     if(ad&&card){copyText(byId(card.dataset.id).adresse,'Adresse kopiert');return;}
     if(e.target.closest('.cn')&&card){openForm(byId(card.dataset.id));return;}
-    const mc=e.target.closest('.mailchk');
-    if(mc&&card){const it=byId(card.dataset.id);
-      if(mc.classList.contains('pend'))markMailSent(it);
-      else if(mc.classList.contains('wait'))markSvart(it);
-      else if(mc.classList.contains('sent'))unmarkMailSent(it);
-      else if(mc.classList.contains('done'))unmarkSvart(it);
-      return;}
+    const an=e.target.closest('.act-next');
+    if(an&&card){e.stopPropagation();openNapop(byId(card.dataset.id),an);return;}
+    const ac=e.target.closest('.actchip');
+    if(ac&&card){checkOffAction(byId(card.dataset.id));return;}
     if(e.target.closest('.act-navedit')&&card){openForm(byId(card.dataset.id));return;}
     const th=e.target.closest('.opf-thumb');
-    if(th){e.preventDefault();openLightbox();return;}
-    if(e.target.closest('.act-mailsent')&&card){markMailSent(byId(card.dataset.id));return;}
-    const ar=e.target.closest('.act-ring');
-    if(ar&&card){const it=byId(card.dataset.id);
-      if(!it.telefon){e.preventDefault();openForm(it);}
-      else{logKontakt(it,'ring');save();setTimeout(render,300);}
-      return;}
+    if(th){e.preventDefault();openLightbox(card?byId(card.dataset.id):null);return;}
     if(e.target.closest('.act-done')&&card){fullfor(byId(card.dataset.id));return;}
   });
 
-  // ---------- stjerner, Vis mer, kommentar ----------
+  // ---------- stjerner + besøkskommentar (inline-redigering) ----------
   function paintStars(rate,n){rate.dataset.rate=n;
     rate.querySelectorAll('.star').forEach(s=>s.classList.toggle('lit',+s.dataset.v<=n));}
   function bindStarHover(scope){
@@ -673,32 +766,18 @@
       rate.addEventListener('mouseleave',()=>paintStars(rate,+rate.dataset.rate||0));
     });
   }
-  function refreshNote(note){
-    const txt=note.querySelector('.opf-note-text'),more=note.querySelector('.note-more');
-    if(!txt||!more)return;
-    if(txt.classList.contains('expanded')){more.classList.add('show');return;}
-    txt.style.webkitLineClamp='unset';txt.style.overflow='visible';
-    const full=txt.scrollHeight;
-    txt.style.webkitLineClamp='';txt.style.overflow='';
-    const lh=parseFloat(getComputedStyle(txt).lineHeight)||21;
-    more.classList.toggle('show',full>lh*3+2);
-  }
-  if(document.fonts&&document.fonts.ready)
-    document.fonts.ready.then(()=>document.querySelectorAll('#list .opf-note').forEach(refreshNote));
   function inlineEditNote(card){
     const it=byId(card.dataset.id);
     const note=card.querySelector('.opf-note');
     if(note.querySelector('textarea'))return;
-    const txt=note.querySelector('.opf-note-text'),more=note.querySelector('.note-more');
-    const ta=document.createElement('textarea');ta.value=it.kommentar||'';ta.rows=4;
-    txt.style.display='none';more.style.display='none';
+    const txt=note.querySelector('.opf-note-text');
+    const ta=document.createElement('textarea');ta.value=it.kommentar||'';
+    txt.style.display='none';
     txt.insertAdjacentElement('afterend',ta);ta.focus();
     const done=function(s){
       if(s){it.kommentar=ta.value.trim();save();}
       ta.remove();txt.textContent=it.kommentar?('«'+it.kommentar+'»'):'Ingen kommentar';
-      txt.classList.remove('expanded');more.textContent='Vis mer';
-      txt.style.display='';more.style.display='';
-      refreshNote(note);
+      txt.style.display='';
     };
     ta.addEventListener('blur',()=>done(true));
     ta.addEventListener('keydown',function(ev){
@@ -708,7 +787,11 @@
   }
 
   // ---------- lightbox ----------
-  function openLightbox(){$('lbImg').src=FULL;$('mapLightbox').classList.add('open');}
+  function openLightbox(it){$('lbImg').src=FULL;
+    const d=$('lbDriv');const adr=it&&it.adresse;
+    if(adr){d.href='https://maps.google.com/?q='+encodeURIComponent(adr);d.style.display='';}
+    else d.style.display='none';
+    $('mapLightbox').classList.add('open');}
   (function(){
     const lb=$('mapLightbox');
     const close=()=>lb.classList.remove('open');
@@ -729,7 +812,17 @@
     if(x>1024-220)x=(ar.left-sr.left)/sc-214;
     if(y>1366-250)y=1366-250;
     dp.style.left=x+'px';dp.style.top=y+'px';
-    $('dpDt').value=it.dato||tomorrowAt(13);
+    // populer time-select (00, 08–23) — aldri 01–07
+    const hs=$('dpHour');const allowed=[0,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+    if(!hs.options.length)allowed.forEach(function(h){const o=document.createElement('option');o.value=pad(h);o.textContent=pad(h);hs.appendChild(o);});
+    // forhåndsfyll fra eksisterende dato, ellers i morgen 13:00 — snap til gyldig time/minutt
+    let dt=it.dato?new Date(it.dato):null;
+    if(!dt||isNaN(+dt)){dt=new Date(Date.now()+864e5);dt.setHours(13,0,0,0);}
+    $('dpDate').value=dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate());
+    let h=dt.getHours();if(allowed.indexOf(h)<0)h=allowed.reduce((a,b)=>Math.abs(b-h)<Math.abs(a-h)?b:a);
+    $('dpHour').value=pad(h);
+    let m=[0,15,45].reduce((a,b)=>Math.abs(b-dt.getMinutes())<Math.abs(a-dt.getMinutes())?b:a);
+    $('dpMin').value=pad(m);
     dp.classList.add('open');
   }
   function closeDpop(){$('dpop').classList.remove('open');dpItem=null;}
@@ -737,7 +830,7 @@
   $('dpop').addEventListener('click',function(e){
     e.stopPropagation();
     const b=e.target.closest('button');if(!b)return;
-    if(b.id==='dpSet'){applyDp($('dpDt').value||null);return;}
+    if(b.id==='dpSet'){const date=$('dpDate').value;if(!date)return;applyDp(date+'T'+$('dpHour').value+':'+$('dpMin').value);return;}
     const k=b.dataset.dp;
     if(k==='senere')applyDp(senereIdag());
     else if(k==='m13')applyDp(tomorrowAt(13));
@@ -750,6 +843,42 @@
     closeDpop();
   });
   $('list').addEventListener('scroll',closeDpop);
+  // hele dato-baren åpner native kalender; ingen manuell tasting (iPad-vennlig)
+  (function(){
+    const d=$('dpDate');if(!d)return;
+    d.setAttribute('inputmode','none');
+    const openPicker=function(e){if(e)e.preventDefault();try{if(typeof d.showPicker==='function')d.showPicker();else{d.focus();d.click();}}catch(_){d.focus();}};
+    d.addEventListener('click',openPicker);
+    d.addEventListener('keydown',e=>e.preventDefault()); // blokker manuell skriving
+    d.addEventListener('paste',e=>e.preventDefault());
+  })();
+
+  // ---------- neste-handling-popover ----------
+  let naItem=null;
+  function openNapop(it,anchor){
+    naItem=it;
+    const dp=$('napop'),st=document.querySelector('.stage');
+    const sr=st.getBoundingClientRect(),ar=anchor.getBoundingClientRect();
+    const sc=sr.width/1024;
+    let x=(ar.left-sr.left)/sc;
+    let y=(ar.bottom-sr.top)/sc+6;
+    if(x>1024-216)x=1024-216;
+    if(y>1366-280)y=(ar.top-sr.top)/sc-282;
+    dp.style.left=x+'px';dp.style.top=y+'px';
+    dp.classList.add('open');
+  }
+  function closeNapop(){$('napop').classList.remove('open');naItem=null;}
+  $('napop').addEventListener('click',function(e){
+    e.stopPropagation();
+    const b=e.target.closest('button');if(!b||!naItem)return;
+    const it=naItem;closeNapop();setAction(it,b.dataset.na);
+  });
+  document.addEventListener('click',function(e){
+    if(!$('napop').classList.contains('open'))return;
+    if(e.target.closest('#napop')||e.target.closest('.act-next'))return;
+    closeNapop();
+  });
+  $('list').addEventListener('scroll',closeNapop);
 
   // ---------- skjema (ny / rediger) med duplikatvern ----------
   let editId=null,fDatoVal=null,fStar=0,fKanal='besok',fStatusV='HP',fLovet=false,savingLock=false;
@@ -770,7 +899,7 @@
     fStatusV=it?it.status:'HP';segSet($('fStatus'),fStatusV);
     fKanal=it?it.kanal:'besok';segSet($('fKanal'),fKanal);
     fStar=it?(it.stjerner||0):0;paintStars($('fStars'),fStar);
-    fLovet=it?pendMail(it):false;$('fLovet').classList.toggle('on',fLovet);
+    fLovet=it?(it.nextAction==='send_offer'):false;$('fLovet').classList.toggle('on',fLovet);
     fDatoVal=it?it.dato:null;chipSync();
     savingLock=false;$('fSave').disabled=false;
     $('fAiNote').style.display='none';
@@ -801,12 +930,12 @@
     if(editId){
       const it=byId(editId);
       Object.assign(it,f);
-      if(fLovet&&!pendMail(it))it.handlinger.push({t:'mail',done:false,ts:null});
-      if(!fLovet)it.handlinger=it.handlinger.filter(h=>!(h.t==='mail'&&!h.done));
+      if(fLovet)it.nextAction='send_offer';
+      else if(it.nextAction==='send_offer')it.nextAction=null;
       toast('Lagret');
     }else{
       const o=migrate(f);
-      if(fLovet&&!pendMail(o))o.handlinger.push({t:'mail',done:false,ts:null});
+      if(fLovet)o.nextAction='send_offer';
       items.push(o);
       toast('Oppfølging lagt til');
     }
