@@ -679,7 +679,12 @@
     let empty='Ingen oppfølginger her';
     if(view==='uten')empty='Ingen kunder uten tidspunkt';
     else if(view==='gjore')empty='Ingenting å gjøre nå';
-    else if(view==='avtaler'&&sub==='forfalte')empty='Ingen forfalte avtaler';
+    else if(view==='avtaler'){
+      if(sub==='idag')empty='Ingen avtaler i dag';
+      else if(sub==='imorgen')empty='Ingen avtaler i morgen';
+      else if(sub==='alle')empty='Ingen kommende avtaler';
+      else if(sub==='forfalte')empty='Ingen forfalte avtaler';
+    }
 
     let html='',any=false;
     groups.forEach(g=>{
