@@ -300,7 +300,6 @@
       </div>
       <div class="vfilter filterrow" id="subbar">
         <button data-s="idag" class="on">I dag</button>
-        <button data-s="imorgen">I morgen</button>
         <button data-s="alle">Alle</button>
         <button data-s="forfalte">Forfalte <span class="cnt" id="cntForf">0</span></button>
       </div>
@@ -657,9 +656,6 @@
         if(forfIdag.length)G(L('Forfalt i dag'),forfIdag,'forfalt');
         const today=fut.filter(i=>P(i)<tm0);
         G(L('I dag'),today,'',true);
-      } else if(sub==='imorgen'){
-        const tom=fut.filter(i=>P(i)>=tm0&&P(i)<tm1);
-        G(L('I morgen'),tom,'',true);
       } else if(sub==='forfalte'){
         if(forfEldre.length)G(L('Forfalte'),forfEldre,'forfalt');
       } else { // alle (avtaler-subfane): kun kommende — I dag / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (forfalte vises kun under Forfalte)
@@ -686,7 +682,6 @@
     else if(view==='gjore')empty='Ingenting å gjøre nå';
     else if(view==='avtaler'){
       if(sub==='idag')empty='Ingen avtaler i dag';
-      else if(sub==='imorgen')empty='Ingen avtaler i morgen';
       else if(sub==='alle')empty='Ingen kommende avtaler';
       else if(sub==='forfalte')empty='Ingen forfalte avtaler';
     }
