@@ -164,3 +164,14 @@ Faste regler:
 - Etter en større fungerende milepæl.
 - Før en risikabel ny endringsrunde.
 - Når handoffen ikke lenger matcher faktisk prosjektstatus.
+
+## K. QA-status — Fase 1 / Avtaler-filter (AVKLART OG LUKKET)
+Read-only QA-runde gjennomført. Status: **grønn — ingen kodeendring nødvendig.**
+
+- Git-status bekreftet: branch `main`, siste commit `78133be`, **ren arbeidskopi**.
+- Avtaler-filterlogikken vurdert **grønn**.
+- `Avtaler → Alle` viser **kun kommende avtaler**, ikke forfalte.
+- `Forfalt i dag` ligger i **I dag-visningen og Må gjøres**, ikke i `Forfalte`.
+- **Akse-dekobling** mellom avtaledato og `nextAction` er avklart som **ønsket oppførsel** (samme kort kan vises i handlingsvisning og datovisning samtidig).
+- **Må gjøres-telleren** skal inkludere forfalte avtaler **uten** aktiv `nextAction`; tallet kan endre seg når et klokkeslett passerer (ønsket).
+- Ingen kodeendring var nødvendig.
