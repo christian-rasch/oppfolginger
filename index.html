@@ -84,19 +84,24 @@
   .opf-card.waitreply{border-color:rgba(232,194,107,.32)}
   .opf-card.replied{border-color:rgba(61,245,197,.3)}
   /* KOL 1 — tid/dato-skinne */
-  .opf-rail{display:flex;flex-direction:column;align-items:center;justify-content:center;align-self:stretch}
-  .opf-card .when-edit{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:7px 9px;border-radius:11px;transition:.15s;text-align:center}
+  /* venstreblokk: venstrejustert, vertikalt sentrert, fast 96px (grid-kolonne), krymper ikke */
+  .opf-rail{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;align-self:stretch;min-width:0}
+  .opf-card .when-edit{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;padding:7px 9px;border-radius:11px;transition:.15s;text-align:left}
+  /* kommende (ikke forfalt): sentrer rail-linjene mot hverandre — blokken blir værende venstre i kolonnen */
+  .opf-card:not(.late) .when-edit{align-items:center;text-align:center}
   .opf-card .when-edit:hover{background:rgba(255,255,255,.06)}
-  .opf-card .when-edit b{font-size:22px;font-weight:800;letter-spacing:-.015em;color:var(--ink);line-height:1}
-  /* mellomstor topp-linje (ukedag/dato/«I dag» for forfalt osv.) */
-  .opf-card .when-edit .when-mid{font-family:"Schibsted Grotesk",sans-serif;font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.05}
-  /* dempet under-linje */
-  .opf-card .when-edit .when-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--ink-dim);margin-top:4px;line-height:1.1}
-  /* ukedag (denne/neste uke): mellomstor — mellom stor klokkeslett/dato og liten undertekst */
-  .opf-card .when-edit .rail-weekday{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:800;letter-spacing:.04em;color:var(--ink);line-height:1.05}
-  .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub,.opf-card .when-edit .rail-weekday+.when-sub{margin-top:5px}
+  /* ----- typografisk skala for venstre dato-/tidblokk ----- */
+  .opf-card .when-edit b{font-size:22px;font-weight:700;letter-spacing:-.015em;color:var(--ink);line-height:1} /* klokkeslett (I dag/I morgen + forfalt) */
+  .opf-card .when-edit .r-label{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;opacity:.45;color:var(--ink);line-height:1;margin-bottom:3px} /* støttetekst øverst: «I DAG»/«I MORGEN» + klokkeslett over ukedag */
+  .opf-card .when-edit .r-date{font-size:16px;font-weight:600;letter-spacing:-.01em;opacity:.75;color:var(--ink);line-height:1} /* dato lenger frem, f.eks. «23. jun» */
+  .opf-card .when-edit .rail-weekday{font-family:"Schibsted Grotesk",sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);line-height:1;white-space:nowrap} /* forkortet ukedag (denne/neste uke) — klokkeslett vises som liten label over */
+  /* forfalt topp-linje (mixed case) på samme skala */
+  .opf-card .when-edit .when-mid{font-family:"Schibsted Grotesk",sans-serif;font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1.05}
+  /* dempet undertekst: klokkeslett under ukedag + forfalt-undertekster */
+  .opf-card .when-edit .when-sub{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:500;letter-spacing:.02em;text-transform:none;opacity:.55;color:var(--ink);margin-top:4px;line-height:1.1}
+  .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub{margin-top:5px}
   .opf-card.late .when-edit .when-sub,.opf-card.late .when-edit .when-mid,.opf-card.late .when-edit b{color:#ff9b9e}
-  .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink-faint);line-height:1}
+  .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink);opacity:.30;line-height:1} /* uten tidspunkt — rolig/dempet */
   .nd-hide{display:none!important}
   .opf-meta .nd-why{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.12);border:1px solid rgba(232,194,107,.28);padding:3px 8px;border-radius:7px}
   .opf-meta .nd-why.sig{color:var(--mint);background:rgba(61,245,197,.1);border-color:rgba(61,245,197,.28)}
@@ -108,7 +113,7 @@
   .opf-action .act-info{font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:600;letter-spacing:.02em;color:var(--ink-faint);white-space:nowrap}
   .opf-body .opf-note{grid-area:comment;align-self:start}
   .opf-cust .cn{font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
-  .opf-cust .addr{font-size:13px;color:var(--ink-dim);margin-top:3px}
+  .opf-ident .addr{font-size:13px;color:var(--ink-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%} /* adresse under badge-raden — dempet småtekst, kuttes med ellipsis */
   .cn-age{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;margin-left:9px;letter-spacing:0;padding:2px 8px;border-radius:6px;vertical-align:1px;white-space:nowrap}
   .cn-age.age-purple{color:#e2d6ff;background:rgba(150,122,255,.24)}
   .cn-age.age-green{color:#6ee8a4;background:rgba(46,212,119,.15)}
@@ -523,10 +528,12 @@
     const t=it.dato?p(it.dato):null;
     if(!t)return '<span class="when-dash">—</span>';   // ingen dato — nøytral strek
     const n=now(),d0=startOfDay(n),td=startOfDay(t);
-    const big=s=>'<b class="tnum">'+s+'</b>';
-    const mid=s=>'<span class="when-mid">'+esc(s)+'</span>';
-    const sub=s=>'<span class="when-sub">'+esc(s)+'</span>';
-    const wd=s=>'<span class="rail-weekday">'+esc(s)+'</span>'; // mellomstor ukedag
+    const big=s=>'<b class="tnum">'+s+'</b>';                    // 22px klokkeslett (også forfalt)
+    const mid=s=>'<span class="when-mid">'+esc(s)+'</span>';     // forfalt topp-linje
+    const sub=s=>'<span class="when-sub">'+esc(s)+'</span>';     // 12px undertekst
+    const wd=s=>'<span class="rail-weekday">'+esc(s)+'</span>';  // 14px ukedag (denne/neste uke)
+    const lab=s=>'<span class="r-label">'+esc(s)+'</span>';      // 11px label «I DAG»/«I MORGEN»
+    const dt=s=>'<b class="r-date tnum">'+esc(s)+'</b>';         // 16px dato lenger frem
     const time=hhmm(t),wk0=startOfWeek(n);
     if(t<n){ // ---------- forfalt ----------
       const daysAgo=Math.round((+d0-+td)/864e5);
@@ -543,10 +550,10 @@
     }
     // ---------- kommende ----------
     const diff=Math.round((+td-+d0)/864e5),wk2=new Date(+wk0+14*864e5);
-    if(diff===0)return sub('I DAG')+big(time);                          // i dag: liten «I DAG» øverst, klokkeslett stort
-    if(diff===1)return sub('I MORGEN')+big(time);                       // i morgen: liten «I MORGEN» øverst, klokkeslett stort
-    if(+td<+wk2)return wd(WDFULL[t.getDay()].toUpperCase())+sub(time);  // denne/neste uke: ukedag mellomstor (versaler), klokkeslett lite under
-    return big(t.getDate()+'. '+MO[t.getMonth()]);                     // senere: kun dato (stor), ingen tid/ukedag/relativ tekst
+    if(diff===0)return lab('I DAG')+big(time);                          // i dag: label 11px + klokkeslett 22px
+    if(diff===1)return lab('I MORGEN')+big(time);                       // i morgen: label 11px + klokkeslett 22px
+    if(+td<+wk2)return lab(time)+wd(WDU[t.getDay()].toUpperCase());     // denne/neste uke: klokkeslett liten øverst, forkortet ukedag (3 bokstaver) under
+    return dt(t.getDate()+'. '+MO[t.getMonth()]);                      // senere: kun dato 16px
   }
   // ---------- neste handling (felles system) ----------
   const NA_META={
@@ -584,9 +591,9 @@
       +'<div class="opf-rail"><button class="when-edit" title="Endre dato/tid">'+railHTML(it)+'</button></div>'
       +'<div class="opf-body">'
       +'<div class="opf-ident">'
-      +'<div class="opf-cust"><div class="cn" title="Trykk for å redigere">'+(esc(it.navn)||'—')+age+'</div>'
-      +'<div class="addr copyable" title="Trykk for å kopiere adressen">'+esc(it.adresse)+'</div></div>'
+      +'<div class="opf-cust"><div class="cn" title="Trykk for å redigere">'+(esc(it.navn)||'—')+age+'</div></div>'
       +'<div class="opf-meta"><span class="type-chip '+typeCls(it.status)+'">'+esc(it.status)+'</span>'+runde+'</div>'
+      +'<div class="addr copyable" title="Trykk for å kopiere adressen">'+esc(it.adresse)+'</div>'
       +'</div>'
       +'<div class="opf-action">'+actionControl(it)+'</div>'
       +'<div class="opf-note" title="Trykk for å redigere kommentar"><span class="opf-note-text">'+kom+'</span></div>'
@@ -618,6 +625,7 @@
       return null;
     }
     const byDate=arr=>arr.slice().sort((a,b)=>(a.dato?+P(a):9e15)-(b.dato?+P(b):9e15));
+    const byDateDesc=arr=>arr.slice().sort((a,b)=>(b.dato?+P(b):-9e15)-(a.dato?+P(a):-9e15)); // synkende: mest nylig forfalt øverst
     const byKontakt=arr=>arr.slice().sort((a,b)=>(a.sistKontakt||0)-(b.sistKontakt||0));
     const groupByDay=(arr,push)=>{const m=new Map();
       arr.forEach(i=>{const k=dKey(P(i));if(!m.has(k))m.set(k,[]);m.get(k).push(i);});
@@ -642,7 +650,7 @@
        ['call','Ring'],['visit','Besøk'],['lead','🔥Lead']].forEach(function(p){
         const arr=sec(p[0]);if(arr.length)G(L(p[1]),arr);
       });
-      const forf=sec('forfalt');
+      const forf=byDateDesc(act.filter(i=>bucket(i)==='forfalt')); // synkende: mest nylig forfalt øverst
       if(forf.length)G(L('Forfalt / må følges opp nå'),forf,'forfalt');
     } else if(view==='uten'){
       const ut=byKontakt(act.filter(i=>!i.dato&&!naOf(i)));
@@ -651,7 +659,7 @@
       const dated=act.filter(i=>i.dato);
       const fut=byDate(dated.filter(i=>!overdue(i)));
       const forfIdag=byDate(dated.filter(i=>overdue(i)&&P(i)>=td0)); // dato i dag, tid passert
-      const forfEldre=byDate(dated.filter(i=>P(i)<td0));             // dato før i dag
+      const forfEldre=byDateDesc(dated.filter(i=>P(i)<td0));         // dato før i dag — synkende (mest nylig øverst)
       if(sub==='idag'){
         if(forfIdag.length)G(L('Forfalt i dag'),forfIdag,'forfalt');
         const today=fut.filter(i=>P(i)<tm0);
