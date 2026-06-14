@@ -92,7 +92,9 @@
   .opf-card .when-edit .when-mid{font-family:"Schibsted Grotesk",sans-serif;font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.05}
   /* dempet under-linje */
   .opf-card .when-edit .when-sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--ink-dim);margin-top:4px;line-height:1.1}
-  .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub{margin-top:5px}
+  /* ukedag (denne/neste uke): mellomstor — mellom stor klokkeslett/dato og liten undertekst */
+  .opf-card .when-edit .rail-weekday{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:800;letter-spacing:.04em;color:var(--ink);line-height:1.05}
+  .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub,.opf-card .when-edit .rail-weekday+.when-sub{margin-top:5px}
   .opf-card.late .when-edit .when-sub,.opf-card.late .when-edit .when-mid,.opf-card.late .when-edit b{color:#ff9b9e}
   .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink-faint);line-height:1}
   .nd-hide{display:none!important}
@@ -525,6 +527,7 @@
     const big=s=>'<b class="tnum">'+s+'</b>';
     const mid=s=>'<span class="when-mid">'+esc(s)+'</span>';
     const sub=s=>'<span class="when-sub">'+esc(s)+'</span>';
+    const wd=s=>'<span class="rail-weekday">'+esc(s)+'</span>'; // mellomstor ukedag
     const time=hhmm(t),wk0=startOfWeek(n);
     if(t<n){ // ---------- forfalt ----------
       const daysAgo=Math.round((+d0-+td)/864e5);
@@ -541,11 +544,10 @@
     }
     // ---------- kommende ----------
     const diff=Math.round((+td-+d0)/864e5),wk2=new Date(+wk0+14*864e5);
-    if(diff===0)return big(time)+sub('I dag');                 // uendret: tid øverst, «I dag» under
-    if(diff===1)return sub('I morgen')+big(time);              // «I morgen» øverst, tid under
-    if(+td<+wk2)return sub(WDFULL[t.getDay()])+big(time);       // denne/neste uke: ukedag øverst, tid under
-    const rel=diff<=20?('Om '+Math.round(diff/7)+' uker'):('Om '+diff+' dager');
-    return mid(t.getDate()+'. '+MO[t.getMonth()])+sub(rel)+sub(time); // dato øverst, relativ + tid under
+    if(diff===0)return sub('I DAG')+big(time);                          // i dag: liten «I DAG» øverst, klokkeslett stort
+    if(diff===1)return sub('I MORGEN')+big(time);                       // i morgen: liten «I MORGEN» øverst, klokkeslett stort
+    if(+td<+wk2)return wd(WDFULL[t.getDay()].toUpperCase())+sub(time);  // denne/neste uke: ukedag mellomstor (versaler), klokkeslett lite under
+    return big(t.getDate()+'. '+MO[t.getMonth()]);                     // senere: kun dato (stor), ingen tid/ukedag/relativ tekst
   }
   // ---------- neste handling (felles system) ----------
   const NA_META={
@@ -660,15 +662,17 @@
         G(L('I morgen'),tom,'',true);
       } else if(sub==='forfalte'){
         if(forfEldre.length)G(L('Forfalte'),forfEldre,'forfalt');
-      } else { // alle (avtaler-subfane): kun kommende — Denne uken / Neste uke / Resten av {måned} / måned for måned (forfalte vises kun under Forfalte)
-        const wk0=startOfWeek(n),wk1=new Date(+wk0+7*864e5),wk2=new Date(+wk0+14*864e5);
+      } else { // alle (avtaler-subfane): kun kommende — I dag / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (forfalte vises kun under Forfalte)
+        const wk1=new Date(+startOfWeek(n)+7*864e5),wk2=new Date(+startOfWeek(n)+14*864e5);
         const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
         const m=new Map();
-        fut.forEach(function(i){
+        fut.forEach(function(i){ // fut er sortert stigende → innsettings-/visningsrekkefølge blir riktig
           const t=p(i.dato),td=+startOfDay(t);let key,lab;
-          if(td<+wk1){key='dw';lab='Denne uken';}
-          else if(td<+wk2){key='nw';lab='Neste uke';}
-          else if(t.getFullYear()===n.getFullYear()&&t.getMonth()===n.getMonth()){key='rm';lab='Resten av '+MOFULL[n.getMonth()];}
+          if(td<+tm0){key='today';lab='I dag';}
+          else if(td<+tm1){key='tomorrow';lab='I morgen';}
+          else if(td<+wk1){key='restweek';lab='Resten av uken';}
+          else if(td<+wk2){key='nextweek';lab='Neste uke';}
+          else if(t.getFullYear()===n.getFullYear()&&t.getMonth()===n.getMonth()){key='restmonth';lab='Resten av måneden';}
           else{key='m'+t.getFullYear()+'-'+t.getMonth();lab=cap(MOFULL[t.getMonth()])+(t.getFullYear()!==n.getFullYear()?' '+t.getFullYear():'');}
           if(!m.has(key))m.set(key,{lab:lab,arr:[]});
           m.get(key).arr.push(i);
