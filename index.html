@@ -61,10 +61,10 @@
   /* ===== OPPFØLGINGER / ANNULLERINGER lists ===== */
   .vlist{flex:1;display:flex;flex-direction:column;gap:12px;overflow:auto;padding-right:4px}
   .vlist>*{flex:none} /* hindre at mange kort krympes/overlapper i flex-kolonnen — behold naturlig høyde, la lista scrolle */
-  .grp{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);margin:24px 0 11px;padding-bottom:8px;border-bottom:1px solid var(--hair-2);display:flex;align-items:baseline;gap:8px}
+  .grp{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);margin:24px 0 11px;padding-bottom:8px;border-bottom:1px solid var(--hair-2);display:flex;align-items:baseline;gap:8px}
   .grp:first-child{margin-top:4px}
   .grp .gcnt{color:var(--ink-faint);font-weight:700}
-  .grp.forfalt{color:var(--red);border-color:rgba(255,90,95,.28)}
+  .grp.forfalt{color:#ff7b80} /* forfalt-overskrift: tydelig (litt sterkere) rød tekst; skillelinje arves nøytral fra .grp (som «Alle») */
   .grp.forfalt .gcnt{color:var(--red)}
   .lcard{display:flex;align-items:center;gap:20px;padding:18px 22px;position:relative}
   .lcard .accent{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
@@ -86,9 +86,8 @@
   /* KOL 1 — tid/dato-skinne */
   /* venstreblokk: venstrejustert, vertikalt sentrert, fast 96px (grid-kolonne), krymper ikke */
   .opf-rail{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;align-self:stretch;min-width:0}
-  .opf-card .when-edit{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;padding:7px 9px;border-radius:11px;transition:.15s;text-align:left}
-  /* kommende (ikke forfalt): sentrer rail-linjene mot hverandre — blokken blir værende venstre i kolonnen */
-  .opf-card:not(.late) .when-edit{align-items:center;text-align:center}
+  /* rail-linjene sentreres mot hverandre (gjelder også forfalt); blokken blir værende venstre i kolonnen */
+  .opf-card .when-edit{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:7px 9px;border-radius:11px;transition:.15s;text-align:center}
   .opf-card .when-edit:hover{background:rgba(255,255,255,.06)}
   /* ----- typografisk skala for venstre dato-/tidblokk ----- */
   .opf-card .when-edit b{font-size:22px;font-weight:700;letter-spacing:-.015em;color:var(--ink);line-height:1} /* klokkeslett (I dag/I morgen + forfalt) */
@@ -99,8 +98,10 @@
   .opf-card .when-edit .when-mid{font-family:"Schibsted Grotesk",sans-serif;font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1.05}
   /* dempet undertekst: klokkeslett under ukedag + forfalt-undertekster */
   .opf-card .when-edit .when-sub{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:500;letter-spacing:.02em;text-transform:none;opacity:.55;color:var(--ink);margin-top:4px;line-height:1.1}
+  /* forfalt-alder «-N d.» under klokkeslett/ukedag — liten/dempet, litt ekstra luft over */
+  .opf-card .when-edit .late-age{font-family:"JetBrains Mono",monospace;font-size:13.5px;font-weight:500;letter-spacing:.02em;opacity:.55;color:var(--ink);margin-top:7px;line-height:1.1;white-space:nowrap}
   .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub{margin-top:5px}
-  .opf-card.late .when-edit .when-sub,.opf-card.late .when-edit .when-mid,.opf-card.late .when-edit b{color:#ff9b9e}
+  .opf-card.late .when-edit .late-age,.opf-card.late .when-edit b,.opf-card.late .when-edit .r-label,.opf-card.late .when-edit .rail-weekday{color:#ff9b9e} /* forfalt-rail: klokkeslett + ukedag + «-N d.» i svak rød (kun forfalt-kort, ikke «Alle») */
   .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink);opacity:.30;line-height:1} /* uten tidspunkt — rolig/dempet */
   .nd-hide{display:none!important}
   .opf-meta .nd-why{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.12);border:1px solid rgba(232,194,107,.28);padding:3px 8px;border-radius:7px}
@@ -195,7 +196,6 @@
   .btn[disabled]{cursor:default;opacity:.42}
   .btn[disabled]:hover{transform:none;background:rgba(255,255,255,.05)}
   /* ===== app v2 — praktiske tillegg ===== */
-  .opf-card.late .when-edit b{color:#ff9b9e}
 
   .vfilter .cnt{margin-left:7px;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:16px;padding:0 5px;border-radius:8px;background:rgba(232,194,107,.16);color:var(--gold);font-size:9px;font-weight:800}
   .vfilter button.on .cnt{background:rgba(6,18,14,.28);color:#06120e}
@@ -524,7 +524,7 @@
   // ---------- kort ----------
   const ageCls=a=>a>=65?'age-brown':a>=50?'age-yellow':a>=30?'age-green':'age-purple';
   const typeCls=s=>({HP:'type-hp',HC:'type-hc',Vula:'type-vula'}[s]||'type-hc');
-  function railHTML(it){
+  function railHTML(it,railCtx){
     const t=it.dato?p(it.dato):null;
     if(!t)return '<span class="when-dash">—</span>';   // ingen dato — nøytral strek
     const n=now(),d0=startOfDay(n),td=startOfDay(t);
@@ -534,19 +534,16 @@
     const wd=s=>'<span class="rail-weekday">'+esc(s)+'</span>';  // 14px ukedag (denne/neste uke)
     const lab=s=>'<span class="r-label">'+esc(s)+'</span>';      // 11px label «I DAG»/«I MORGEN»
     const dt=s=>'<b class="r-date tnum">'+esc(s)+'</b>';         // 16px dato lenger frem
+    const la=s=>'<span class="late-age">'+esc(s)+'</span>';      // forfalt-alder «-N d.» (egen klasse, påvirker ikke «Alle»)
     const time=hhmm(t),wk0=startOfWeek(n);
-    if(t<n){ // ---------- forfalt ----------
-      const daysAgo=Math.round((+d0-+td)/864e5);
-      if(daysAgo===0)return mid('I dag')+big(time);
-      if(daysAgo===1)return mid('I går')+big(time);
-      const minus=sub('-'+daysAgo+' d siden');
-      const lastWk=new Date(+wk0-7*864e5);
-      if(+td>=+wk0)return mid(WDFULL[t.getDay()])+sub('Denne uken')+minus;
-      if(+td>=+lastWk)return mid('Forrige uke')+sub(WD[t.getDay()])+minus;
-      const weekIdx=Math.round((+wk0-+startOfWeek(t))/(7*864e5));
-      if(weekIdx===2)return mid('2 uker siden')+minus;
-      if(weekIdx===3)return mid('3 uker siden')+minus;
-      return mid(MO[t.getMonth()])+minus;
+    if(t<n){ // ---------- forfalt (samme format som «Alle», men rød via .late) ----------
+      const daysAgo=Math.round((+d0-+td)/864e5),ww=new Date(+wk0-14*864e5);
+      const dgr='-'+daysAgo+' d.';                                            // «-N d.» (kun i «Eldre»)
+      // forfalt i dag: «I DAG» øverst KUN i Avtaler → I dag (ikke i Forfalte); klokkeslett, rød via .late, ingen «-0 d.»
+      if(daysAgo===0)return (railCtx==='idag'?lab('I DAG'):'')+big(time);
+      if(daysAgo===1)return big(time);                                        // i går: kun klokkeslett (uten «-N d.»)
+      if(+td>=+ww)return lab(time)+wd(WDU[t.getDay()].toUpperCase());         // denne/forrige/uken før: klokkeslett + 3-bokstavs ukedag (uten «-N d.»)
+      return la(dgr);                                                         // eldre: kun «-N d.»
     }
     // ---------- kommende ----------
     const diff=Math.round((+td-+d0)/864e5),wk2=new Date(+wk0+14*864e5);
@@ -576,7 +573,7 @@
     return '<button class="actchip '+a.cls+'" data-na="'+na+'" title="Huk av når handlingen er gjort">'
       +'<span class="box"></span>'+(a.ico?'<span class="a-ico">'+a.ico+'</span>':'')+a.label+'</button>'+info;
   }
-  function cardHTML(it){
+  function cardHTML(it,railCtx){
     const n=now(),t=it.dato?p(it.dato):null;
     const late=(t&&t<n)?' late':'';
     const age=it.alder?' <span class="cn-age '+ageCls(it.alder)+'">'+it.alder+' år</span>':'';
@@ -588,7 +585,7 @@
       :'<button class="btn dim act-navedit" title="Mangler adresse — trykk for å legge inn">Naviger</button>';
     const kom=it.kommentar?'«'+esc(it.kommentar)+'»':'<span style="color:var(--ink-faint)">Ingen kommentar</span>';
     return '<div class="card opf-card'+late+'" data-id="'+it.id+'">'
-      +'<div class="opf-rail"><button class="when-edit" title="Endre dato/tid">'+railHTML(it)+'</button></div>'
+      +'<div class="opf-rail"><button class="when-edit" title="Endre dato/tid">'+railHTML(it,railCtx)+'</button></div>'
       +'<div class="opf-body">'
       +'<div class="opf-ident">'
       +'<div class="opf-cust"><div class="cn" title="Trykk for å redigere">'+(esc(it.navn)||'—')+age+'</div></div>'
@@ -637,12 +634,12 @@
     $('cntGjore').textContent=muste.length;
     $('cntGjore').classList.toggle('red',muste.some(i=>bucket(i)==='forfalt')); // rød kun ved forfalt
     $('cntUten').textContent=act.filter(i=>!i.dato&&!naOf(i)).length;
-    const earlierForf=act.filter(i=>!!i.dato&&P(i)<td0); // forfalt før i dag = det «Forfalte»-fanen viser
-    $('cntForf').textContent=earlierForf.length;$('cntForf').classList.toggle('red',earlierForf.length>0);
+    const alleForf=act.filter(overdue); // alle forfalte (inkl. forfalt i dag) = det «Forfalte»-fanen viser
+    $('cntForf').textContent=alleForf.length;$('cntForf').classList.toggle('red',alleForf.length>0);
 
     const L=t=>t;   // seksjonsoverskrift uten antall
     const groups=[]; // [label, arr, cls, force]
-    const G=(lab,arr,cls,force)=>groups.push([lab,arr,cls||'',!!force]);
+    const G=(lab,arr,cls,force,railCtx)=>groups.push([lab,arr,cls||'',!!force,railCtx]);
 
     if(view==='gjore'){
       const sec=k=>byDate(act.filter(i=>bucket(i)===k));
@@ -658,14 +655,19 @@
     } else { // avtaler (hovedfanen «Alle» er fjernet; ev. view==='alle' faller hit)
       const dated=act.filter(i=>i.dato);
       const fut=byDate(dated.filter(i=>!overdue(i)));
-      const forfIdag=byDate(dated.filter(i=>overdue(i)&&P(i)>=td0)); // dato i dag, tid passert
-      const forfEldre=byDateDesc(dated.filter(i=>P(i)<td0));         // dato før i dag — synkende (mest nylig øverst)
+      const forfIdag=byDate(dated.filter(i=>overdue(i)&&P(i)>=td0)); // dato i dag, tid passert (vises også i «I dag»-visningen)
       if(sub==='idag'){
-        if(forfIdag.length)G(L('Forfalt i dag'),forfIdag,'forfalt');
+        if(forfIdag.length)G(L('Forfalt i dag'),forfIdag,'forfalt',false,'idag'); // rail viser «I DAG» over klokkeslett (kun her)
         const today=fut.filter(i=>P(i)<tm0);
         G(L('I dag'),today,'',true);
-      } else if(sub==='forfalte'){
-        if(forfEldre.length)G(L('Forfalte'),forfEldre,'forfalt');
+      } else if(sub==='forfalte'){ // gruppert: I dag · I går · Denne uken · Forrige uke · Uken før · Eldre (nyest øverst, kun ikke-tomme)
+        const od=byDateDesc(dated.filter(overdue)),wk0=startOfWeek(n);
+        const yd=+td0-864e5,lw=+wk0-7*864e5,ww=+wk0-14*864e5;
+        const fb=new Map([['idag',[]],['igar',[]],['denne',[]],['forrige',[]],['ukenfor',[]],['eldre',[]]]);
+        od.forEach(function(i){const d=+startOfDay(P(i));
+          fb.get(d===+td0?'idag':d===yd?'igar':d>=+wk0?'denne':d>=lw?'forrige':d>=ww?'ukenfor':'eldre').push(i);});
+        [['idag','I dag'],['igar','I går'],['denne','Denne uken'],['forrige','Forrige uke'],['ukenfor','Uken før'],['eldre','Eldre']]
+          .forEach(function(p){const a=fb.get(p[0]);if(a.length)G(L(p[1]),a,'forfalt');});
       } else { // alle (avtaler-subfane): kun kommende — I dag / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (forfalte vises kun under Forfalte)
         const wk1=new Date(+startOfWeek(n)+7*864e5),wk2=new Date(+startOfWeek(n)+14*864e5);
         const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
@@ -698,7 +700,7 @@
     groups.forEach(g=>{
       const lab=g[0],arr=g[1],cls=g[2],force=g[3];
       if(!arr.length&&!force)return;
-      html+='<div class="grp '+cls+'">'+lab+'</div>'+arr.map(it=>cardHTML(it)).join('');
+      html+='<div class="grp '+cls+'">'+lab+'</div>'+arr.map(it=>cardHTML(it,g[4])).join('');
       if(arr.length)any=true;
     });
     if(!any)html+='<div class="empty">'+empty+'</div>';
