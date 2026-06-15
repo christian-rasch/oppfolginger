@@ -2,7 +2,7 @@
 
 Levende prosjektstatus i repoet. Oppdateres når funksjonalitet endres.
 
-> **Ferskeste UI-status (oppdatert 2026-06-15):** se `HANDOFF_NEXT_CHAT.md` seksjon E. Den gjenspeiler commit `18b9e8a` (handlingsområde, kortnavn, rediger-modal, besøkskommentar-hurtigvalg). Enkelte detaljer lenger ned i dette dokumentet kan være eldre.
+> **Ferskeste status (oppdatert 2026-06-15):** se `HANDOFF_NEXT_CHAT.md` seksjon E + F. Den gjenspeiler dagens UI **og at valgfri sky-synk via Supabase nå er LIVE** på tvers av enheter (detaljer i `SUPABASE_SETUP.md`). Enkelte detaljer lenger ned i dette dokumentet kan være eldre.
 
 ---
 

@@ -86,11 +86,13 @@ der kun «N d.» er rød. Klikk på check-boksen oppdaterer `waitingSince` til n
 
 **Forfalte:** egen gruppert visning (I dag/I går/Denne uken/Forrige uke/…/Eldre), rolige farger, «-N d.» kun i Eldre, badge skjult ved 0. «Fjern alle eldre»-knapp på Eldre-overskriften.
 
-## F. Git- og valideringsstatus (på overleveringstidspunktet)
-- **Branch:** `main`
-- **Siste commit:** `18b9e8a` — «feat: handlingsområde, kortnavn, rediger-modal, besøkskommentar-hurtigvalg»
-  (samler alt UI-arbeidet siden `d55b27d`). Arbeidskopi **ren** etter commit.
-- **IKKE pushet** ennå → endringene er **ikke** rullet ut til GitHub Pages. Push gjøres kun når Christian sier ifra.
+**Sky-synk (Supabase) — LIVE:** valgfri synk av oppfølginger på tvers av enheter. Sync-indikator i headeren («Lokal/Sky av/Logg inn/Synker…/Synket/Ikke synket/Konflikt/Feil») åpner innloggings-/synk-modal (magic link på e-post). localStorage er fortsatt primær; sky er snapshot-modell (én rad pr. bruker, hele lista som JSON i tabellen `oppf_snapshots`, RLS). Synker **kun `oppf:index`**, aldri `oppf:apikey`. Konflikt vises kun når både lokal og sky er endret — aldri auto-overskriving. Config i `CLOUD_SYNC_CONFIG` øverst i hovedscriptet (anon/public-nøkkel, EU/Ireland-prosjekt). Virker kun fra https (GitHub Pages), ikke `file://`. Degraderer trygt hvis ikke konfigurert/offline/ikke innlogget. Full doc: `SUPABASE_SETUP.md`. **Ikke bytt til service_role-nøkkel; ikke bryt lokal-flyten.**
+
+## F. Git- og valideringsstatus (oppdatert 2026-06-15)
+- **Branch:** `main`. Alt UI-arbeid + sky-synk er **committet og pushet** til GitHub.
+- **Live:** `https://christian-rasch.github.io/oppfolginger/` — pushet, rullet ut på GitHub Pages.
+- **Sky-synk via Supabase er LIVE og bekreftet fungerende** på iPad + Mac (se seksjon E + `SUPABASE_SETUP.md`).
+- Push gjøres fortsatt kun når Christian sier eksplisitt ifra.
 - Validering: JavaScriptCore-syntakssjekk **OK** (node finnes ikke i miljøet).
 
 ## G. Rollefordeling / arbeidsrutine
@@ -105,4 +107,4 @@ der kun «N d.» er rød. Klikk på check-boksen oppdaterer `waitingSince` til n
 ## I. Åpne punkter / mulig neste arbeid
 - Finpuss av besøkskommentar/quickComment har gått over flere runder — fortsett gjerne forsiktig her hvis Christian ønsker mer.
 - Vurder om skjemaets dato-chips («Senere i dag») skal samkjøres med dato-popoverens nye hurtigvalg.
-- Når Christian er klar: vurder **push til `main`** for å rulle ut til GitHub Pages.
+- Sky-synk er live; mulig videre arbeid kan være å overvåke at synk er stabil, eller utvide (men hold snapshot-modellen enkel — ikke bygg per-kort-merge uten grunn).
