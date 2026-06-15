@@ -25,7 +25,7 @@
       radial-gradient(900px 700px at 6% 112%, rgba(232,194,107,.06), transparent 52%),
       linear-gradient(180deg,var(--bg1),var(--bg0));
     color:var(--ink);font-family:"Schibsted Grotesk",sans-serif;-webkit-font-smoothing:antialiased;
-    display:grid;place-items:center;min-height:100vh;overflow:hidden}
+    display:grid;place-items:start center;min-height:100vh;overflow:hidden}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9;opacity:.035;mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   .scaler{position:relative}
@@ -301,6 +301,11 @@
   .seg button{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);background:none;border:0;padding:7px 12px;border-radius:7px;cursor:pointer}
   .seg button.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a)}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chips-break{flex-basis:100%;height:0} /* tvinger «i morgen»/«ingen» til egen linje */
+  #fKanal{flex-wrap:wrap} /* plass til 4 knapper (Mail/Ring/Besøk/Få tak i) */
+  #formModal .m-card{position:relative}
+  .f-del{position:absolute;top:18px;right:20px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#ff8a8e;background:rgba(255,90,95,.08);border:1px solid rgba(255,90,95,.4);border-radius:8px;padding:6px 11px;cursor:pointer;transition:.12s}
+  .f-del:hover{background:rgba(255,90,95,.18);color:#fff}
   .chip{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--ink-dim);background:rgba(255,255,255,.04);border:1px solid var(--hair-2);border-radius:9px;padding:8px 11px;cursor:pointer;transition:.15s}
   .chip:hover{border-color:var(--hair);color:var(--ink)}
   .chip.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
@@ -342,10 +347,9 @@
     <section class="view active" id="view-oppfolg">
       <div class="topbar">
         <div class="spacer"></div>
+        <button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button>
         <button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button>
         <button class="nodate-btn" id="btnPaste" title="Lim inn kartskjermbilde — AI fyller ut oppfølgingen">📷 Lim inn</button>
-        <button class="ghost-btn" id="btnExport" title="Kopier alle oppfølginger som JSON (sikkerhetskopi)">Kopier alt</button>
-        <button class="ghost-btn" id="btnImport" title="Lim inn JSON fra «Kopier alt»">Importer</button>
         <button class="btn primary" id="btnNy">+ Ny oppfølging</button>
       </div>
 
@@ -397,6 +401,7 @@
   <div class="modal" id="formModal">
     <div class="m-card">
       <div class="m-title" id="fTitle">Ny oppfølging</div>
+      <button class="f-del" id="fDelete" type="button" title="Slett denne oppfølgingen" style="display:none">Slett</button>
       <div class="ai-note" id="fAiNote" style="display:none"></div>
       <div class="f-grid">
         <div class="f-field"><label>Navn</label><input id="fNavn" autocomplete="off"></div>
@@ -407,13 +412,15 @@
         <div class="f-field"><label>Status</label>
           <div class="seg" id="fStatus"><button data-v="HP" class="on">HP</button><button data-v="HC">HC</button><button data-v="Vula">Vula</button></div></div>
         <div class="f-field"><label>Neste handling</label>
-          <div class="seg" id="fKanal"><button data-v="send_offer">Mail</button><button data-v="call">Ring</button><button data-v="visit">Besøk</button></div></div>
+          <div class="seg" id="fKanal"><button data-v="send_offer">Mail</button><button data-v="call">Ring</button><button data-v="visit">Besøk</button><button data-v="trying_to_reach">Få tak i</button></div></div>
         <div class="f-field full"><label>Oppfølgingsdato</label>
           <div class="chips" id="fChips">
-            <button class="chip" data-dp="senere" type="button">Senere i dag</button>
-            <button class="chip" data-dp="m13" type="button">I morgen 13:00</button>
-            <button class="chip" data-dp="m16" type="button">I morgen 16:00</button>
-            <button class="chip" data-dp="ingen" type="button">Ingen dato</button>
+            <button class="chip" data-dp="t1" type="button">I dag +1t</button>
+            <button class="chip" data-dp="t2" type="button">I dag +2t</button>
+            <button class="chip" data-dp="i2100" type="button">I dag 21:00</button>
+            <div class="chips-break"></div>
+            <button class="chip" data-dp="m21" type="button">I morgen 21:00</button>
+            <button class="chip" data-dp="ingen" type="button">Ingen tidspunkt</button>
           </div>
           <input type="datetime-local" id="fDt" style="margin-top:8px">
         </div>
@@ -481,13 +488,17 @@
     const stage=document.querySelector('.stage');
     const scaler=document.querySelector('.scaler');
     function fit(){
-      const pad=20;
-      const sc=Math.min((window.innerWidth-pad)/1024,(window.innerHeight-pad)/1366,1);
+      const pad=16;
+      const sc=Math.min((window.innerWidth-pad)/1024,1); // skaler etter bredde — ikke zoom ut pga. høyde
+      const h=Math.max(700,(window.innerHeight-2)/sc);   // stativhøyde = vindushøyde → ingen tom luft over/under
       stage.style.transform='scale('+sc+')';
+      stage.style.height=h+'px';
       scaler.style.width=(1024*sc)+'px';
-      scaler.style.height=(1366*sc)+'px';
+      scaler.style.height=(h*sc)+'px';
     }
-    window.addEventListener('resize',fit); fit();
+    window.addEventListener('resize',fit);
+    window.addEventListener('orientationchange',fit);
+    fit();
   })();
   </script>
   <script>
@@ -1292,25 +1303,39 @@
     $('fAdr').value=it?it.adresse:'';
     $('fKom').value=it?it.kommentar:'';
     fStatusV=it?it.status:'HP';segSet($('fStatus'),fStatusV);
-    fHandling=(it&&['send_offer','call','visit'].includes(it.nextAction))?it.nextAction:null;segSet($('fKanal'),fHandling);
+    fHandling=(it&&['send_offer','call','visit','trying_to_reach'].includes(it.nextAction))?it.nextAction:null;segSet($('fKanal'),fHandling);
     fDatoVal=it?it.dato:null;chipSync();
     savingLock=false;$('fSave').disabled=false;
     $('fAiNote').style.display='none';
+    $('fDelete').style.display=editId?'':'none'; // Slett vises kun når en lagret oppfølging redigeres
     $('formModal').classList.add('open');
   }
   function closeForm(){$('formModal').classList.remove('open');}
-  $('fStatus').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fStatusV=b.dataset.v;segSet($('fStatus'),fStatusV);}});
-  $('fKanal').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fHandling=b.dataset.v;segSet($('fKanal'),fHandling);}});
+  // live-lagring: når en lagret oppfølging redigeres, skriv endringer fortløpende (Lagre/klikk-utenfor blir overflødig)
+  function formGather(){return {navn:$('fNavn').value.trim(),alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
+    salgsrunde:$('fRunde').value.trim(),adresse:$('fAdr').value.trim(),status:fStatusV,dato:fDatoVal,kommentar:$('fKom').value.trim()};}
+  let liveTimer=null;
+  function liveCommit(immediate){
+    if(!editId)return;const it=byId(editId);if(!it)return;
+    Object.assign(it,formGather());
+    if(fHandling)it.nextAction=fHandling;
+    clearTimeout(liveTimer);
+    if(immediate)save();else liveTimer=setTimeout(save,400);
+  }
+  $('fStatus').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fStatusV=b.dataset.v;segSet($('fStatus'),fStatusV);liveCommit(true);}});
+  $('fKanal').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fHandling=b.dataset.v;segSet($('fKanal'),fHandling);liveCommit(true);}});
   $('fChips').addEventListener('click',function(e){
     const c=e.target.closest('.chip');if(!c)return;
     const k=c.dataset.dp;
-    if(k==='senere')fDatoVal=senereIdag();
-    else if(k==='m13')fDatoVal=tomorrowAt(13);
-    else if(k==='m16')fDatoVal=tomorrowAt(16);
+    if(k==='t1')fDatoVal=todayPlus(1);
+    else if(k==='t2')fDatoVal=todayPlus(2);
+    else if(k==='i2100')fDatoVal=dayAt(21);
+    else if(k==='m21')fDatoVal=tomorrowAt(21);
     else if(k==='ingen')fDatoVal=null;
-    chipSync();
+    chipSync();liveCommit(true);
   });
-  $('fDt').addEventListener('change',function(){fDatoVal=$('fDt').value||null;chipSync();});
+  $('fDt').addEventListener('change',function(){fDatoVal=$('fDt').value||null;chipSync();liveCommit(true);});
+  ['fNavn','fAlder','fTel','fRunde','fAdr','fKom'].forEach(function(id){$(id).addEventListener('input',function(){liveCommit(false);});});
   function doSave(){
     if(savingLock)return;savingLock=true;$('fSave').disabled=true;
     const navn=$('fNavn').value.trim(),adr=$('fAdr').value.trim();
@@ -1326,7 +1351,7 @@
     }else{
       const o=migrate(f);
       if(fHandling)o.nextAction=fHandling;
-      if(formFromPaste&&pendingCardImg){o.hasImg=true;const im=pendingCardImg;compressThumb(im,function(t){setCardImg(o.id,t);render();});} // lagre kartbildet lokalt på kortet
+      if(formFromPaste&&pendingCardImg){o.hasImg=true;setCardImg(o.id,pendingCardImg);} // lagre kartbildet (full kvalitet ≤1400px) lokalt
       items.push(o);
       toast('Oppfølging lagt til');
     }
@@ -1335,20 +1360,25 @@
     setTimeout(function(){savingLock=false;$('fSave').disabled=false;},600);
   }
   $('fSave').addEventListener('click',doSave);
-  $('fCancel').addEventListener('click',function(){pendingCardImg=null;formFromPaste=false;if(!savingLock)closeForm();});
+  $('fCancel').addEventListener('click',function(){pendingCardImg=null;formFromPaste=false;if(!savingLock){closeForm();render();}});
+  $('fDelete').addEventListener('click',function(){
+    if(!editId)return;
+    if(!confirm('Slette denne oppfølgingen helt? Dette kan ikke angres.'))return;
+    const id=editId,it=byId(id),ix=it?items.indexOf(it):-1;
+    if(ix>=0)items.splice(ix,1);
+    delCardImg(id);save();closeForm();render();toast('Oppfølging slettet');
+  });
   $('formModal').addEventListener('click',function(e){if(e.target===$('formModal')&&!savingLock)doSave();}); // klikk på mørk overlay = lagre (ikke avbryt)
   $('formModal').addEventListener('keydown',function(e){ // Enter = lagre; Shift+Enter = linjeskift i kommentar
     if(e.key==='Enter'&&!e.shiftKey&&!savingLock&&$('formModal').classList.contains('open')){e.preventDefault();doSave();}
   });
   $('fDt').addEventListener('click',function(){try{if(this.showPicker)this.showPicker();else this.focus();}catch(_){this.focus();}}); // hele datofeltet åpner kalenderen
   $('btnNy').addEventListener('click',function(){pendingCardImg=null;formFromPaste=false;openForm(null);});
+  // hent nyeste versjon (cache-omgåelse) — slipper å re-installere appen på hjemskjerm
+  $('btnReload').addEventListener('click',function(){location.href=location.pathname+'?t='+Date.now();});
 
   // ---------- sikkerhetskopi: Kopier alt / Importer ----------
-  $('btnExport').addEventListener('click',function(){
-    copyText(JSON.stringify({v:1,exported:new Date().toISOString(),items:items}),
-      'Kopiert '+items.length+' oppfølginger');
-  });
-  $('btnImport').addEventListener('click',function(){$('impTa').value='';$('impModal').classList.add('open');});
+  // «Kopier alt» / «Importer» er fjernet (erstattet av sky-synk)
   $('impCancel').addEventListener('click',function(){$('impModal').classList.remove('open');});
   $('impModal').addEventListener('click',function(e){if(e.target===$('impModal'))$('impModal').classList.remove('open');});
   $('impGo').addEventListener('click',function(){
@@ -1402,6 +1432,7 @@
   function imgMap(){try{return JSON.parse(localStorage.getItem('oppf:cardimg')||'{}')||{};}catch(e){return {};}}
   function getCardImg(id){const m=imgMap();return (m&&m[id])||null;}
   function setCardImg(id,durl){const m=imgMap();m[id]=durl;try{localStorage.setItem('oppf:cardimg',JSON.stringify(m));}catch(e){toast('Klarte ikke å lagre kartbildet (lite lagringsplass)');}}
+  function delCardImg(id){const m=imgMap();if(m[id]){delete m[id];try{localStorage.setItem('oppf:cardimg',JSON.stringify(m));}catch(e){}}}
   // liten miniatyr for lagring (holder localStorage lite siden bildet ikke synkes)
   function compressThumb(durl,cb){
     const img=new Image();
@@ -1474,8 +1505,8 @@
     return 'Du ser et skjermbilde fra en norsk dørsalg-app: et flyfoto-kart med kundepins (FORNAVN + alder, noen med et blått notat ved pinen) og et hvitt infopanel nederst for valgt kunde. Etiketter kan være engelske (CUSTOMER, AGE, INFRASTRUCTURE).\n'
     +'Naa: '+nowCtx()+'.\n\n'
     +'Les ut informasjonen og svar med KUN ett gyldig JSON-objekt, ingen markdown og ingen forklaring:\n'
-    +'{"navn":"fullt navn fra CUSTOMER","alder":tall fra AGE,"telefon":"nummer hvis synlig, ellers tom streng","adresse":"adressen oeverst i panelet, med postnr/sted hvis vist","salgsrunde":"KORT stedsnavn + nummer fra salgsrunde-linja under saksnummer-lenken — f.eks. «Hoeybraaten 2». IKKE hele linja (ikke «FTTH Oslo Hoeybraaten 2_Juli_26», ikke FTTH/by/maaned/aar)","status":"HP eller HC eller Vula, fra INFRASTRUCTURE","kommentar":"teksten i det blaa notatet paa kartet som hoerer til pinen med samme fornavn og alder som kunden i panelet, skrevet av ordrett — ellers tom streng","pinNavn":"fornavnet paa den matchende pinen, ellers tom","pinAlder":tall eller null,"pinMatch":true/false — om pinens fornavn+alder stemmer med CUSTOMER+AGE,"kanal":"mail hvis notatet sier noe om aa sende mail/e-post, ring hvis det sier ring/ringe, ellers besok","lovetMail":true/false — om notatet lover aa sende mail/tilbud,"dato":"YYYY-MM-DDTHH:MM eller null"}\n\n'
-    +'Datoregler (alltid frem i tid): notatet sier senere i dag -> naa + 2 timer rundet opp til hel/halv time. I morgen uten klokkeslett -> i morgen 13:00. I morgen foer felt -> i morgen 14:00. Eksplisitt klokkeslett -> bruk det. Ingen tidshint i notatet -> null.\n'
+    +'{"navn":"fullt navn fra CUSTOMER","alder":tall fra AGE,"telefon":"nummer hvis synlig, ellers tom streng","adresse":"adressen oeverst i panelet, med postnr/sted hvis vist","salgsrunde":"KORT stedsnavn + nummer fra salgsrunde-linja under saksnummer-lenken — f.eks. «Hoeybraaten 2». IKKE hele linja (ikke «FTTH Oslo Hoeybraaten 2_Juli_26», ikke FTTH/by/maaned/aar)","status":"HP eller HC eller Vula, fra INFRASTRUCTURE","kommentar":"teksten i det blaa notatet paa kartet som hoerer til pinen med samme fornavn og alder som kunden i panelet, skrevet av ordrett — ellers tom streng","pinNavn":"fornavnet paa den matchende pinen, ellers tom","pinAlder":tall eller null,"pinMatch":true/false — om pinens fornavn+alder stemmer med CUSTOMER+AGE,"kanal":"mail hvis notatet sier noe om aa sende mail/e-post, ring hvis det sier ring/ringe, ellers besok","lovetMail":true/false — om notatet lover aa sende mail/tilbud,"nextAction":"foreslaatt neste handling ut fra notatet: send_offer (skal sende mail/tilbud), call (skal ringe), visit (skal dra innom/besoeke), trying_to_reach (skal faa tak i / proeve aa naa kunden) — ellers tom streng","dato":"YYYY-MM-DDTHH:MM eller null"}\n\n'
+    +'Datoregler (alltid frem i tid, bruk «Naa» over som referanse): Eksplisitt klokkeslett -> bruk det. «Senere i dag» -> naa + 2 timer rundet opp til hel/halv time. Dag/dato uten klokkeslett -> kl 12:00. Henvisning til en UKE (til uken, neste uke, om 1 uke) -> mandag kl 12:00 den uken; «om 2 uker» -> mandag kl 12:00 to uker frem. Henvisning til en MAANED (f.eks. «hjemme i juli») -> den 1. i den maaneden kl 12:00; «paa reise/borte ut <maaned>» -> den 1. i MAANEDEN ETTER kl 12:00. Noe som skal GJOERES (dra/stikke innom, komme tilbake, ringe, sende tilbud e.l.) uten at dag er nevnt -> i morgen kl 12:00. Rene info-notater uten noen handling -> null.\n'
     +'Ikke dikt opp verdier: bruk tom streng eller null naar noe ikke er synlig i bildet.';
   }
   async function callClaude(img){
@@ -1501,6 +1532,7 @@
     const k=String(o.kanal||'').toLowerCase();
     o.kanal=k==='mail'?'mail':(k==='ring'?'ring':'besok');
     o.lovetMail=!!o.lovetMail;
+    const NAI=['send_offer','call','visit','trying_to_reach'];const nna=String(o.nextAction||'').toLowerCase();o.nextAction=NAI.indexOf(nna)>=0?nna:'';
     if(typeof o.dato==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(o.dato)){
       o.dato=o.dato.slice(0,16);
       if(p(o.dato)<now())o.dato=null; // alltid frem i tid
@@ -1616,13 +1648,16 @@
     aiKey='';store.set(KEYK,'');$('keyInp').value='';aiWarm=false;closeKey();toast('API-nøkkel fjernet');
   });
   function openFormFromAI(o){
-    openForm(null);
+    // opprett + lagre oppfølgingen med en gang, og åpne den i redigering (videre endringer auto-lagres)
+    const card=migrate({navn:o.navn,alder:o.alder||null,telefon:o.telefon,salgsrunde:o.salgsrunde,
+      adresse:o.adresse,status:o.status,dato:o.dato||null,kommentar:o.kommentar});
+    const na=o.nextAction||(o.lovetMail?'send_offer':'');
+    if(na&&NA_KEYS.includes(na))card.nextAction=na;
+    if(pendingCardImg){card.hasImg=true;setCardImg(card.id,pendingCardImg);} // full kvalitet ≤1400px, lokalt
+    pendingCardImg=null;formFromPaste=false;
+    items.push(card);save();render();
+    openForm(card); // edit-modus → live-lagring
     $('fTitle').textContent='Ny oppfølging — fra skjermbilde';
-    $('fNavn').value=o.navn;$('fAlder').value=o.alder||'';$('fTel').value=o.telefon;
-    $('fRunde').value=o.salgsrunde;$('fAdr').value=o.adresse;$('fKom').value=o.kommentar;
-    fStatusV=o.status;segSet($('fStatus'),fStatusV);
-    fHandling=o.lovetMail?'send_offer':null;segSet($('fKanal'),fHandling);
-    fDatoVal=o.dato||null;chipSync();
     const nEl=$('fAiNote');
     if(o.pinMatch){nEl.textContent='✓ Pin '+(o.pinNavn||'')+(o.pinAlder?(' '+o.pinAlder):'')+' matcher kortet';nEl.className='ai-note ok';nEl.style.display='';}
     else{nEl.textContent='⚠ Fant ingen pin som matcher navn + alder — sjekk feltene';nEl.className='ai-note warn';nEl.style.display='';}
