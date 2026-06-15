@@ -270,6 +270,23 @@
 
   .modal{position:fixed;inset:0;z-index:180;background:rgba(5,7,12,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
   .modal.open{display:flex}
+  /* sky-synk: indikator + modal */
+  .cloud-ind{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.04em;white-space:nowrap}
+  .cloud-ind[data-cs="synced"]{color:var(--mint);border-color:rgba(61,245,197,.4)}
+  .cloud-ind[data-cs="dirty"]{color:var(--gold);border-color:rgba(232,194,107,.4)}
+  .cloud-ind[data-cs="syncing"]{color:var(--ink-dim)}
+  .cloud-ind[data-cs="login"]{color:var(--ink-dim)}
+  .cloud-ind[data-cs="conflict"]{color:var(--gold);border-color:rgba(232,194,107,.6)}
+  .cloud-ind[data-cs="error"]{color:var(--red);border-color:rgba(255,90,95,.55)}
+  .cloud-card{width:min(420px,94vw)}
+  .cloud-row{margin:10px 0}
+  .cloud-row input{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
+  .cloud-row input:focus{border-color:rgba(61,245,197,.55)}
+  .cloud-muted{color:var(--ink-dim);font-size:13px;line-height:1.5}
+  .cloud-muted code{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink)}
+  .cloud-btns{display:flex;gap:9px}
+  .cloud-status-line,.cloud-conflict-info{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-faint)}
+  .cloud-conflict-info{color:var(--ink-dim);font-size:12px;margin-top:8px}
   .m-card{width:min(640px,94vw);max-height:92vh;overflow:auto;background:#0d1019;border:1px solid var(--hair);border-radius:18px;padding:22px 24px;box-shadow:0 40px 120px -20px rgba(0,0,0,.9);color:var(--ink);font-family:"Schibsted Grotesk",sans-serif}
   .m-title{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:16px}
   .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
@@ -325,6 +342,7 @@
     <section class="view active" id="view-oppfolg">
       <div class="topbar">
         <div class="spacer"></div>
+        <button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button>
         <button class="nodate-btn" id="btnPaste" title="Lim inn kartskjermbilde — AI fyller ut oppfølgingen">📷 Lim inn</button>
         <button class="ghost-btn" id="btnExport" title="Kopier alle oppfølginger som JSON (sikkerhetskopi)">Kopier alt</button>
         <button class="ghost-btn" id="btnImport" title="Lim inn JSON fra «Kopier alt»">Importer</button>
@@ -438,6 +456,23 @@
     </div>
   </div>
 
+  <div class="modal" id="cloudModal">
+    <div class="m-card cloud-card">
+      <div class="m-title">Sky-synk</div>
+      <div id="cloudBody"></div>
+      <div class="m-foot"><button class="btn" id="cloudClose">Lukk</button></div>
+    </div>
+  </div>
+
+  <div class="modal" id="cloudConflictModal">
+    <div class="m-card cloud-card">
+      <div class="m-title">Synk-konflikt</div>
+      <div class="cloud-muted">Både denne enheten og skyen har endringer siden sist synk. Velg hvilken du vil beholde — ingenting slettes før du velger.</div>
+      <div id="cloudConflictInfo" class="cloud-conflict-info"></div>
+      <div class="m-foot"><button class="btn" id="cfgCancel">Avbryt</button><button class="btn" id="cfgCloud">Bruk skydata</button><button class="btn primary" id="cfgLocal">Bruk denne enheten</button></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"><span id="toastMsg"></span><button class="t-undo" id="toastUndo" style="display:none">Angre</button></div>
 
   <script>
@@ -523,7 +558,185 @@
   const KEY='oppf:index';
   let items=[];
   const byId=id=>items.find(i=>i.id===id);
-  function save(){store.set(KEY,JSON.stringify(items));}
+  function save(){store.set(KEY,JSON.stringify(items));cloudOnLocalSave();}
+
+  /* ============================================================
+     SKY-SYNK (valgfri, Supabase). Lokal localStorage er alltid primær;
+     alt nedenfor er no-op hvis ikke konfigurert / offline / ikke innlogget.
+     Synker KUN oppf:index (aldri oppf:apikey). Snapshot-modell: én rad pr bruker.
+     ============================================================ */
+  const CLOUD_SYNC_CONFIG={
+    supabaseUrl:"PASTE_SUPABASE_URL_HERE",
+    supabaseAnonKey:"PASTE_SUPABASE_ANON_OR_PUBLISHABLE_KEY_HERE",
+    table:"oppf_snapshots"
+  };
+  // Merk: anon/publishable-nøkkel er trygg i statisk fil — sikkerheten ligger i RLS + innlogging.
+  // Bruk ALDRI service_role-nøkkel her.
+  const CKEY={dev:'oppf:cloud:deviceId',hash:'oppf:cloud:lastHash',srv:'oppf:cloud:lastServerAt',pull:'oppf:cloud:lastPullAt'};
+  const CLOUD_LBL={off:'Lokal',unconfigured:'Sky av',login:'Logg inn',syncing:'Synker…',synced:'Synket',dirty:'Ikke synket',conflict:'Konflikt',error:'Feil'};
+  let sbClient=null,sbUser=null,cloudState='off',cloudPushTimer=null,conflictData=null;
+
+  function isCloudConfigured(){
+    const c=CLOUD_SYNC_CONFIG;
+    return !!(c.supabaseUrl&&c.supabaseAnonKey&&!/PASTE_/.test(c.supabaseUrl)&&!/PASTE_/.test(c.supabaseAnonKey));
+  }
+  function loadSupabaseLib(){
+    return new Promise(function(res){
+      if(window.supabase&&window.supabase.createClient)return res(true);
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      s.onload=function(){res(!!(window.supabase&&window.supabase.createClient));};
+      s.onerror=function(){res(false);};
+      document.head.appendChild(s);
+    });
+  }
+  function getSupabaseClient(){
+    if(sbClient)return sbClient;
+    if(!isCloudConfigured()||!window.supabase||!window.supabase.createClient)return null;
+    try{sbClient=window.supabase.createClient(CLOUD_SYNC_CONFIG.supabaseUrl,CLOUD_SYNC_CONFIG.supabaseAnonKey,
+      {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});}catch(e){sbClient=null;}
+    return sbClient;
+  }
+  function deviceId(){let d=null;try{d=localStorage.getItem(CKEY.dev);}catch(e){}
+    if(!d){d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);try{localStorage.setItem(CKEY.dev,d);}catch(e){}}return d;}
+  function cmeta(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function setCmeta(k,v){try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}}
+  // deterministisk hash av lista (djb2) — for å se om lokal data er endret siden siste sync
+  function stableFollowupHash(arr){let s;try{s=JSON.stringify(arr);}catch(e){s=String(arr);}
+    let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0)+':'+s.length;}
+
+  function setCloudState(s){cloudState=s;renderCloudStatus();}
+  function renderCloudStatus(){
+    const el=$('cloudInd');
+    if(el){el.textContent=CLOUD_LBL[cloudState]||'Lokal';el.setAttribute('data-cs',cloudState);}
+    const m=$('cloudModal');
+    if(m&&m.classList.contains('open')&&!(document.activeElement&&document.activeElement.id==='cloudEmail'))renderCloudModalBody();
+  }
+
+  // skriv skydata til lokal cache UTEN å trigge ny push (ingen ekko)
+  function setLocalFollowupsFromCloud(data,serverAt){
+    items=(Array.isArray(data)?data:[]).map(migrate);
+    store.set(KEY,JSON.stringify(items));
+    setCmeta(CKEY.hash,stableFollowupHash(items));
+    if(serverAt)setCmeta(CKEY.srv,serverAt);
+    setCmeta(CKEY.pull,new Date().toISOString());
+    render();
+  }
+
+  async function cloudPull(){
+    const c=getSupabaseClient();if(!c||!sbUser)return null;
+    try{const {data:row,error}=await c.from(CLOUD_SYNC_CONFIG.table).select('data,updated_at').eq('user_id',sbUser.id).maybeSingle();
+      if(error)throw error;return row||null;}
+    catch(e){setCloudState('error');return null;}
+  }
+  async function cloudPush(){
+    const c=getSupabaseClient();if(!c||!sbUser)return false;
+    try{
+      const data=items;
+      const {error}=await c.from(CLOUD_SYNC_CONFIG.table).upsert(
+        {user_id:sbUser.id,data:data,client_id:deviceId(),schema_version:1},{onConflict:'user_id'});
+      if(error)throw error;
+      setCmeta(CKEY.hash,stableFollowupHash(data));
+      const {data:row}=await c.from(CLOUD_SYNC_CONFIG.table).select('updated_at').eq('user_id',sbUser.id).maybeSingle();
+      if(row&&row.updated_at){setCmeta(CKEY.srv,row.updated_at);setCmeta(CKEY.pull,new Date().toISOString());}
+      setCloudState('synced');return true;
+    }catch(e){setCloudState('error');return false;}
+  }
+  // hent + sammenlign; push/pull/konflikt etter reglene
+  async function cloudReconcile(){
+    const c=getSupabaseClient();if(!c||!sbUser)return;
+    setCloudState('syncing');
+    const row=await cloudPull();
+    if(cloudState==='error')return; // pull feilet
+    const localData=items,localHash=stableFollowupHash(localData);
+    const lastHash=cmeta(CKEY.hash),lastSrv=cmeta(CKEY.srv);
+    if(!row){ if(localData.length){await cloudPush();} else setCloudState('synced'); return; }
+    const cloudData=Array.isArray(row.data)?row.data:[];
+    const serverChanged=lastSrv?(+new Date(row.updated_at)>+new Date(lastSrv)):true;
+    const localChanged=(localHash!==lastHash);
+    if(!localData.length){ setLocalFollowupsFromCloud(cloudData,row.updated_at);setCloudState('synced');return; }
+    if(!localChanged){ if(serverChanged)setLocalFollowupsFromCloud(cloudData,row.updated_at); setCloudState('synced'); return; }
+    if(serverChanged){ setCloudState('conflict'); showCloudConflict(localData,cloudData,row.updated_at); return; }
+    await cloudPush(); // kun lokal endret
+  }
+  // kalt fra save(): debounced trygg synk
+  function cloudOnLocalSave(){
+    if(!isCloudConfigured()||!sbUser){renderCloudStatus();return;}
+    setCloudState('dirty');
+    clearTimeout(cloudPushTimer);
+    cloudPushTimer=setTimeout(function(){cloudReconcile();},1500);
+  }
+
+  async function cloudSignIn(email){
+    const c=getSupabaseClient();if(!c){toast('Sky-synk ikke konfigurert');return;}
+    setCloudState('syncing');
+    const redirect=location.origin+location.pathname;
+    try{const {error}=await c.auth.signInWithOtp({email:email,options:{emailRedirectTo:redirect}});
+      if(error)throw error;toast('Sjekk e-posten din for innloggingslenke');setCloudState('login');}
+    catch(e){setCloudState('error');toast('Innlogging feilet: '+(e&&e.message||''));}
+  }
+  async function cloudSignOut(){
+    const c=getSupabaseClient();if(c){try{await c.auth.signOut();}catch(e){}}
+    sbUser=null;setCloudState('login'); // lokal data beholdes urørt
+  }
+  async function cloudInit(){
+    if(!isCloudConfigured()){setCloudState('unconfigured');return;}
+    const ok=await loadSupabaseLib();
+    if(!ok){setCloudState('unconfigured');return;} // CDN lastet ikke → app fungerer lokalt
+    const c=getSupabaseClient();if(!c){setCloudState('unconfigured');return;}
+    try{const {data:{session}}=await c.auth.getSession();sbUser=session?session.user:null;}catch(e){sbUser=null;}
+    if(location.hash&&/access_token|refresh_token|[?&]code=|type=/.test(location.hash)){
+      try{history.replaceState(null,'',location.origin+location.pathname+location.search);}catch(e){}}
+    c.auth.onAuthStateChange(function(_evt,session){
+      const was=!!sbUser;sbUser=session?session.user:null;renderCloudStatus();
+      if(!was&&sbUser)cloudReconcile();});
+    if(sbUser)await cloudReconcile(); else setCloudState('login');
+  }
+
+  // ---- sky-synk UI ----
+  function renderCloudModalBody(){
+    const b=$('cloudBody');if(!b)return;
+    if(!isCloudConfigured()){
+      b.innerHTML='<div class="cloud-row cloud-muted">Sky-synk er ikke konfigurert ennå. Legg inn Supabase-URL og nøkkel i <code>CLOUD_SYNC_CONFIG</code> øverst i index.html.</div>';return;}
+    if(sbUser){
+      b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
+        +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>'
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="cloudSyncNow">Synk nå</button><button class="btn" id="cloudLogout">Logg ut</button></div>';
+    }else{
+      b.innerHTML='<div class="cloud-row cloud-muted">Logg inn med e-post for å synke oppfølginger på tvers av enheter. Du får en innloggingslenke på e-post (åpne den på samme enhet).</div>'
+        +'<div class="cloud-row"><input id="cloudEmail" type="email" inputmode="email" autocomplete="email" placeholder="din@epost.no"></div>'
+        +'<div class="cloud-row"><button class="btn primary" id="cloudSendLink">Send innloggingslenke</button></div>'
+        +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>';
+    }
+  }
+  function openCloudModal(){renderCloudModalBody();$('cloudModal').classList.add('open');}
+  function closeCloudModal(){$('cloudModal').classList.remove('open');}
+  function showCloudConflict(localData,cloudData,serverAt){
+    conflictData={cloud:cloudData,serverAt:serverAt};
+    const info=$('cloudConflictInfo');
+    if(info)info.textContent='Denne enheten: '+localData.length+' oppfølginger · Sky: '+(Array.isArray(cloudData)?cloudData.length:0)+' oppfølginger.';
+    $('cloudConflictModal').classList.add('open');
+  }
+  function wireCloudUI(){
+    const ind=$('cloudInd');if(ind)ind.addEventListener('click',openCloudModal);
+    const m=$('cloudModal');
+    if(m)m.addEventListener('click',function(e){
+      if(e.target===m){closeCloudModal();return;}
+      const id=e.target.id;
+      if(id==='cloudClose'){closeCloudModal();return;}
+      if(id==='cloudSendLink'){const em=($('cloudEmail')&&$('cloudEmail').value||'').trim();if(em)cloudSignIn(em);else toast('Skriv inn e-post');return;}
+      if(id==='cloudSyncNow'){cloudReconcile();return;}
+      if(id==='cloudLogout'){cloudSignOut().then(renderCloudModalBody);return;}
+    });
+    const cf=$('cloudConflictModal');
+    if(cf){
+      const close=function(){cf.classList.remove('open');};
+      const lo=$('cfgLocal'),cl=$('cfgCloud'),ca=$('cfgCancel');
+      if(lo)lo.addEventListener('click',function(){close();cloudPush();});
+      if(cl)cl.addEventListener('click',function(){if(conflictData)setLocalFollowupsFromCloud(conflictData.cloud,conflictData.serverAt);close();setCloudState('synced');});
+      if(ca)ca.addEventListener('click',function(){close();setCloudState('dirty');});
+    }
+  }
 
   // ---------- datamodell + migrering (brukes ved innlasting OG import) ----------
   // gyldige neste-handlinger
@@ -1403,6 +1616,7 @@
     render();save();
     try{const k=await store.get(KEYK);if(k)aiKey=String(k);}catch(err){}
     warmupAI(); // varm opp AI-kanalen ved appstart (kaldstart gir SyntaxError)
+    wireCloudUI();cloudInit(); // sky-synk: kobler UI + starter (no-op hvis ikke konfigurert)
   })();
   })();
   </script>
