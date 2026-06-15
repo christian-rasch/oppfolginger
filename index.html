@@ -630,9 +630,9 @@
     const td0=startOfDay(n),tm0=new Date(+td0+864e5),tm1=new Date(+td0+2*864e5);
 
     // tellere på fanene (beholdes — kun seksjonsoverskrifter mister tall)
-    const muste=act.filter(i=>bucket(i));
+    const muste=act.filter(i=>i.nextAction==='send_offer'); // Må gjøres = kun «Husk å send tilbud»
     $('cntGjore').textContent=muste.length;
-    $('cntGjore').classList.toggle('red',muste.some(i=>bucket(i)==='forfalt')); // rød kun ved forfalt
+    $('cntGjore').classList.toggle('red',false); // ingen rød (Må gjøres viser ikke forfalt lenger)
     $('cntUten').textContent=act.filter(i=>!i.dato&&!naOf(i)).length;
     const alleForf=act.filter(overdue); // alle forfalte (inkl. forfalt i dag) = det «Forfalte»-fanen viser
     $('cntForf').textContent=alleForf.length;$('cntForf').classList.toggle('red',alleForf.length>0);
@@ -642,13 +642,17 @@
     const G=(lab,arr,cls,force,railCtx)=>groups.push([lab,arr,cls||'',!!force,railCtx]);
 
     if(view==='gjore'){
-      const sec=k=>byDate(act.filter(i=>bucket(i)===k));
-      [['send_offer','Husk å send tilbud'],['waiting_reply','Venter på svar'],['trying_to_reach','Prøver å nå'],
-       ['call','Ring'],['visit','Besøk'],['lead','🔥Lead']].forEach(function(p){
-        const arr=sec(p[0]);if(arr.length)G(L(p[1]),arr);
-      });
-      const forf=byDateDesc(act.filter(i=>bucket(i)==='forfalt')); // synkende: mest nylig forfalt øverst
-      if(forf.length)G(L('Forfalt / må følges opp nå'),forf,'forfalt');
+      // Må gjøres = kun «Husk å send tilbud» (send_offer), gruppert etter opprettet-dato (ikke oppfølgingsdato)
+      const so=act.filter(i=>i.nextAction==='send_offer');
+      const yd=+td0-864e5,wk0=+startOfWeek(n),lw=wk0-7*864e5;
+      const byCreated=arr=>arr.slice().sort((a,b)=>(b.opprettet||0)-(a.opprettet||0)); // nyest opprettet først
+      const cat=function(i){const o=+i.opprettet;if(!o||isNaN(o))return 'eldre'; // mangler trygg opprettet → Eldre
+        const d=+startOfDay(new Date(o));
+        return d===+td0?'idag':d===yd?'igar':d>=wk0?'denne':d>=lw?'forrige':'eldre';};
+      const fb=new Map([['idag',[]],['igar',[]],['denne',[]],['forrige',[]],['eldre',[]]]);
+      so.forEach(function(i){fb.get(cat(i)).push(i);});
+      [['idag','Fra i dag'],['igar','Fra i går'],['denne','Fra resten av uken'],['forrige','Fra forrige uke'],['eldre','Eldre']]
+        .forEach(function(p){const a=byCreated(fb.get(p[0]));if(a.length)G(L(p[1]),a);});
     } else if(view==='uten'){
       const ut=byKontakt(act.filter(i=>!i.dato&&!naOf(i)));
       if(ut.length)G(L('Uten tidspunkt'),ut);
