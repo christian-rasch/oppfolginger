@@ -66,6 +66,13 @@
   .grp .gcnt{color:var(--ink-faint);font-weight:700}
   .grp.forfalt{color:#ff7b80} /* forfalt-overskrift: tydelig (litt sterkere) rød tekst; skillelinje arves nøytral fra .grp (som «Alle») */
   .grp.forfalt .gcnt{color:var(--red)}
+  /* underseksjon (f.eks. i «Uten tidspunkt» under hver salgsrunde) — mindre, dempet */
+  .grp.sub{font-size:11px;letter-spacing:.12em;color:var(--ink-faint);margin:10px 0 7px;border-bottom-color:rgba(255,255,255,.035)}
+  /* salgsrunde-boks i «Uten tidspunkt»: subtil kant, kompakt, alt på samme venstremarg */
+  .runde-box{display:flex;flex-direction:column;gap:7px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.015);border-radius:12px;padding:11px 13px}
+  .runde-box>*{flex:none}
+  .runde-box .grp{margin:0;padding-bottom:5px;border-bottom:none} /* salgsrundenavn — boksen rammer inn */
+  .runde-box .grp.sub{margin:0;padding-left:0;padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,.05)} /* underkategori — ingen innrykk, linje ut til kanten */
   .lcard{display:flex;align-items:center;gap:20px;padding:18px 22px;position:relative}
   .lcard .accent{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
   .lcard .when{display:flex;flex-direction:column;align-items:center;min-width:84px;padding-left:8px}
@@ -313,11 +320,11 @@
 
       <div class="napop" id="napop">
         <button data-na="send_offer">Husk å send tilbud</button>
-        <button data-na="waiting_reply">Tilbud er sendt ✅</button>
+        <button data-na="waiting_reply">Tilbud sendt ✅</button>
         <button data-na="trying_to_reach">Prøver å nå</button>
         <button data-na="call"><span class="a-ico">📞</span> Ring</button>
         <button data-na="visit"><span class="a-ico">🚪</span> Besøk</button>
-        <button data-na="lead">🔥Lead</button>
+        <button data-na="lead">🔥Bør kontaktes</button>
       </div>
 
       <div class="dpop" id="dpop">
@@ -559,17 +566,17 @@
     trying_to_reach:{label:'Prøver å nå',cls:'a-reach',ico:''},
     call:{label:'Ring',cls:'a-call',ico:'📞'},
     visit:{label:'Besøk',cls:'a-visit',ico:'🚪'},
-    lead:{label:'🔥Lead',cls:'a-lead',ico:''}
+    lead:{label:'🔥Bør kontaktes',cls:'a-lead',ico:''}
   };
   // dager siden tilbud sendt: «i dag» / «N d siden»
-  const sentAgo=ts=>{const d=daysSince(ts);return d<=0?'i dag':d+' d siden';};
+  const sentAgo=ts=>{const d=daysSince(ts);return d<=0?'i dag':d===1?'i går':d+' d. siden';};
   function actionControl(it){
     const na=NA_KEYS.includes(it.nextAction)?it.nextAction:null;
     if(!na)return '<button class="act-next" title="Velg neste handling">Neste handling</button>';
     const a=NA_META[na];
     let info='';
     if(na==='waiting_reply'){const ts=it.waitingSince||it.opprettet||Date.now();
-      info='<span class="act-info">Tilbud er sendt ✅ · '+sentAgo(ts)+'</span>';}
+      info='<span class="act-info">Tilbud sendt ✅ · '+sentAgo(ts)+'</span>';}
     return '<button class="actchip '+a.cls+'" data-na="'+na+'" title="Huk av når handlingen er gjort">'
       +'<span class="box"></span>'+(a.ico?'<span class="a-ico">'+a.ico+'</span>':'')+a.label+'</button>'+info;
   }
@@ -633,7 +640,7 @@
     const muste=act.filter(i=>i.nextAction==='send_offer'); // Må gjøres = kun «Husk å send tilbud»
     $('cntGjore').textContent=muste.length;
     $('cntGjore').classList.toggle('red',false); // ingen rød (Må gjøres viser ikke forfalt lenger)
-    $('cntUten').textContent=act.filter(i=>!i.dato&&!naOf(i)).length;
+    $('cntUten').textContent=act.filter(i=>!i.dato).length; // alle aktive kort uten dato (uansett handling), hver én gang
     const alleForf=act.filter(overdue); // alle forfalte (inkl. forfalt i dag) = det «Forfalte»-fanen viser
     $('cntForf').textContent=alleForf.length;$('cntForf').classList.toggle('red',alleForf.length>0);
 
@@ -654,8 +661,26 @@
       [['idag','Fra i dag'],['igar','Fra i går'],['denne','Fra resten av uken'],['forrige','Fra forrige uke'],['eldre','Eldre']]
         .forEach(function(p){const a=byCreated(fb.get(p[0]));if(a.length)G(L(p[1]),a);});
     } else if(view==='uten'){
-      const ut=byKontakt(act.filter(i=>!i.dato&&!naOf(i)));
-      if(ut.length)G(L('Uten tidspunkt'),ut);
+      // alle aktive kort UTEN dato (uansett handling). Per salgsrunde i en boks; underseksjoner «🔥Bør kontaktes» (nextAction==='lead') og «Uten tidspunkt» (alle andre)
+      const inn=act.filter(i=>!i.dato);
+      const cre=i=>+i.opprettet||0;                              // mangler → 0 (eldst)
+      const byNew=arr=>arr.slice().sort((a,b)=>cre(b)-cre(a));   // nyeste opprettet først; mangler nederst
+      const m=new Map();
+      inn.forEach(function(i){
+        const k=(i.salgsrunde||'').trim()||'Uten salgsrunde';
+        if(!m.has(k))m.set(k,{ut:[],lead:[],newest:0});
+        const g=m.get(k);
+        if(i.nextAction==='lead')g.lead.push(i);else g.ut.push(i);
+        if(cre(i)>g.newest)g.newest=cre(i);
+      });
+      const sub=(tittel,arr)=>'<div class="grp sub">'+tittel+'</div>'+arr.map(it=>cardHTML(it)).join('');
+      Array.from(m.entries()).sort((a,b)=>b[1].newest-a[1].newest).forEach(function(e){
+        const g=e[1];
+        let box='<div class="grp runde">'+esc(e[0])+'</div>';   // salgsrundenavn
+        if(g.ut.length)box+=sub('Uten tidspunkt',byNew(g.ut));
+        if(g.lead.length)box+=sub('🔥Bør kontaktes',byNew(g.lead));
+        G('<div class="runde-box">'+box+'</div>',[],'raw',true);
+      });
     } else { // avtaler (hovedfanen «Alle» er fjernet; ev. view==='alle' faller hit)
       const dated=act.filter(i=>i.dato);
       const fut=byDate(dated.filter(i=>!overdue(i)));
@@ -703,6 +728,7 @@
     let html='',any=false;
     groups.forEach(g=>{
       const lab=g[0],arr=g[1],cls=g[2],force=g[3];
+      if(cls==='raw'){html+=lab;any=true;return;} // forhåndsbygd HTML (salgsrunde-bokser i «Uten tidspunkt»)
       if(!arr.length&&!force)return;
       html+='<div class="grp '+cls+'">'+lab+'</div>'+arr.map(it=>cardHTML(it,g[4])).join('');
       if(arr.length)any=true;
@@ -726,7 +752,7 @@
     if(na==='waiting_reply'){if(!it.waitingSince)it.waitingSince=Date.now();} // sett hvis mangler
     else it.waitingSince=null;
     save();render();
-    toastUndo((na==='waiting_reply'?'Tilbud er sendt ✅':NA_META[na].label)+' — '+(it.navn||''),
+    toastUndo((na==='waiting_reply'?'Tilbud sendt ✅':NA_META[na].label)+' — '+(it.navn||''),
       function(){it.nextAction=prev;it.waitingSince=prevWS;save();render();});
   }
   // Huk av valgt handling: send_offer → waiting_reply, alle andre → null
