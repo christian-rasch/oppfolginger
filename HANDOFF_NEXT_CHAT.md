@@ -3,100 +3,106 @@
 ## A. Instruks til ny ChatGPT-chat
 - Dette er en **overlevering fra en tidligere, treg ChatGPT-chat**.
 - Bruk **denne filen som eneste tidligere kontekst**.
-- **Ikke** anta terminaltilgang.
-- **Ikke** anta filtilgang.
-- Du skal hjelpe med **vurdering, QA, planlegging og presise Claude Code-prompts** — ikke kode selv.
-- **Svar på norsk.**
+- **Ikke** anta terminaltilgang. **Ikke** anta filtilgang.
+- Din rolle er **planlegging, QA, og å skrive presise Claude Code-prompts** — **ikke** å kode selv.
+- Den faktiske kodingen gjøres av **Claude Code i terminalen** (mot fila `index.html`).
+- **Svar på norsk.** Eier er Christian — norsk dørselger, ikke utvikler.
 - **Ikke** be om den gamle chatten eller lange logger.
+- Første oppgave: les denne, oppsummer status, og foreslå neste konkrete Claude Code-prompt. Ikke start «utvikling» blindt.
 
-## B. Prosjektmappe
-`/Users/christian/Desktop/Claude Prosjekt 1/oppfolginger-github-pakke`
+## B. Prosjektmappe og fil
+- Mappe: `/Users/christian/Desktop/Claude Prosjekt 1/oppfolginger-github-pakke`
+- Hovedfil: **`index.html`** (hele appen — HTML, CSS, JS — ligger i én fil). Ingen backend.
+- Publisering: GitHub Pages. Endringer rulles ut **når noen pusher til `main`**. (Se `deploy-github-pages.md`/minne for URL og repo.)
 
-## C. Hovedfil
-`index.html` (hele appen — HTML, CSS, JS — ligger der).
+## C. Hva appen er
+- Lokal HTML/CSS/JS-app for **oppfølginger i dørsalg**.
+- Stil: mørk **pixel/neon «premium cockpit»**. Fonter: Schibsted Grotesk + JetBrains Mono.
+- Data i **localStorage** (nøkler: `oppf:index`, `oppf:apikey`). Ekte dato (`now()=new Date()`).
+- Brukes mest på **iPad 11"** i felt + desktop.
+- AI-import finnes (📷 Lim inn skjermbilde → JSON → forhåndsutfylt skjema).
 
-## D. Prosjektoppsummering
-- Lokal **HTML/CSS/JS-app** for oppfølginger/kunder/feltselgere (dørsalg).
-- **Mørk pixel/neon-stil.**
-- Endringer gjøres **direkte i `index.html`**.
-- **Claude Code i terminal** gjør de faktiske kodeendringene. **ChatGPT** planlegger/kvalitetssikrer/skriver prompts.
+## D. Faste regler (må alltid følges)
+- Endringer gjøres **kun i `index.html`**. Ikke separat mockup/ny side.
+- **Minste effektive endring** — ikke store omskrivinger uten grunn.
+- Behold mørk pixel/neon-stil. Farge-tokens i `:root`:
+  `--mint #3DF5C5` (utført/positivt), `--gold #E8C26B` (handling gjenstår),
+  `--red #FF5A5F` (kun kritisk/forfalt), `--hair/--hair-2` (kanter), `--ink-*` (tekstnivåer).
+  **Aldri rød for normal fremdrift.**
+- **Ikke** clear localStorage. **Ikke** slett/reset/migrer/seed ekte brukerdata.
+- **Ikke** commit eller push uten **eksplisitt** beskjed fra Christian.
+- Base64-bilder (THUMB/FULL/kart) skal aldri skrives på nytt — gjenbrukes via grep.
+- **Skal aldri tilbake:** `DEMO=true`, `DEMO_NOW`, stort demo-datasett. `seed()` returnerer tom liste.
+- QA etter endring: **syntakssjekk av JS er obligatorisk.** `node` finnes ikke alltid →
+  trekk ut siste script-blokk og kjør `osascript -l JavaScript` med `new Function(src)`
+  (fanger SyntaxError uten å kjøre koden). Ingen automatisert UI-/headless-test i miljøet → visuell QA gjøres manuelt.
 
-## E. Nåværende produktregler
+## E. Nåværende UI-/produktstatus (oppdatert)
 
-**Hovedfaner:** Avtaler · Må gjøres · Uten tidspunkt. Hovedfanen **«Alle» er fjernet** (skal ikke tilbake).
+**Hovedfaner:** `Avtaler` · `Må gjøres` · `Uten tidspunkt`. (Hovedfanen «Alle» er fjernet og skal ikke tilbake.)
 
-**Avtaler-subfaner:** I dag · I morgen · Alle · Forfalte.
-- **Avtaler → Alle viser IKKE forfalte** — kun kommende, gruppert: Denne uken · Neste uke · Resten av {måned} · måned for måned. Kun ikke-tomme grupper, ingen tall i overskrifter.
-- Forfalte vises under **Forfalte**, samt «Forfalt i dag» i I dag-visningen og «Forfalt / må følges opp nå» i Må gjøres.
+**Avtaler-subfaner:** `I dag` · `Alle` · `Forfalte`. (Subfanen «I morgen» er fjernet.)
+- `Avtaler → Alle` viser **kun kommende** avtaler (ikke forfalte), gruppert: Denne uken · Neste uke · Resten av {måned} · måned for måned. Kun ikke-tomme grupper, ingen tall i overskrifter.
+- Forfalte vises under `Forfalte`; «Forfalt i dag» vises i `I dag`-visningen og i `Må gjøres`.
 
-**nextAction — gyldige verdier + labels:**
-- `null` = Neste handling
-- `send_offer` = Husk å send tilbud
-- `waiting_reply` = Venter på svar (dropdown-valg: **Tilbud er sendt ✅**)
-- `trying_to_reach` = Prøver å nå
-- `call` = Ring
-- `visit` = Besøk
-- `lead` = **🔥Lead** (ikke «Lead🔥»)
-- Det skal stå **Husk å send tilbud**, ikke «Send tilbud». **«Tilbud skal sendes»** skal ikke tilbake.
+**nextAction (kortenes «neste handling») — gyldige verdier + labels:**
+- `null` = «Neste handling» (knapp som åpner dropdown)
+- `send_offer` = «Husk å send tilbud»
+- `waiting_reply` = «Venter på svar»
+- `trying_to_reach` = «Prøver å nå»
+- `call` = «Ring»
+- `visit` = «Besøk»
+- `lead` = «🔥Bør kontaktes»
+- Checkbox-logikk (huk av valgt handling): `send_offer`→`waiting_reply` (+`waitingSince` settes);
+  `waiting_reply`→`null` (+`waitingSince` nullstilles); alle andre→`null`. Angre via toast.
 
-**Checkbox-logikk:**
-- `send_offer` → `waiting_reply` + `waitingSince` settes.
-- `waiting_reply` → `null` + `waitingSince` nullstilles.
-- alle andre → `null`. Angre gjenoppretter både `nextAction` og `waitingSince`.
+**Kortets handlingsområde:** én kompakt rad: handling-chip + (kun ved `waiting_reply`) statusen
+«Tilbud sendt …» med klikkbar **check-boks** (ikke ✅-emoji, ikke pil). Tekst: «Tilbud sendt i dag / i går / N d. siden»
+der kun «N d.» er rød. Klikk på check-boksen oppdaterer `waitingSince` til nå. **«Logg kontakt» er fjernet fra kortene** (data `sistKontakt`/`kontaktlogg` finnes fortsatt, vises bare ikke).
 
-**waiting_reply-tekst (liten, dempet):** «Tilbud er sendt ✅ · i dag», «… · 1 d siden», «… · 2 d siden», osv.
+**Kortnavn:** vises som **kun første fornavn + siste etternavn** (data uendret), mindre/lettere font, én linje med ellipsis. Alder-badge på samme linje.
 
-**Besøkskommentar:** klikkbar/redigerbar direkte, **fast størrelse, 3 linjer**, lang tekst klippes, **ingen «Vis mer»**, **ingen blyant**, kortet vokser ikke permanent.
+**Besøkskommentar (på kort):**
+- Fast høyde (~84px), plass til **3 synlige linjer**. Ingen «Vis mer», ingen blyantikon.
+- **Klikk i boksen = rediger fritekst direkte** (contenteditable). Lagres i vanlig `kommentar`-felt.
+- Lite **`+` som hjørneflik** øverst til høyre åpner **hurtigvalg-meny** (2 kolonner, iPad-vennlig, over/oppe-til-høyre). `+` lyser neon-grønt på hover/aktiv.
+- Hurtigvalg (quickComment): `📞 Ingen svar` · `📅 Ring tilbake` · `💳 Må sjekke pris.` · `🔥 Skal inn!` · `Fjern`.
+- Valgt quickComment lagres i **egne felt** `quickComment` + `quickCommentAt` (aldri limt inn i friteksten). Vises som **inline slate-chip** først i feltet, med tidspunkt i parentes («(i dag)», «(1 d.)», «(2 d.)» …). Fritekst flyter etter chipen. Kun **ett** aktivt quickComment per kort; nytt valg erstatter forrige. `Fjern` fjerner quickComment uten å slette friteksten.
 
-**Datoblokk:** klikkbar, åpner date-popover; **ingen «Endre»**, **ingen blyant**; «Ingen dato» vises som **«—»**.
+**Datoblokk + dato-popover:** klikk på datoblokken åpner popover. Hurtigvalg:
+`I dag om 1t` · `I dag om 2t` · `I dag 21:00` · `I morgen 13:00` · `I morgen 16:00` · `I morgen 21:00` · egen dato/tid · `Ingen dato`.
+- Egen dato/tid: dato + time + minutt. Gyldige timer: 00, 08–23 (aldri 01–07). Minutter: 00/15/45.
+  **Minuttvelgeren åpner alltid på `00`** (uavhengig av lagret tid; endres ikke før «Sett»).
+- «Ingen dato» vises som «—». Ingen manuell tasting i kalender-baren.
+- (Merk: skjemaet «Ny/Rediger oppfølging» har egne dato-chips der «Senere i dag» fortsatt finnes — det er en annen UI enn popoveren.)
 
-**Date-popover:** hurtigvalg Senere i dag · I morgen 13:00 · I morgen 16:00 · egen dato/tid · Ingen dato.
-- Hele dato-baren er touchvennlig og **åpner kalenderen** (ikke bare ikonet). **Ingen manuell tasting.**
-- **Timer 01–07 kan ikke velges** (kun 00, 08–23). **Minutter kun 00, 15, 45.**
+**«Ny / Rediger oppfølging»-modal:** felt navn/alder/telefon/salgsrunde/adresse, Status (HP/HC/Vula),
+«Neste handling» (Mail→`send_offer`, Ring→`call`, Besøk→`visit`), dato (chips + datetime-local), besøkskommentar.
+- **Fjernet:** «Sjanse»/stjerner og «Løfte»/«Husk å send tilbud»-knapp.
+- **Enter** lagrer (Shift+Enter = linjeskift i kommentar). **Klikk på mørk overlay = lagre.** «Avbryt» lukker uten å lagre. Datofeltet åpner kalender ved klikk hvor som helst.
 
-**Dato-/tidvisning:**
-- I dag: klokkeslett øverst, «I dag» under. I morgen: «I morgen» øverst, klokkeslett under. Neste/nær uke: ukedag øverst, klokkeslett under. Lengre frem: dato øverst, relativ tekst under.
-- Forfalt egen visning: I dag/I går + tid; tidligere denne uken (ukedag + «Denne uken» + «-N d siden»); forrige uke («Forrige uke» + 3-bokstavs ukedag + «-N d siden»); 2/3 uker siden; >4 uker → 3-bokstavs måned + «-N d siden». Forfalt vises rødt.
+**Gruppeoverskrifter:** dempet **blågrå/slate** farge (`#9fb6c7`) på Avtaler/Må gjøres-grupper.
+`.grp.forfalt` beholder rød; underkategori `.grp.sub` (Uten tidspunkt) beholder dempet stil.
 
-**DEMO-modus skal IKKE tilbake:** `DEMO=true`, `DEMO_NOW`, stort demo-datasett (~52) er fjernet.
+**Forfalte:** egen gruppert visning (I dag/I går/Denne uken/Forrige uke/…/Eldre), rolige farger, «-N d.» kun i Eldre, badge skjult ved 0. «Fjern alle eldre»-knapp på Eldre-overskriften.
 
-**localStorage-regler:** appen bruker ekte dato og localStorage. `save()` skriver, `load()` leser, `seed()` fyller IKKE inn demo-data. Nøkler: `oppf:index`, `oppf:apikey`. Ikke clear localStorage, ikke slett brukerdata.
-
-> Full status finnes i `PROJECT_STATUS.md` i prosjektmappen.
-
-## F. Hva som er viktigst akkurat nå
-- **Bevare kontekst.**
-- **Ikke** fortsette utvikling blindt.
-- **Første oppgave i ny chat:** kontrollere denne handoffen og lage neste konkrete Claude Code-prompt.
-
-## G. Hva ny ChatGPT-chat IKKE trenger
-- Ikke kopier hele den gamle ChatGPT-chatten.
-- Ikke kopier lange Claude Code-logger.
-- Ikke bruk `/export`.
-- Ikke lim inn irrelevante terminalutdrag.
-- Ikke last opp gamle skjermbilder som ikke viser nåværende relevant UI/status.
-
-## H. Git- og valideringsstatus
-*(faktiske resultater på overleveringstidspunktet — `index.html` er endret, men IKKE committet)*
-
+## F. Git- og valideringsstatus (på overleveringstidspunktet)
 - **Branch:** `main`
-- **Nåværende commit-hash (før checkpoint):** `4ee56c2` (`Første versjon: oppfølginger-feltapp (index.html) + dokumentasjon`)
-- **`git status --short`:**
-  ```
-   M index.html
-  ?? HANDOFF_NEXT_CHAT.md
-  ?? PROJECT_STATUS.md
-  ```
-  (alt arbeidet siden første commit ligger **ucommittet** i arbeidskopien)
-- **`git diff --stat`:** `index.html | 601 ++++----  (365 insertions(+), 236 deletions(-))`
-- **`git diff --name-only`:** `index.html`
-- **`git diff --check`:** rent — ingen whitespace-/konfliktfeil.
-- **Valideringskommandoer kjørt:** Ingen formelle test/lint/build-kommandoer funnet (ingen `package.json`, `Makefile` eller `README`). Kjørte prosjektets faktiske syntakssjekk (JavaScriptCore: trekk ut script-blokk 2 → `osascript -l JavaScript` + `new Function(src)`).
-- **Resultat av validering:** **SYNTAKS OK.**
-- **Gjenstående risikoer:**
-  - Alt arbeid er ucommittet → bør tas **checkpoint-commit** (kun etter eksplisitt beskjed fra Christian).
-  - Ingen automatisert UI-/headless-test i miljøet (Node/puppeteer ikke tilgjengelig); visuell QA gjøres manuelt i nettleser + skjermbilder.
-  - `CLAUDE.md` ble oppdatert i denne runden (var utdatert) — sjekk at den fortsatt matcher faktisk tilstand ved neste runde.
+- **Siste commit:** `18b9e8a` — «feat: handlingsområde, kortnavn, rediger-modal, besøkskommentar-hurtigvalg»
+  (samler alt UI-arbeidet siden `d55b27d`). Arbeidskopi **ren** etter commit.
+- **IKKE pushet** ennå → endringene er **ikke** rullet ut til GitHub Pages. Push gjøres kun når Christian sier ifra.
+- Validering: JavaScriptCore-syntakssjekk **OK** (node finnes ikke i miljøet).
 
-## I. Anbefalt første handling i ny ChatGPT-chat
-**«Første oppgave er å lese denne handoffen, oppsummere status, peke ut risikoer/uklarheter og lage neste konkrete Claude Code-prompt. Ikke start med kodeendringer før det er gjort.»**
+## G. Rollefordeling / arbeidsrutine
+- **ChatGPT** (du): planlegger, QA, lager presise Claude Code-prompts. Koder ikke selv.
+- **Claude Code (terminal):** gjør de faktiske endringene i `index.html`, kjører syntakssjekk, viser diff, og venter på eksplisitt beskjed før commit/push.
+- Hver runde: tydelig avgrenset mål → Claude Code endrer → syntakssjekk + diff → manuell visuell QA hos Christian → evt. commit etter beskjed.
+
+## H. Hva ny ChatGPT-chat IKKE trenger
+- Ikke kopier hele den gamle ChatGPT-chatten eller lange Claude Code-logger. Ikke bruk `/export`.
+- Ikke last opp gamle skjermbilder som ikke viser nåværende UI.
+
+## I. Åpne punkter / mulig neste arbeid
+- Finpuss av besøkskommentar/quickComment har gått over flere runder — fortsett gjerne forsiktig her hvis Christian ønsker mer.
+- Vurder om skjemaets dato-chips («Senere i dag») skal samkjøres med dato-popoverens nye hurtigvalg.
+- Når Christian er klar: vurder **push til `main`** for å rulle ut til GitHub Pages.

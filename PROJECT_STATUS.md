@@ -2,6 +2,8 @@
 
 Levende prosjektstatus i repoet. Oppdateres når funksjonalitet endres.
 
+> **Ferskeste UI-status (oppdatert 2026-06-15):** se `HANDOFF_NEXT_CHAT.md` seksjon E. Den gjenspeiler commit `18b9e8a` (handlingsområde, kortnavn, rediger-modal, besøkskommentar-hurtigvalg). Enkelte detaljer lenger ned i dette dokumentet kan være eldre.
+
 ---
 
 ## A. Kort prosjektbeskrivelse
@@ -30,9 +32,9 @@ Levende prosjektstatus i repoet. Oppdateres når funksjonalitet endres.
 
 **Avtaler-subfaner:**
 - I dag
-- I morgen
 - Alle
 - Forfalte
+- (subfanen «I morgen» er fjernet)
 
 **Regel:** **Avtaler → Alle skal IKKE vise forfalte avtaler** — kun kommende, gruppert: Denne uken · Neste uke · Resten av {måned} · deretter måned for måned. Viser kun ikke-tomme grupper, ingen tall i overskrifter. Forfalte vises under **Forfalte** og relevante forfaltvisninger (Avtaler → I dag har egen «Forfalt i dag»-seksjon; Må gjøres har «Forfalt / må følges opp nå»).
 
@@ -50,7 +52,7 @@ Hvert kort har én «neste handling». Uten valgt handling vises **«Neste handl
 - `trying_to_reach` = **Prøver å nå**
 - `call` = **Ring**
 - `visit` = **Besøk**
-- `lead` = **🔥Lead**
+- `lead` = **🔥Bør kontaktes**
 
 **Viktige label-regler:**
 - Det skal stå **🔥Lead**, ikke «Lead🔥».
