@@ -678,6 +678,7 @@
     cloudPushTimer=setTimeout(function(){cloudReconcile();},1500);
   }
 
+  // Magic link = «første gang»-bootstrap (åpne lenken i Safari på samme enhet).
   async function cloudSignIn(email){
     const c=getSupabaseClient();if(!c){toast('Sky-synk ikke konfigurert');return;}
     setCloudState('syncing');
@@ -685,6 +686,23 @@
     try{const {error}=await c.auth.signInWithOtp({email:email,options:{emailRedirectTo:redirect}});
       if(error)throw error;toast('Sjekk e-posten din for innloggingslenke');setCloudState('login');}
     catch(e){setCloudState('error');toast('Innlogging feilet: '+(e&&e.message||''));}
+  }
+  // Passord-innlogging = virker rett i hjemskjerm-appen på iPad (ingen e-post/lenke).
+  async function cloudSignInPassword(email,pw){
+    const c=getSupabaseClient();if(!c){toast('Sky-synk ikke konfigurert');return;}
+    if(!email||!pw){toast('Skriv e-post og passord');return;}
+    setCloudState('syncing');
+    try{const {error}=await c.auth.signInWithPassword({email:email,password:pw});
+      if(error)throw error;renderCloudModalBody();} // onAuthStateChange håndterer sync + status
+    catch(e){setCloudState('error');toast('Innlogging feilet: '+(e&&e.message||''));}
+  }
+  // Sett/endre passord (mens innlogget) — gjør hjemskjerm-appen selvgående.
+  async function cloudSetPassword(pw){
+    const c=getSupabaseClient();if(!c||!sbUser){toast('Logg inn først');return;}
+    if(!pw||pw.length<6){toast('Passord må være minst 6 tegn');return;}
+    try{const {error}=await c.auth.updateUser({password:pw});
+      if(error)throw error;toast('Passord lagret – bruk e-post + passord på hjemskjerm-appen');renderCloudModalBody();}
+    catch(e){toast('Kunne ikke lagre passord: '+(e&&e.message||''));}
   }
   async function cloudSignOut(){
     const c=getSupabaseClient();if(c){try{await c.auth.signOut();}catch(e){}}
@@ -712,12 +730,18 @@
     if(sbUser){
       b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
         +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>'
-        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="cloudSyncNow">Synk nå</button><button class="btn" id="cloudLogout">Logg ut</button></div>';
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="cloudSyncNow">Synk nå</button><button class="btn" id="cloudLogout">Logg ut</button></div>'
+        +'<div class="cloud-row cloud-muted">Sett et passord for å logge inn i hjemskjerm-appen på iPad (uten e-postlenke):</div>'
+        +'<div class="cloud-row"><input id="cloudNewPw" type="password" autocomplete="new-password" placeholder="nytt passord (min. 6 tegn)"></div>'
+        +'<div class="cloud-row"><button class="btn" id="cloudSavePw">Lagre passord</button></div>';
     }else{
-      b.innerHTML='<div class="cloud-row cloud-muted">Logg inn med e-post for å synke oppfølginger på tvers av enheter. Du får en innloggingslenke på e-post (åpne den på samme enhet).</div>'
+      b.innerHTML='<div class="cloud-row cloud-muted">Logg inn for å synke oppfølginger på tvers av enheter.</div>'
         +'<div class="cloud-row"><input id="cloudEmail" type="email" inputmode="email" autocomplete="email" placeholder="din@epost.no"></div>'
-        +'<div class="cloud-row"><button class="btn primary" id="cloudSendLink">Send innloggingslenke</button></div>'
-        +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>';
+        +'<div class="cloud-row"><input id="cloudPw" type="password" autocomplete="current-password" placeholder="passord"></div>'
+        +'<div class="cloud-row"><button class="btn primary" id="cloudLoginPw">Logg inn</button></div>'
+        +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>'
+        +'<div class="cloud-row cloud-muted">Første gang / glemt passord? Logg inn via e-postlenke (åpne lenken i Safari på samme enhet), og sett deretter et passord.</div>'
+        +'<div class="cloud-row"><button class="btn" id="cloudSendLink">Send innloggingslenke</button></div>';
     }
   }
   function openCloudModal(){renderCloudModalBody();$('cloudModal').classList.add('open');}
@@ -735,7 +759,9 @@
       if(e.target===m){closeCloudModal();return;}
       const id=e.target.id;
       if(id==='cloudClose'){closeCloudModal();return;}
+      if(id==='cloudLoginPw'){const em=($('cloudEmail')&&$('cloudEmail').value||'').trim();const pw=($('cloudPw')&&$('cloudPw').value||'');cloudSignInPassword(em,pw);return;}
       if(id==='cloudSendLink'){const em=($('cloudEmail')&&$('cloudEmail').value||'').trim();if(em)cloudSignIn(em);else toast('Skriv inn e-post');return;}
+      if(id==='cloudSavePw'){const pw=($('cloudNewPw')&&$('cloudNewPw').value||'');cloudSetPassword(pw);return;}
       if(id==='cloudSyncNow'){cloudReconcile();return;}
       if(id==='cloudLogout'){cloudSignOut().then(renderCloudModalBody);return;}
     });
