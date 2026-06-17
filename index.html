@@ -296,6 +296,12 @@
   .f-field textarea{resize:vertical;min-height:74px;line-height:1.45}
   #fDt{cursor:pointer}
   #fDt::-webkit-calendar-picker-indicator{display:none} /* hele feltet er klikkbart (showPicker), eget ikon skjules */
+  .dt-wrap{position:relative;margin-top:8px}
+  .dt-flag{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:"JetBrains Mono",monospace;font-weight:800;font-size:14px;line-height:1;pointer-events:none}
+  #fDt.ai-ok{border-color:var(--mint)!important;box-shadow:inset 0 0 0 1px rgba(61,245,197,.5),0 0 14px -6px rgba(61,245,197,.7)}
+  #fDt.ai-miss{border-color:var(--red)!important;box-shadow:inset 0 0 0 1px rgba(255,90,95,.55),0 0 14px -6px rgba(255,90,95,.55)}
+  .dt-flag.ok{color:var(--mint)}
+  .dt-flag.miss{color:var(--red)}
   .full{grid-column:1/-1}
   .seg{display:inline-flex;gap:3px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:3px}
   .seg button{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);background:none;border:0;padding:7px 12px;border-radius:7px;cursor:pointer}
@@ -422,7 +428,7 @@
             <button class="chip" data-dp="m21" type="button">I morgen 21:00</button>
             <button class="chip" data-dp="ingen" type="button">Ingen tidspunkt</button>
           </div>
-          <input type="datetime-local" id="fDt" style="margin-top:8px">
+          <div class="dt-wrap"><input type="datetime-local" id="fDt"><span class="dt-flag" id="fDtFlag"></span></div>
         </div>
         <div class="f-field full"><label>Besøkskommentar</label><textarea id="fKom"></textarea></div>
       </div>
@@ -1312,14 +1318,24 @@
   $('list').addEventListener('scroll',closeQpop);
 
   // ---------- skjema (ny / rediger) med duplikatvern ----------
-  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false;
+  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false;
   function segSet(seg,v){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
   function chipSync(){
     Array.from($('fChips').children).forEach(c=>c.classList.toggle('on',c.dataset.dp==='ingen'&&!fDatoVal));
     $('fDt').value=fDatoVal||'';
+    dtFlagSync();
+  }
+  // viser om AI fant en dato: mint ramme + ✓ når satt, rød ramme + ✗ når tom. Kun i AI-import-skjemaet.
+  function dtFlagSync(){
+    const dt=$('fDt'),fl=$('fDtFlag');
+    dt.classList.remove('ai-ok','ai-miss');fl.classList.remove('ok','miss');fl.textContent='';
+    if(!aiDateMode)return;
+    if(fDatoVal){dt.classList.add('ai-ok');fl.classList.add('ok');fl.textContent='✓';}
+    else{dt.classList.add('ai-miss');fl.classList.add('miss');fl.textContent='✗';}
   }
   function openForm(it){
     editId=it?it.id:null;
+    aiDateMode=false; // dato-indikator av som standard; openFormFromAI slår den på
     if(it){formFromPaste=false;pendingCardImg=null;} // redigering av eksisterende kort → ingen innlimt bilde
     $('fTitle').textContent=it?'Rediger oppfølging':'Ny oppfølging';
     $('fNavn').value=it?it.navn:'';
@@ -1687,6 +1703,7 @@
     items.push(card);save();render();
     openForm(card); // edit-modus → live-lagring
     $('fTitle').textContent='Ny oppfølging — fra skjermbilde';
+    aiDateMode=true;dtFlagSync(); // vis om AI fant en dato (mint ✓ / rød ✗)
     const nEl=$('fAiNote');
     if(o.pinMatch){nEl.textContent='✓ Pin '+(o.pinNavn||'')+(o.pinAlder?(' '+o.pinAlder):'')+' matcher kortet';nEl.className='ai-note ok';nEl.style.display='';}
     else{nEl.textContent='⚠ Fant ingen pin som matcher navn + alder — sjekk feltene';nEl.className='ai-note warn';nEl.style.display='';}
