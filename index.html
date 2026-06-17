@@ -818,6 +818,13 @@
       it.kanal=it.handlinger.some(h=>h.t==='mail'&&!h.done)?'mail':(it.ringFelt?'ring':'besok');
     return it;
   }
+  // salgsrunde vises som KUN siste stedsnavn + nummer: «Agder Lyngdal 2» → «Lyngdal 2». Endrer ikke lagret data.
+  function shortRunde(s){
+    s=String(s||'').trim().replace(/\s+/g,' ');
+    if(!s)return '';
+    const p=s.split(' '),last=p[p.length-1];
+    return (p.length>=2&&/^\d+[a-zæøå]?$/i.test(last))?p[p.length-2]+' '+last:s;
+  }
   function logKontakt(it,t){it.kontaktlogg.push({ts:Date.now(),t:t});it.sistKontakt=Date.now();}
   function popLastLog(it,t){const ts=it.kontaktlogg.map(x=>x.t);const i=ts.lastIndexOf(t);
     if(i>-1)it.kontaktlogg.splice(i,1);
@@ -904,7 +911,7 @@
     const n=now(),t=it.dato?p(it.dato):null;
     const late=(t&&t<n)?' late':'';
     const age=it.alder?' <span class="cn-age '+ageCls(it.alder)+'">'+it.alder+' år</span>':'';
-    const runde=it.salgsrunde?'<span class="runde">'+esc(it.salgsrunde)+'</span>':'';
+    const runde=it.salgsrunde?'<span class="runde">'+esc(shortRunde(it.salgsrunde))+'</span>':'';
     const sf=(it.salesforceUrl||it.salesforceVisitUrl||'').trim();
     const sfBtn=sf?'<a class="btn act-sf" target="_blank" rel="noopener" href="'+esc(sf)+'">Salesforce</a>'
       :'<button class="btn dim act-sf" disabled title="Mangler Salesforce-lenke">Salesforce</button>';
@@ -1001,7 +1008,7 @@
       const sub=(tittel,arr)=>'<div class="grp sub">'+tittel+'</div>'+arr.map(it=>cardHTML(it)).join('');
       Array.from(m.entries()).sort((a,b)=>b[1].newest-a[1].newest).forEach(function(e){
         const g=e[1];
-        let box='<div class="grp runde">'+esc(e[0])+'</div>';   // salgsrundenavn
+        let box='<div class="grp runde">'+esc(shortRunde(e[0]))+'</div>';   // salgsrundenavn
         if(g.ut.length)box+=sub('Uten tidspunkt',byNew(g.ut));
         if(g.lead.length)box+=sub('🔥Bør kontaktes',byNew(g.lead));
         G('<div class="runde-box">'+box+'</div>',[],'raw',true);
@@ -1556,7 +1563,7 @@
     return 'Du ser et skjermbilde fra en norsk dørsalg-app: et flyfoto-kart med kundepins (FORNAVN + alder, noen med et blått notat ved pinen) og et hvitt infopanel nederst for valgt kunde. Etiketter kan være engelske (CUSTOMER, AGE, INFRASTRUCTURE).\n'
     +'Naa: '+nowCtx()+'.\n\n'
     +'Les ut informasjonen og svar med KUN ett gyldig JSON-objekt, ingen markdown og ingen forklaring:\n'
-    +'{"navn":"fullt navn fra CUSTOMER","alder":tall fra AGE,"telefon":"nummer hvis synlig, ellers tom streng","adresse":"adressen oeverst i panelet, med postnr/sted hvis vist","salgsrunde":"KORT stedsnavn + nummer fra salgsrunde-linja under saksnummer-lenken — f.eks. «Hoeybraaten 2». IKKE hele linja (ikke «FTTH Oslo Hoeybraaten 2_Juli_26», ikke FTTH/by/maaned/aar)","status":"HP eller HC eller Vula, fra INFRASTRUCTURE","kommentar":"teksten i det blaa notatet paa kartet som hoerer til pinen med samme fornavn og alder som kunden i panelet, skrevet av ordrett — ellers tom streng","pinNavn":"fornavnet paa den matchende pinen, ellers tom","pinAlder":tall eller null,"pinMatch":true/false — om pinens fornavn+alder stemmer med CUSTOMER+AGE,"kanal":"mail hvis notatet sier noe om aa sende mail/e-post, ring hvis det sier ring/ringe, ellers besok","lovetMail":true/false — om notatet lover aa sende mail/tilbud,"nextAction":"foreslaatt neste handling ut fra notatet: send_offer (skal sende mail/tilbud), call (skal ringe), visit (skal dra innom/besoeke), trying_to_reach (skal faa tak i / proeve aa naa kunden) — ellers tom streng","dato":"YYYY-MM-DDTHH:MM eller null"}\n\n'
+    +'{"navn":"fullt navn fra CUSTOMER","alder":tall fra AGE,"telefon":"nummer hvis synlig, ellers tom streng","adresse":"adressen oeverst i panelet, med postnr/sted hvis vist","salgsrunde":"KUN det SISTE stedsnavnet + nummer fra salgsrunde-linja under saksnummer-lenken — f.eks. «Agder Lyngdal 2» -> «Lyngdal 2», «FTTH Oslo Hoeybraaten 2_Juli_26» -> «Hoeybraaten 2». Aldri flere stedsnavn, aldri FTTH/by/maaned/aar","status":"HP eller HC eller Vula, fra INFRASTRUCTURE","kommentar":"teksten i det blaa notatet paa kartet som hoerer til pinen med samme fornavn og alder som kunden i panelet, skrevet av ordrett — ellers tom streng","pinNavn":"fornavnet paa den matchende pinen, ellers tom","pinAlder":tall eller null,"pinMatch":true/false — om pinens fornavn+alder stemmer med CUSTOMER+AGE,"kanal":"mail hvis notatet sier noe om aa sende mail/e-post, ring hvis det sier ring/ringe, ellers besok","lovetMail":true/false — om notatet lover aa sende mail/tilbud,"nextAction":"foreslaatt neste handling ut fra notatet: send_offer (skal sende mail/tilbud), call (skal ringe), visit (skal dra innom/besoeke), trying_to_reach (skal faa tak i / proeve aa naa kunden) — ellers tom streng","dato":"YYYY-MM-DDTHH:MM eller null"}\n\n'
     +'Datoregler — finn DAG og TID hver for seg fra notatet og kombiner dem. Relative datoer skal alltid vaere frem i tid (bruk «Naa» over som referanse).\n'
     +'DAG: «i dag»/«i kveld»/«i ettermiddag»/«senere i dag»/«i natt» = i dag. «i morgen» = i morgen. «i overmorgen» = om 2 dager. Navngitt ukedag (f.eks. «onsdag») = naermeste kommende slike dag (i dag hvis det er den dagen og tiden ikke er passert). Eksplisitt dato UTEN aarstall («17. juni», «17/6») = den datoen (bruk aaret fra «Naa»). VIKTIG: et 4-sifret aarstall i notatet (f.eks. «2025», «01.01.2025», «17.06.2024») er en ordre-/systemdato og har IKKE noe med oppfoelgingen aa gjoere — ignorer det fullstendig, aldri bruk det som dato. «til uken»/«neste uke»/«om 1 uke» = mandag uken etter; «om 2 uker» = mandag to uker frem. Maaned («hjemme i juli») = den 1. i den maaneden; «borte/paa reise ut <maaned>» = den 1. i MAANEDEN ETTER. Et klokkeslett uten dag (f.eks. «kom tilbake 19:30», «etter kl 16», «tilbake 18», «hjemme 17:30») = i dag — selv om notatet ogsaa har en handling som «kom tilbake»; klokkeslett betyr alltid i dag naar ingen dag er nevnt. Ingen dag OG ingen tid, men noe skal GJOERES (komme tilbake, stikke innom, ringe, sende tilbud e.l.) = i morgen.\n'
     +'TID: eksplisitt klokkeslett = bruk det, ogsaa «etter kl 16»/«fra 16»/«fra kl 16»/«rundt kl 19»/«ca 19»/«ca kl 19» = det klokkeslettet. Ellers ord for tid paa dagen: «tidlig»/«morgen» = 08:00, «formiddag» = 10:00, «lunsj»/«midt paa dagen» = 12:00, «ettermiddag» = 15:00, «kveld»/«i kveld» = 18:00, «sent»/«seint i kveld» = 20:00, «senere i dag» (uten klokkeslett) = Naa + 2 timer rundet opp til hel/halv time. Ingen tid antydet = 12:00.\n'
@@ -1578,7 +1585,7 @@
     if(a<0||b<a)throw new Error('fant ikke JSON i svaret');
     const o=JSON.parse(t.slice(a,b+1));
     o.navn=String(o.navn||'').trim();o.adresse=String(o.adresse||'').trim();
-    o.telefon=String(o.telefon||'').trim();o.salgsrunde=String(o.salgsrunde||'').trim();
+    o.telefon=String(o.telefon||'').trim();o.salgsrunde=shortRunde(o.salgsrunde);
     o.kommentar=String(o.kommentar||'').trim();
     o.alder=+o.alder||null;
     const st=String(o.status||'').toUpperCase();
