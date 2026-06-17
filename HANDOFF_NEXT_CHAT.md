@@ -86,12 +86,13 @@ der kun «N d.» er rød. Klikk på check-boksen oppdaterer `waitingSince` til n
 
 **Forfalte:** egen gruppert visning (I dag/I går/Denne uken/Forrige uke/…/Eldre), rolige farger, «-N d.» kun i Eldre, badge skjult ved 0. «Fjern alle eldre»-knapp på Eldre-overskriften.
 
-**Sky-synk (Supabase) — LIVE:** valgfri synk av oppfølginger på tvers av enheter. Sync-indikator i headeren («Lokal/Sky av/Logg inn/Synker…/Synket/Ikke synket/Konflikt/Feil») åpner innloggings-/synk-modal (magic link på e-post). localStorage er fortsatt primær; sky er snapshot-modell (én rad pr. bruker, hele lista som JSON i tabellen `oppf_snapshots`, RLS). Synker **kun `oppf:index`**, aldri `oppf:apikey`. Konflikt vises kun når både lokal og sky er endret — aldri auto-overskriving. Config i `CLOUD_SYNC_CONFIG` øverst i hovedscriptet (anon/public-nøkkel, EU/Ireland-prosjekt). Virker kun fra https (GitHub Pages), ikke `file://`. Degraderer trygt hvis ikke konfigurert/offline/ikke innlogget. Full doc: `SUPABASE_SETUP.md`. **Ikke bytt til service_role-nøkkel; ikke bryt lokal-flyten.**
+**Sky-synk (Supabase) — LIVE:** valgfri synk av oppfølginger på tvers av enheter. Sync-indikator i headeren («Lokal/Sky av/Logg inn/Synker…/Synket/Ikke synket/Konflikt/Feil») åpner innloggings-/synk-modal. **To innloggingsmåter:** magic link på e-post **og e-post + passord** (sett/endre passord i modalen). Passord-innlogging gjør at **hjemskjerm-appen på iPad kan logge inn og synke helt selvstendig** — uten Safari og uten å åpne e-postlenke. localStorage er fortsatt primær; sky er snapshot-modell (én rad pr. bruker, hele lista som JSON i tabellen `oppf_snapshots`, RLS). Synker **kun `oppf:index`**, aldri `oppf:apikey`. Konflikt vises kun når både lokal og sky er endret — aldri auto-overskriving. Config i `CLOUD_SYNC_CONFIG` øverst i hovedscriptet (anon/public-nøkkel, EU/Ireland-prosjekt). Virker kun fra https (GitHub Pages), ikke `file://`. Degraderer trygt hvis ikke konfigurert/offline/ikke innlogget. Full doc: `SUPABASE_SETUP.md`. **Ikke bytt til service_role-nøkkel; ikke bryt lokal-flyten.**
 
-## F. Git- og valideringsstatus (oppdatert 2026-06-15)
-- **Branch:** `main`. Alt UI-arbeid + sky-synk er **committet og pushet** til GitHub.
+## F. Git- og valideringsstatus (oppdatert 2026-06-17)
+- **Branch:** `main`. Alt UI-arbeid + sky-synk er **committet og pushet** til GitHub. Siste commit: `74b9d1f` (passord-innlogging for selvstendig synk i hjemskjerm-appen).
 - **Live:** `https://christian-rasch.github.io/oppfolginger/` — pushet, rullet ut på GitHub Pages.
 - **Sky-synk via Supabase er LIVE og bekreftet fungerende** på iPad + Mac (se seksjon E + `SUPABASE_SETUP.md`).
+- **Passord-innlogging:** lagt til så iPad-hjemskjerm-appen kan synke uten Safari/e-postlenke. **Bekreftet fungerende på iPad (2026-06-17)** — innlogging med e-post + passord i hjemskjerm-appen synker selvstendig. Forutsetter at **Email-provider med passord er på** i Supabase (Authentication → Sign In / Providers → Email).
 - Push gjøres fortsatt kun når Christian sier eksplisitt ifra.
 - Validering: JavaScriptCore-syntakssjekk **OK** (node finnes ikke i miljøet).
 

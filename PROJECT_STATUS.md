@@ -2,7 +2,7 @@
 
 Levende prosjektstatus i repoet. Oppdateres når funksjonalitet endres.
 
-> **Ferskeste status (oppdatert 2026-06-15):** se `HANDOFF_NEXT_CHAT.md` seksjon E + F. Den gjenspeiler dagens UI **og at valgfri sky-synk via Supabase nå er LIVE** på tvers av enheter (detaljer i `SUPABASE_SETUP.md`). Enkelte detaljer lenger ned i dette dokumentet kan være eldre.
+> **Ferskeste status (oppdatert 2026-06-17):** se `HANDOFF_NEXT_CHAT.md` seksjon E + F. Den gjenspeiler dagens UI **og at valgfri sky-synk via Supabase nå er LIVE** på tvers av enheter (detaljer i `SUPABASE_SETUP.md`). Synk støtter nå både **magic link og e-post + passord**, slik at iPad-hjemskjerm-appen kan synke selvstendig. Enkelte detaljer lenger ned i dette dokumentet kan være eldre.
 
 ---
 
