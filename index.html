@@ -954,8 +954,11 @@
     // tellere på fanene (beholdes — kun seksjonsoverskrifter mister tall)
     const muste=act.filter(i=>i.nextAction==='send_offer'); // Må gjøres = kun «Husk å send tilbud»
     $('cntGjore').textContent=muste.length;
+    $('cntGjore').style.display=muste.length?'':'none'; // skjul teller ved 0 — vis kun tall ≥1
     $('cntGjore').classList.toggle('red',false); // ingen rød (Må gjøres viser ikke forfalt lenger)
-    $('cntUten').textContent=act.filter(i=>!i.dato).length; // alle aktive kort uten dato (uansett handling), hver én gang
+    const utenN=act.filter(i=>!i.dato).length; // alle aktive kort uten dato (uansett handling), hver én gang
+    $('cntUten').textContent=utenN;
+    $('cntUten').style.display=utenN?'':'none'; // skjul teller ved 0 — vis kun tall ≥1
     const alleForf=act.filter(overdue); // alle forfalte (inkl. forfalt i dag) = det «Forfalte»-fanen viser
     $('cntForf').textContent=alleForf.length;$('cntForf').classList.toggle('red',alleForf.length>0);
     $('cntForf').style.display=alleForf.length?'':'none'; // skjul badge/tall helt når 0
