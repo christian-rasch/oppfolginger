@@ -495,7 +495,7 @@
     const scaler=document.querySelector('.scaler');
     function fit(){
       const pad=16;
-      const sc=Math.min((window.innerWidth-pad)/1024,1); // skaler etter bredde — ikke zoom ut pga. høyde
+      const sc=Math.min((window.innerWidth-pad)/1024,1.7); // fyll bredden; tak hindrer ekstrem skalering på svært brede skjermer
       const h=Math.max(700,(window.innerHeight-2)/sc);   // stativhøyde = vindushøyde → ingen tom luft over/under
       stage.style.transform='scale('+sc+')';
       stage.style.height=h+'px';
