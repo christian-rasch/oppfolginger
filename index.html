@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Oppfølginger — Min side</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -502,9 +502,15 @@
       scaler.style.width=(1024*sc)+'px';
       scaler.style.height=(h*sc)+'px';
     }
+    // re-skaler robust ved retur til appen (hjemskjerm-app kan vise feil mål ett øyeblikk)
+    function refit(){fit();requestAnimationFrame(fit);setTimeout(fit,250);}
     window.addEventListener('resize',fit);
-    window.addEventListener('orientationchange',fit);
-    fit();
+    window.addEventListener('orientationchange',refit);
+    window.addEventListener('pageshow',refit);
+    window.addEventListener('focus',refit);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)refit();});
+    if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
+    refit();
   })();
   </script>
   <script>
