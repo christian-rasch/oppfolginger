@@ -373,9 +373,9 @@
       <div class="vlist" id="list"></div>
 
       <div class="napop" id="napop">
-        <button data-na="send_offer">Husk å send tilbud</button>
+        <button data-na="send_offer"><span class="a-ico">💡</span> Husk å send tilbud</button>
         <button data-na="waiting_reply">Tilbud sendt ✅</button>
-        <button data-na="trying_to_reach">Prøver å nå</button>
+        <button data-na="trying_to_reach"><span class="a-ico">👤</span> Prøver å nå</button>
         <button data-na="call"><span class="a-ico">📞</span> Ring</button>
         <button data-na="visit"><span class="a-ico">🚪</span> Besøk</button>
         <button data-na="lead">🔥Bør kontaktes</button>
@@ -868,9 +868,9 @@
   }
   // ---------- neste handling (felles system) ----------
   const NA_META={
-    send_offer:{label:'Husk å send tilbud',cls:'a-offer',ico:'💡'},
+    send_offer:{label:'Husk å send tilbud',cls:'a-offer',ico:''},
     waiting_reply:{label:'Venter på svar',cls:'a-wait',ico:''},
-    trying_to_reach:{label:'Prøver å nå',cls:'a-reach',ico:'👤'},
+    trying_to_reach:{label:'Prøver å nå',cls:'a-reach',ico:''},
     call:{label:'Ring',cls:'a-call',ico:'📞'},
     visit:{label:'Besøk',cls:'a-visit',ico:'🚪'},
     lead:{label:'🔥Bør kontaktes',cls:'a-lead',ico:''}
@@ -881,9 +881,8 @@
     const na=NA_KEYS.includes(it.nextAction)?it.nextAction:null;
     if(!na)return '<button class="act-next" title="Velg neste handling">Neste handling</button>';
     const a=NA_META[na];
-    const front=na==='waiting_reply'?'<span class="box"></span>':(a.ico?'<span class="a-ico">'+a.ico+'</span>':'');
     return '<button class="actchip '+a.cls+'" data-na="'+na+'" title="Huk av når handlingen er gjort">'
-      +front+a.label+'</button>';
+      +'<span class="box"></span>'+(a.ico?'<span class="a-ico">'+a.ico+'</span>':'')+a.label+'</button>';
   }
   // «→ Tilbud sendt: …» (pil, ingen boks) — høyre celle, linje 2. Kun ved waiting_reply. Klikk oppdaterer waitingSince.
   // «Tilbud sendt …» med klikkbar check-boks; klikk oppdaterer waitingSince. Kun ved waiting_reply.
