@@ -374,11 +374,11 @@
 
       <div class="napop" id="napop">
         <button data-na="send_offer"><span class="a-ico">💡</span> Husk å send tilbud</button>
-        <button data-na="waiting_reply">Tilbud sendt ✅</button>
+        <button data-na="waiting_reply"><span class="a-ico">✅</span> Tilbud sendt</button>
         <button data-na="trying_to_reach"><span class="a-ico">👤</span> Prøver å nå</button>
         <button data-na="call"><span class="a-ico">📞</span> Ring</button>
         <button data-na="visit"><span class="a-ico">🚪</span> Besøk</button>
-        <button data-na="lead">🔥Bør kontaktes</button>
+        <button data-na="lead"><span class="a-ico">🔥</span> Bør kontaktes</button>
       </div>
 
       <div class="qpop" id="qpop">
@@ -881,8 +881,10 @@
     const na=NA_KEYS.includes(it.nextAction)?it.nextAction:null;
     if(!na)return '<button class="act-next" title="Velg neste handling">Neste handling</button>';
     const a=NA_META[na];
+    const hasBox=(na==='send_offer'||na==='waiting_reply'||na==='trying_to_reach'); // checkbox kun på status-chips
+    const front=hasBox?'<span class="box"></span>':(a.ico?'<span class="a-ico">'+a.ico+'</span>':''); // Ring/Besøk/Bør kontaktes viser symbol
     return '<button class="actchip '+a.cls+'" data-na="'+na+'" title="Huk av når handlingen er gjort">'
-      +'<span class="box"></span>'+(a.ico?'<span class="a-ico">'+a.ico+'</span>':'')+a.label+'</button>';
+      +front+a.label+'</button>';
   }
   // «→ Tilbud sendt: …» (pil, ingen boks) — høyre celle, linje 2. Kun ved waiting_reply. Klikk oppdaterer waitingSince.
   // «Tilbud sendt …» med klikkbar check-boks; klikk oppdaterer waitingSince. Kun ved waiting_reply.
