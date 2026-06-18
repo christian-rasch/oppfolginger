@@ -159,10 +159,10 @@
   .actchip.a-offer:hover{background:rgba(232,194,107,.18)}
   .actchip.a-wait{color:var(--mint);border-color:rgba(61,245,197,.42);background:rgba(61,245,197,.08)}
   .actchip.a-wait:hover{background:rgba(61,245,197,.15)}
-  .actchip.a-reach{color:#86b6ff;border-color:rgba(120,160,255,.46);background:rgba(120,160,255,.1)}
-  .actchip.a-reach:hover{background:rgba(120,160,255,.18)}
-  .actchip.a-call{color:#F58FD0;border-color:rgba(245,143,208,.55);background:rgba(245,143,208,.12);box-shadow:0 0 16px -6px rgba(245,143,208,.8)}
-  .actchip.a-call:hover{background:rgba(245,143,208,.2)}
+  .actchip.a-reach{color:#33D6CE;border-color:rgba(51,214,206,.5);background:rgba(51,214,206,.1)}
+  .actchip.a-reach:hover{background:rgba(51,214,206,.18)}
+  .actchip.a-call{color:#5B9DF7;border-color:rgba(91,157,247,.55);background:rgba(91,157,247,.12);box-shadow:0 0 16px -6px rgba(91,157,247,.8)}
+  .actchip.a-call:hover{background:rgba(91,157,247,.2)}
   .actchip.a-visit{color:#cbb6ff;border-color:rgba(150,122,255,.55);background:rgba(150,122,255,.14);box-shadow:0 0 16px -6px rgba(150,122,255,.7)}
   .actchip.a-visit:hover{background:rgba(150,122,255,.22)}
   .actchip.a-lead{color:#ffb169;border-color:rgba(242,150,60,.6);background:rgba(242,150,60,.14);box-shadow:0 0 18px -5px rgba(242,150,60,.85)}
@@ -267,6 +267,9 @@
   .napop.open{display:flex}
   .napop button{text-align:left;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);background:none;border:0;border-radius:8px;padding:9px 11px;cursor:pointer;display:flex;align-items:center;gap:8px}
   .napop button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+  .sf-pop{position:absolute;z-index:70;display:none;align-items:center;gap:7px;white-space:nowrap;background:#0f1320;border:1px solid rgba(61,245,197,.32);border-radius:10px;padding:8px 11px;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;color:var(--ink);box-shadow:0 18px 44px -14px rgba(0,0,0,.85);pointer-events:none}
+  .sf-pop.open{display:flex}
+  .sf-pop .gchk{width:14px;height:14px;border-radius:4px;border:1px solid rgba(61,245,197,.5);background:rgba(61,245,197,.14);color:var(--mint);display:grid;place-items:center;font-size:9px;line-height:1;flex:none}
 
   .modal{position:fixed;inset:0;z-index:180;background:rgba(5,7,12,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
   .modal.open{display:flex}
@@ -380,6 +383,8 @@
         <button data-na="visit"><span class="a-ico">🚪</span> Besøk</button>
         <button data-na="lead"><span class="a-ico">🔥</span> Bør kontaktes</button>
       </div>
+
+      <div class="sf-pop" id="sfPop"></div>
 
       <div class="qpop" id="qpop">
         <button data-qc="📞 Ingen svar">📞 Ingen svar</button>
@@ -1153,7 +1158,7 @@
     const ad=e.target.closest('.addr.copyable');
     if(ad&&card){copyText(byId(card.dataset.id).adresse,'Adresse kopiert');return;}
     const sfb=e.target.closest('.act-sf');
-    if(sfb&&sfb.dataset.sf){e.preventDefault();copyText(sfb.dataset.sf,'Kopiert ✅ lim inn i salesforce');return;}
+    if(sfb&&sfb.dataset.sf){e.preventDefault();copyText(sfb.dataset.sf,'');sfPop(sfb);return;}
     if(e.target.closest('.cn')&&card){openForm(byId(card.dataset.id));return;}
     const an=e.target.closest('.act-next');
     if(an&&card){e.stopPropagation();openNapop(byId(card.dataset.id),an);return;}
@@ -1462,10 +1467,10 @@
       ta.style.cssText='position:fixed;opacity:0';
       document.body.appendChild(ta);ta.select();
       let ok=false;try{ok=document.execCommand('copy');}catch(err){}
-      ta.remove();toast(ok?msg:'Kunne ikke kopiere');
+      ta.remove();if(ok){if(msg)toast(msg);}else toast('Kunne ikke kopiere');
     }
     if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(t).then(function(){toast(msg);}).catch(fb);
+      navigator.clipboard.writeText(t).then(function(){if(msg)toast(msg);}).catch(fb);
     }else fb();
   }
   let toastTimer=null;
@@ -1475,6 +1480,21 @@
     $('toast').classList.add('show');
     clearTimeout(toastTimer);
     toastTimer=setTimeout(function(){$('toast').classList.remove('show');},2500);
+  }
+  let sfPopT=null;
+  function sfPop(anchor){ // «Kopiert ✓ Lim inn i Salesforce» rett over Salesforce-knappen
+    const el=$('sfPop'),st=document.querySelector('.stage');
+    if(!el||!st)return;
+    el.innerHTML='Kopiert <span class="gchk">✓</span> Lim inn i Salesforce';
+    el.classList.add('open'); // vis først så vi kan måle størrelsen
+    const sr=st.getBoundingClientRect(),ar=anchor.getBoundingClientRect(),sc=sr.width/1024;
+    const w=el.offsetWidth,h=el.offsetHeight;
+    let x=(ar.left-sr.left)/sc+(ar.width/sc)/2-w/2;
+    let y=(ar.top-sr.top)/sc-h-8;
+    if(x<6)x=6; if(x>1024-w-6)x=1024-w-6;
+    if(y<6)y=(ar.bottom-sr.top)/sc+8; // ikke plass over → vis under
+    el.style.left=x+'px';el.style.top=y+'px';
+    clearTimeout(sfPopT);sfPopT=setTimeout(function(){el.classList.remove('open');},1800);
   }
   function toastUndo(msg,fn){
     $('toastMsg').textContent=msg;
