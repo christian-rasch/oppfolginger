@@ -453,14 +453,14 @@
     <div class="m-card">
       <div class="m-title">Lim inn kartskjermbilde</div>
       <div class="paste-zone">
-        <div class="pz-overlay" id="pzOverlay"><span>Hold inne her → «Lim inn»</span><small>Ta skjermbilde i kart-appen, trykk Kopier — og lim inn her. AI fyller ut oppfølgingen.</small></div>
+        <div class="pz-overlay" id="pzOverlay"><span>Trykk «📋 Lim inn bilde» under</span><small>Ta skjermbilde i kart-appen, trykk Kopier — så trykk «Lim inn bilde» under (eller hold inne her og velg «Lim inn»). AI fyller ut oppfølgingen.</small></div>
         <div class="pz-edit" id="pzEdit" contenteditable="true" inputmode="none" spellcheck="false"></div>
         <img id="pzPrev" alt="" style="display:none">
       </div>
       <div class="pz-status" id="pzStatus"></div>
       <div class="m-foot" style="justify-content:space-between">
         <span style="display:inline-flex;gap:8px"><label class="ghost-btn pz-file" for="pzFile">Velg bilde …</label><input type="file" id="pzFile" accept="image/*" style="display:none"><button class="ghost-btn" id="btnKey" title="Egen Anthropic API-nøkkel — gjør at AI-importen virker utenfor Claude">API-nøkkel</button></span>
-        <button class="btn" id="pzCancel">Avbryt</button>
+        <span style="display:inline-flex;gap:8px"><button class="btn primary" id="pzPaste">📋 Lim inn bilde</button><button class="btn" id="pzCancel">Avbryt</button></span>
       </div>
     </div>
   </div>
@@ -1709,6 +1709,24 @@
     },80);
   });
   $('pzFile').addEventListener('change',function(){if(this.files&&this.files[0])handleImageFile(this.files[0]);this.value='';});
+  // «Lim inn bilde»-knapp: les bildet rett fra utklippstavla (slipper hold-inne-menyen)
+  async function pasteFromClipboard(){
+    if(!(navigator.clipboard&&navigator.clipboard.read)){
+      setAiStatus('Nettleseren støtter ikke direkte liming — hold inne i boksen og velg «Lim inn».','err');return;
+    }
+    setAiStatus('Henter bilde fra utklippstavla …','busy');
+    try{
+      const items=await navigator.clipboard.read();
+      for(const it of items){
+        const type=(it.types||[]).find(function(t){return t.indexOf('image/')===0;});
+        if(type){const blob=await it.getType(type);handleImageFile(blob);return;}
+      }
+      setAiStatus('Fant ikke noe bilde i utklippstavla — kopier kart-skjermbildet og prøv igjen.','err');
+    }catch(e){
+      setAiStatus('Fikk ikke lest utklippstavla ('+((e&&e.message)||'avvist')+'). Hold inne i boksen og velg «Lim inn» i stedet.','err');
+    }
+  }
+  $('pzPaste').addEventListener('click',pasteFromClipboard);
   $('pzStatus').addEventListener('click',function(){
     if(aiWarming||analysing)return;
     if(!aiWarm){warmupAI();}
