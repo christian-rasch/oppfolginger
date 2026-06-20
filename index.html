@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-09">
+<meta name="app-build" content="2026-06-20-10">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -217,6 +217,13 @@
   .opf-thumb .thumb-lbl{position:absolute;left:0;right:0;bottom:0;text-align:center;font-family:"JetBrains Mono",monospace;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent);padding:10px 0 4px;z-index:2}
   .opf-thumb::after{content:"⤢";position:absolute;top:5px;right:6px;font-size:12px;color:#fff;background:rgba(0,0,0,.45);border-radius:5px;width:20px;height:20px;display:grid;place-items:center;z-index:2}
   .opf-thumb:hover{border-color:var(--mint)}
+  /* kort uten kartbilde: rolig «ingen bilde»-rute i stedet for standard-kart */
+  .opf-thumb.no-img{background:rgba(255,255,255,.025);background-image:none;border:1px dashed var(--hair-2);cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  .opf-thumb.no-img::after{display:none}
+  .opf-thumb.no-img:hover{border-color:var(--hair-2)}
+  .opf-thumb.no-img .ni-box{width:36px;height:28px;border:1.5px solid var(--ink-faint);border-radius:5px;opacity:.45;position:relative;flex:none}
+  .opf-thumb.no-img .ni-box::after{content:"";position:absolute;left:5px;bottom:5px;width:10px;height:10px;border-radius:50%;background:var(--ink-faint)}
+  .opf-thumb.no-img .thumb-lbl{position:static;background:none;padding:0;color:var(--ink-faint);font-size:8px}
   .opf-side .btn{width:100%;padding:7px 7px;font-size:11.5px}
   .filterrow{margin:-6px 0 14px}
   /* lightbox */
@@ -952,7 +959,7 @@
       +'<div class="opf-action">'+actionControl(it)+tilbudInfo(it)+'</div>'
       +'<div class="opf-note" title="Trykk for å skrive kommentar">'+qc+'<span class="opf-note-text">'+kom+'</span><button class="qc-add" type="button" title="Hurtigvalg">+</button></div>'
       +'</div>'
-      +'<div class="opf-side"><a class="opf-thumb" href="#" title="Se adresse i kart"><span class="thumb-lbl">Kart</span></a>'
+      +'<div class="opf-side">'+(it.hasImg?'<a class="opf-thumb" href="#" title="Se kartbilde"><span class="thumb-lbl">Kart</span></a>':'<span class="opf-thumb no-img" title="Ingen kartbilde lastet opp"><span class="ni-box"></span><span class="thumb-lbl">Ingen bilde</span></span>')
       +'<div class="side-btns">'+sfBtn+navBtn+'<button class="btn act-done">Fjern</button></div></div>'
       +'</div>';
   }
@@ -1093,9 +1100,11 @@
     $('list').innerHTML=html;
     document.querySelectorAll('#list .opf-card').forEach(function(c){
       const t=c.querySelector('.opf-thumb');if(!t)return;
-      t.style.backgroundImage="url('"+THUMB+"')"; // plassholder med en gang
       const it=byId(c.dataset.id);
-      if(it&&it.hasImg)getCardImg(c.dataset.id).then(function(d){if(d)t.style.backgroundImage="url('"+d+"')";}); // ekte bilde popper inn
+      if(it&&it.hasImg){ // kun kort med bilde får miniatyr; resten viser «ingen bilde»-ruta (CSS)
+        t.style.backgroundImage="url('"+THUMB+"')"; // plassholder med en gang
+        getCardImg(c.dataset.id).then(function(d){if(d)t.style.backgroundImage="url('"+d+"')";}); // ekte bilde popper inn
+      }
     });
     updateBars();
   }
@@ -1204,7 +1213,7 @@
     if(ac&&card){checkOffAction(byId(card.dataset.id));return;}
     if(e.target.closest('.act-navedit')&&card){openForm(byId(card.dataset.id));return;}
     const th=e.target.closest('.opf-thumb');
-    if(th){e.preventDefault();openLightbox(card?byId(card.dataset.id):null);return;}
+    if(th){e.preventDefault();const ti=card?byId(card.dataset.id):null;if(ti&&ti.hasImg)openLightbox(ti);return;} // kun åpne forstørret hvis det finnes bilde
     if(e.target.closest('.act-done')&&card){fullfor(byId(card.dataset.id));return;}
   });
 
