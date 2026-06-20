@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-20">
+<meta name="app-build" content="2026-06-20-21">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1643,8 +1643,7 @@
   }
   function aiModel(){return aiKey?AI_MODEL_KEY:AI_MODEL;}
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  function setAiStatus(msg,cls){const el=$('pzStatus');el.textContent=msg||'';el.className='pz-status'+(cls?' '+cls:'');
-    if(cls==='err'&&msg&&!$('pasteModal').classList.contains('open'))toast(msg);} // feil synlig naar popup ikke brukes
+  function setAiStatus(msg,cls){const el=$('pzStatus');el.textContent=msg||'';el.className='pz-status'+(cls?' '+cls:'');}
   function withTimeout(pr,ms){return Promise.race([pr,new Promise(function(_,rej){setTimeout(function(){rej(new Error('tidsavbrudd'));},ms);})]);}
   function aiCall(payload){
     // Med egen nøkkel: gå utenom sidens fetch-lag (som kan kapre/henge) — XHR direkte mot API-et.
@@ -1797,21 +1796,8 @@
     warmupAI();
   }
   function closePaste(){$('pasteModal').classList.remove('open');}
-  // Hovedsidens «Lim inn»: les bildet rett fra utklippstavla og analyser — uten popup (reserve: gammel popup hvis nettleseren ikke støtter det)
-  async function quickPasteAnalyze(){
-    if(!(navigator.clipboard&&navigator.clipboard.read)){openPaste();return;}
-    pendingImg=null;pendingCardImg=null;formFromPaste=false;analysing=false;
-    warmupAI();
-    toast('Leser skjermbildet …');
-    try{
-      const items=await navigator.clipboard.read();
-      for(const it of items){
-        const type=(it.types||[]).find(function(t){return t.indexOf('image/')===0;});
-        if(type){const blob=await it.getType(type);handleImageFile(blob);return;}
-      }
-      toast('Fant ingen bilde i utklippstavla — kopier kart-skjermbildet og prøv igjen.');
-    }catch(e){toast('Fikk ikke lest utklippstavla — prøv igjen.');}
-  }
+  // Hovedsidens «Lim inn»: aapne forhaandsvisnings-vinduet (viser bildet + «analyserer»-status) OG les utklippstavla automatisk — slipper manuelt trykk
+  function quickPasteAnalyze(){ openPaste(); pasteFromClipboard(); }
   $('btnPaste').addEventListener('click',quickPasteAnalyze);
   $('pasteModal').addEventListener('click',function(e){if(e.target===$('pasteModal')){pendingImg=null;pendingCardImg=null;formFromPaste=false;closePaste();}});
   $('pzEdit').addEventListener('paste',function(e){
