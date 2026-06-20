@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-18-02">
+<meta name="app-build" content="2026-06-20-01">
 <title>Oppfølginger — Min side</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -743,8 +743,8 @@
       try{history.replaceState(null,'',location.origin+location.pathname+location.search);}catch(e){}}
     c.auth.onAuthStateChange(function(_evt,session){
       const was=!!sbUser;sbUser=session?session.user:null;renderCloudStatus();
-      if(!was&&sbUser)cloudReconcile();});
-    if(sbUser)await cloudReconcile(); else setCloudState('login');
+      if(!was&&sbUser){cloudReconcile();flushPendingImgs();}});
+    if(sbUser){await cloudReconcile();flushPendingImgs();} else setCloudState('login');
   }
 
   // ---- sky-synk UI ----
@@ -1084,7 +1084,12 @@
     });
     if(!any)html+='<div class="empty">'+empty+'</div>';
     $('list').innerHTML=html;
-    document.querySelectorAll('#list .opf-card').forEach(function(c){const t=c.querySelector('.opf-thumb');if(t)t.style.backgroundImage="url('"+(getCardImg(c.dataset.id)||THUMB)+"')";});
+    document.querySelectorAll('#list .opf-card').forEach(function(c){
+      const t=c.querySelector('.opf-thumb');if(!t)return;
+      t.style.backgroundImage="url('"+THUMB+"')"; // plassholder med en gang
+      const it=byId(c.dataset.id);
+      if(it&&it.hasImg)getCardImg(c.dataset.id).then(function(d){if(d)t.style.backgroundImage="url('"+d+"')";}); // ekte bilde popper inn
+    });
     updateBars();
   }
   function setView(v){view=v;render();}
@@ -1214,7 +1219,8 @@
   }
 
   // ---------- lightbox ----------
-  function openLightbox(it){$('lbImg').src=(it&&getCardImg(it.id))||FULL;
+  function openLightbox(it){$('lbImg').src=FULL; // plassholder; ekte fullbilde hentes under
+    if(it&&it.hasImg)getCardImg(it.id).then(function(d){if(d)$('lbImg').src=d;});
     const d=$('lbDriv');const adr=it&&it.adresse;
     if(adr){d.href='https://maps.google.com/?q='+encodeURIComponent(adr);d.style.display='';}
     else d.style.display='none';
@@ -1518,23 +1524,75 @@
   const AI_MODEL='claude-sonnet-4-20250514';   // Claude-broen (nøkkelfritt i Claude)
   const AI_MODEL_KEY='claude-sonnet-4-6';      // direkte API med egen nøkkel
   let aiWarm=false,aiWarming=false,pendingImg=null,analysing=false,aiKey='',pendingCardImg=null,formFromPaste=false;
-  // kartbilde pr. kort — KUN lokalt (synkes IKKE; egen localStorage-nøkkel, ikke i oppf:index)
-  function imgMap(){try{return JSON.parse(localStorage.getItem('oppf:cardimg')||'{}')||{};}catch(e){return {};}}
-  function getCardImg(id){const m=imgMap();return (m&&m[id])||null;}
-  function setCardImg(id,durl){const m=imgMap();m[id]=durl;try{localStorage.setItem('oppf:cardimg',JSON.stringify(m));}catch(e){toast('Klarte ikke å lagre kartbildet (lite lagringsplass)');}}
-  function delCardImg(id){const m=imgMap();if(m[id]){delete m[id];try{localStorage.setItem('oppf:cardimg',JSON.stringify(m));}catch(e){}}}
-  // liten miniatyr for lagring (holder localStorage lite siden bildet ikke synkes)
-  function compressThumb(durl,cb){
-    const img=new Image();
-    img.onload=function(){try{
-      let w=img.width,h=img.height;const MAX=520;
-      if(w>=h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}else if(h>w&&h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-      const c=document.createElement('canvas');c.width=w;c.height=h;
-      c.getContext('2d').drawImage(img,0,0,w,h);
-      cb(c.toDataURL('image/jpeg',0.6));
-    }catch(e){cb(durl);}};
-    img.onerror=function(){cb(durl);};
-    img.src=durl;
+  // kartbilde pr. kort — lokal IndexedDB-buffer + Supabase Storage (server = fasit). Synkes IKKE via oppf:index.
+  const IMG_BUCKET='cardimg';
+  const imgMem=new Map(); // rask minne-cache i økten (slipper IndexedDB/nett ved hver render)
+  // ---- lokal buffer (IndexedDB) ----
+  let _imgDbP=null;
+  function imgDB(){
+    if(_imgDbP)return _imgDbP;
+    _imgDbP=new Promise(function(res){
+      try{const r=indexedDB.open('oppfImg',1);
+        r.onupgradeneeded=function(){try{r.result.createObjectStore('img');}catch(e){}};
+        r.onsuccess=function(){res(r.result);};
+        r.onerror=function(){res(null);};
+      }catch(e){res(null);}
+    });
+    return _imgDbP;
+  }
+  function idbGet(id){return imgDB().then(function(db){if(!db)return null;return new Promise(function(res){try{const rq=db.transaction('img','readonly').objectStore('img').get(id);rq.onsuccess=function(){res(rq.result||null);};rq.onerror=function(){res(null);};}catch(e){res(null);}});});}
+  function idbSet(id,durl){return imgDB().then(function(db){if(!db)return;return new Promise(function(res){try{const tx=db.transaction('img','readwrite');tx.objectStore('img').put(durl,id);tx.oncomplete=function(){res();};tx.onerror=function(){res();};tx.onabort=function(){res();};}catch(e){res();}});});}
+  function idbDel(id){return imgDB().then(function(db){if(!db)return;try{db.transaction('img','readwrite').objectStore('img').delete(id);}catch(e){}});}
+  // ---- server (Supabase Storage) ----
+  function imgPath(id){return sbUser?(sbUser.id+'/'+id+'.jpg'):null;}
+  function dataURLtoBlob(durl){const i=durl.indexOf(';base64,');const mime=durl.slice(5,i)||'image/jpeg';const bin=atob(durl.slice(i+8));const len=bin.length,arr=new Uint8Array(len);for(let k=0;k<len;k++)arr[k]=bin.charCodeAt(k);return new Blob([arr],{type:mime});}
+  function blobToDataURL(b){return new Promise(function(res,rej){const fr=new FileReader();fr.onload=function(){res(String(fr.result));};fr.onerror=function(){rej(fr.error);};fr.readAsDataURL(b);});}
+  async function imgUpload(id,durl){const c=getSupabaseClient(),path=imgPath(id);if(!c||!path)return false;try{const blob=dataURLtoBlob(durl);const {error}=await c.storage.from(IMG_BUCKET).upload(path,blob,{upsert:true,contentType:blob.type||'image/jpeg'});if(error)throw error;return true;}catch(e){return false;}}
+  async function imgDownload(id){const c=getSupabaseClient(),path=imgPath(id);if(!c||!path)return null;try{const {data,error}=await c.storage.from(IMG_BUCKET).download(path);if(error||!data)return null;return await blobToDataURL(data);}catch(e){return null;}}
+  function imgRemoveServer(id){const c=getSupabaseClient(),path=imgPath(id);if(!c||!path)return;try{c.storage.from(IMG_BUCKET).remove([path]);}catch(e){}}
+  // ---- utsatt opplasting (offline/utlogget → last opp senere) ----
+  const PENDK='oppf:imgpending';
+  function pendGet(){try{return JSON.parse(localStorage.getItem(PENDK)||'[]')||[];}catch(e){return [];}}
+  function pendSet(a){try{localStorage.setItem(PENDK,JSON.stringify(a));}catch(e){}}
+  function pendAdd(id){const a=pendGet();if(a.indexOf(id)<0){a.push(id);pendSet(a);}}
+  function pendDel(id){pendSet(pendGet().filter(function(x){return x!==id;}));}
+  let flushing=false;
+  async function flushPendingImgs(){
+    if(flushing||!sbUser||!getSupabaseClient())return;
+    const a=pendGet();if(!a.length)return;
+    flushing=true;
+    for(const id of a.slice()){
+      const durl=await idbGet(id);
+      if(!durl){pendDel(id);continue;}            // ingen lokal kopi → kan ikke laste opp
+      if(await imgUpload(id,durl))pendDel(id);     // lastet opp → ut av køen
+    }
+    flushing=false;
+  }
+  window.addEventListener('online',flushPendingImgs);
+  window.addEventListener('focus',flushPendingImgs);
+  // ---- offentlig API brukt av appen ----
+  function setCardImg(id,durl){
+    imgMem.set(id,durl);
+    idbSet(id,durl); // buffer med en gang (rask + offline)
+    if(sbUser&&getSupabaseClient())imgUpload(id,durl).then(function(ok){if(!ok)pendAdd(id);});
+    else pendAdd(id); // last opp når innlogget/på nett
+  }
+  function delCardImg(id){imgMem.delete(id);idbDel(id);pendDel(id);imgRemoveServer(id);}
+  function getCardImg(id){ // minne → buffer → server (og buffer det)
+    if(imgMem.has(id))return Promise.resolve(imgMem.get(id));
+    return idbGet(id).then(function(d){
+      if(d){imgMem.set(id,d);return d;}
+      return imgDownload(id).then(function(s){if(s)idbSet(id,s);imgMem.set(id,s||null);return s||null;});
+    });
+  }
+  // engangs-migrering: gamle bilder i localStorage → buffer + køes for opplasting til server
+  async function migrateCardImgs(){
+    if(localStorage.getItem('oppf:cardimg:migrated'))return;
+    let map={};try{map=JSON.parse(localStorage.getItem('oppf:cardimg')||'{}')||{};}catch(e){}
+    for(const id of Object.keys(map)){if(map[id]){await idbSet(id,map[id]);pendAdd(id);}}
+    try{localStorage.removeItem('oppf:cardimg');}catch(e){} // frigjør plassen først etter trygg flytting
+    try{localStorage.setItem('oppf:cardimg:migrated','1');}catch(e){}
+    flushPendingImgs();
   }
   const KEYK='oppf:apikey';
   function aiHeaders(){
@@ -1782,6 +1840,7 @@
     try{raw=await store.get(KEY);}catch(err){}
     if(raw){try{const arr=JSON.parse(raw);items=(Array.isArray(arr)?arr:[]).map(migrate);}catch(err){items=[];}}
     if(!items.length)items=seed();
+    migrateCardImgs(); // flytt gamle lokale kartbilder til buffer + køes for opplasting
     render();save();
     try{const k=await store.get(KEYK);if(k)aiKey=String(k);}catch(err){}
     warmupAI(); // varm opp AI-kanalen ved appstart (kaldstart gir SyntaxError)
