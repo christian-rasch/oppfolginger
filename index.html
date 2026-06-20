@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-21">
+<meta name="app-build" content="2026-06-20-23">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -473,12 +473,12 @@
     <div class="m-card">
       <div class="m-title">Lim inn kartskjermbilde</div>
       <div class="paste-zone">
-        <div class="pz-overlay" id="pzOverlay"><span>Trykk «📋 Lim inn bilde» under</span><small>Ta skjermbilde i kart-appen, trykk Kopier — så trykk «Lim inn bilde» under (eller hold inne her og velg «Lim inn»). AI fyller ut oppfølgingen.</small></div>
+        <div class="pz-overlay" id="pzOverlay"><span>Henter skjermbildet …</span><small>Kommer det ikke automatisk? Hold inne her og velg «Lim inn».</small></div>
         <div class="pz-edit" id="pzEdit" contenteditable="true" inputmode="none" spellcheck="false"></div>
         <img id="pzPrev" alt="" style="display:none">
       </div>
       <div class="pz-status" id="pzStatus"></div>
-      <div class="m-foot" style="flex-direction:column;align-items:stretch;gap:12px">
+      <div class="m-foot" style="display:none;flex-direction:column;align-items:stretch;gap:12px">
         <button class="btn primary" id="pzPaste" style="font-size:18px;font-weight:800;padding:22px;width:100%">📋 Lim inn bilde</button>
         <span style="display:inline-flex;gap:8px;justify-content:center"><label class="ghost-btn pz-file" for="pzFile">Velg bilde …</label><input type="file" id="pzFile" accept="image/*" style="display:none"><button class="ghost-btn" id="btnKey" title="Egen Anthropic API-nøkkel — gjør at AI-importen virker utenfor Claude" style="display:none">API-nøkkel</button></span>
       </div>
@@ -518,10 +518,13 @@
   (function(){
     const stage=document.querySelector('.stage');
     const scaler=document.querySelector('.scaler');
+    let lastSc=0,lastH=0;
     function fit(){
       const pad=16;
       const sc=Math.min((window.innerWidth-pad)/1024,1.7); // fyll bredden; tak hindrer ekstrem skalering på svært brede skjermer
       const h=Math.max(700,(window.innerHeight-2)/sc);   // stativhøyde = vindushøyde → ingen tom luft over/under
+      if(Math.abs(sc-lastSc)<0.0005&&Math.abs(h-lastH)<0.5)return; // ingen reell endring → ingen re-tegning (hindrer flikring + bom-trykk når man går inn/ut av appen)
+      lastSc=sc;lastH=h;
       stage.style.transform='scale('+sc+')';
       stage.style.height=h+'px';
       scaler.style.width=(1024*sc)+'px';
