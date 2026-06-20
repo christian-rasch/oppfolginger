@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-03">
+<meta name="app-build" content="2026-06-20-04">
 <title>Oppfølginger — Min side</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -756,10 +756,7 @@
     if(sbUser){
       b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
         +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>'
-        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="cloudSyncNow">Synk nå</button><button class="btn" id="cloudLogout">Logg ut</button></div>'
-        +'<div class="cloud-row cloud-muted">Sett et passord for å logge inn i hjemskjerm-appen på iPad (uten e-postlenke):</div>'
-        +'<div class="cloud-row"><input id="cloudNewPw" type="password" autocomplete="new-password" placeholder="nytt passord (min. 6 tegn)"></div>'
-        +'<div class="cloud-row"><button class="btn" id="cloudSavePw">Lagre passord</button></div>';
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="cloudSyncNow">Synk nå</button><button class="btn" id="cloudLogout">Logg ut</button></div>';
     }else{
       b.innerHTML='<div class="cloud-row cloud-muted">Logg inn med e-post + passord for å synke på tvers av enheter.</div>'
         +'<div class="cloud-row"><input id="cloudEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="din@epost.no"></div>'
