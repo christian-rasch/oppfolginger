@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-06">
+<meta name="app-build" content="2026-06-20-07">
 <title>Oppfølginger — Min side</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -517,24 +517,13 @@
     }
     // re-skaler robust ved retur til appen (hjemskjerm-app kan vise feil mål ett øyeblikk)
     function refit(){fit();requestAnimationFrame(fit);setTimeout(fit,250);}
-    // viewport: lås på iPad/desktop (hindrer uønsket zoom-ut til tomme kanter), men tillat knip-zoom på telefon (liten skjerm = lite tekst)
-    let vpPhone=null;
-    function setViewport(){
-      const m=document.querySelector('meta[name="viewport"]');if(!m)return;
-      const phone=window.innerWidth<=600;
-      if(phone===vpPhone)return; // bytt kun ved kryssing av terskel (unngå loop)
-      vpPhone=phone;
-      m.setAttribute('content',phone
-        ?'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover'
-        :'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-    }
-    window.addEventListener('resize',function(){setViewport();fit();});
-    window.addEventListener('orientationchange',function(){setViewport();refit();});
+    window.addEventListener('resize',fit);
+    window.addEventListener('orientationchange',refit);
     window.addEventListener('pageshow',refit);
     window.addEventListener('focus',refit);
     document.addEventListener('visibilitychange',function(){if(!document.hidden)refit();});
-    if(window.visualViewport)window.visualViewport.addEventListener('resize',function(){if(!vpPhone)fit();}); // ikke kjør under knip-zoom på telefon (ville nullstilt zoomen)
-    setViewport();refit();
+    if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
+    refit();
   })();
   </script>
   <script>
@@ -1890,7 +1879,13 @@
         const res=await fetch(location.pathname+'?_v='+now,{cache:'no-store',headers:{'Range':'bytes=0-2000'}});
         const txt=await res.text();
         const m=txt.match(/name="app-build"\s+content="([^"]+)"/);
-        if(m&&m[1]&&m[1]!==cur&&!busy())location.replace(location.pathname+'?_v='+now);
+        if(m&&m[1]&&m[1]!==cur&&!busy()){
+          let lr=0;try{lr=+sessionStorage.getItem('oppf:autoReload')||0;}catch(e){}
+          if(Date.now()-lr>120000){ // maks én auto-reload pr. 2 min — hindrer loop hvis CDN er treg etter utrulling
+            try{sessionStorage.setItem('oppf:autoReload',String(Date.now()));}catch(e){}
+            location.replace(location.pathname+'?_v='+Date.now());
+          }
+        }
       }catch(e){}
       checking=false;
     }
