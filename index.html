@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-18">
+<meta name="app-build" content="2026-06-20-19">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -337,7 +337,8 @@
   .chip.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
   .chip.gold.on{color:#1a1407;background:linear-gradient(135deg,#f3d999,var(--gold))}
   .m-foot{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
-  .f-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .f-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .f-head .m-title{margin-bottom:0} /* tittel-margen styres av f-head her */
   .btn.f-del-btn{flex:none;color:#ff8a8e;border-color:rgba(255,90,95,.4);background:rgba(255,90,95,.08)}
   .btn.f-del-btn:hover{border-color:var(--red);background:rgba(255,90,95,.16)}
   .m-foot .btn{padding:11px 18px}
@@ -362,7 +363,7 @@
   .pz-status.err{color:var(--red);cursor:pointer}
   .key-help{margin-top:10px;font-size:12px;line-height:1.55;color:var(--ink-dim)}
   .pz-file{cursor:pointer;display:inline-flex;align-items:center}
-  .ai-note{margin:-6px 0 14px;padding:8px 11px;border-radius:9px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.04em}
+  .ai-note{margin:0 0 14px;padding:8px 11px;border-radius:9px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.04em}
   .ai-note.ok{color:var(--mint);background:rgba(61,245,197,.08);border:1px solid rgba(61,245,197,.3)}
   .ai-note.warn{color:var(--gold);background:rgba(232,194,107,.08);border:1px solid rgba(232,194,107,.32)}
 </style>
@@ -1870,7 +1871,7 @@
     $('fTitle').textContent='Ny oppfølging';
     aiDateMode=true;dtFlagSync(); // vis om AI fant en dato (mint ✓ / rød ✗)
     const nEl=$('fAiNote');
-    if(o.pinMatch){nEl.textContent='✓ Pin '+(o.pinNavn||'')+(o.pinAlder?(' '+o.pinAlder):'')+' matcher kortet';nEl.className='ai-note ok';nEl.style.display='';}
+    if(o.pinMatch){nEl.style.display='none';} // match → ikke vis noe (kun advarsel ved bom)
     else{nEl.textContent='⚠ Fant ingen pin som matcher navn + alder — sjekk feltene';nEl.className='ai-note warn';nEl.style.display='';}
   }
 
