@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-05">
+<meta name="app-build" content="2026-06-20-06">
 <title>Oppfølginger — Min side</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -533,7 +533,7 @@
     window.addEventListener('pageshow',refit);
     window.addEventListener('focus',refit);
     document.addEventListener('visibilitychange',function(){if(!document.hidden)refit();});
-    if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
+    if(window.visualViewport)window.visualViewport.addEventListener('resize',function(){if(!vpPhone)fit();}); // ikke kjør under knip-zoom på telefon (ville nullstilt zoomen)
     setViewport();refit();
   })();
   </script>
