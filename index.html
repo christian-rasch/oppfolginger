@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-07">
+<meta name="app-build" content="2026-06-20-08">
 <title>Oppfølginger — Min side</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -467,7 +467,7 @@
       </div>
       <div class="pz-status" id="pzStatus"></div>
       <div class="m-foot" style="justify-content:space-between">
-        <span style="display:inline-flex;gap:8px"><label class="ghost-btn pz-file" for="pzFile">Velg bilde …</label><input type="file" id="pzFile" accept="image/*" style="display:none"><button class="ghost-btn" id="btnKey" title="Egen Anthropic API-nøkkel — gjør at AI-importen virker utenfor Claude">API-nøkkel</button></span>
+        <span style="display:inline-flex;gap:8px"><label class="ghost-btn pz-file" for="pzFile">Velg bilde …</label><input type="file" id="pzFile" accept="image/*" style="display:none"><button class="ghost-btn" id="btnKey" title="Egen Anthropic API-nøkkel — gjør at AI-importen virker utenfor Claude" style="display:none">API-nøkkel</button></span>
         <span style="display:inline-flex;gap:8px"><button class="btn primary" id="pzPaste">📋 Lim inn bilde</button><button class="btn" id="pzCancel">Avbryt</button></span>
       </div>
     </div>
@@ -743,9 +743,19 @@
       try{history.replaceState(null,'',location.origin+location.pathname+location.search);}catch(e){}}
     c.auth.onAuthStateChange(function(_evt,session){
       const was=!!sbUser;sbUser=session?session.user:null;renderCloudStatus();
-      if(!was&&sbUser){cloudReconcile();flushPendingImgs();purgeExpiredArchive();}});
-    if(sbUser){await cloudReconcile();flushPendingImgs();} else setCloudState('login');
+      if(!was&&sbUser){cloudReconcile();flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();}});
+    if(sbUser){await cloudReconcile();flushPendingImgs();cloudFetchApiKey();} else setCloudState('login');
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
+  }
+  // hent felles Anthropic-nøkkel fra app_config (sentralt styrt) → selgeren slipper å lime inn noe
+  async function cloudFetchApiKey(){
+    const c=getSupabaseClient();if(!c||!sbUser)return;
+    try{
+      const {data,error}=await c.from('app_config').select('anthropic_key').eq('id',1).maybeSingle();
+      if(error)return;
+      const k=data&&data.anthropic_key;
+      if(k&&typeof k==='string'&&k.trim()){aiKey=k.trim();try{store.set(KEYK,aiKey);}catch(e){}aiWarm=false;}
+    }catch(e){}
   }
 
   // ---- sky-synk UI ----
