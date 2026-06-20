@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-20-10">
+<meta name="app-build" content="2026-06-20-11">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1554,7 +1554,7 @@
   // ---------- AI: les kartskjermbilde (fungerer når appen kjører i Claude) ----------
   const AI_URL='https://api.anthropic.com/v1/messages';
   const AI_MODEL='claude-sonnet-4-20250514';   // Claude-broen (nøkkelfritt i Claude)
-  const AI_MODEL_KEY='claude-sonnet-4-6';      // direkte API med egen nøkkel
+  const AI_MODEL_KEY='claude-haiku-4-5-20251001';      // direkte API med nøkkel — Haiku = raskest
   let aiWarm=false,aiWarming=false,pendingImg=null,analysing=false,aiKey='',pendingCardImg=null,formFromPaste=false;
   // kartbilde pr. kort — lokal IndexedDB-buffer + Supabase Storage (server = fasit). Synkes IKKE via oppf:index.
   const IMG_BUCKET='cardimg';
