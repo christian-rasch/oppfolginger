@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-02">
+<meta name="app-build" content="2026-06-21-03">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -302,6 +302,12 @@
   .cloud-ind[data-cs="error"]{color:var(--red);border-color:rgba(255,90,95,.55)}
   .cloud-card{width:min(420px,94vw)}
   .cloud-row{margin:10px 0}
+  /* profil-knapp (konto/passord) */
+  .profile-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    padding:0;border:1px solid var(--hair-2);background:rgba(255,255,255,.04);cursor:pointer;flex:none;
+    font-size:18px;line-height:1;transition:border-color .15s,background .15s}
+  .profile-btn:hover{background:rgba(255,255,255,.08)}
+  .profile-btn.is-in{border-color:rgba(61,245,197,.55)}
   .cloud-row input{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
   .cloud-row input:focus{border-color:rgba(61,245,197,.55)}
   .cloud-muted{color:var(--ink-dim);font-size:13px;line-height:1.5}
@@ -385,6 +391,7 @@
         <button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button>
         <button class="btn primary" id="btnNy">+ Ny oppfølging</button>
         <button class="nodate-btn" id="btnPaste" title="Lim inn kartskjermbilde — AI fyller ut oppfølgingen">📷 Lim inn</button>
+        <button class="profile-btn" id="btnProfile" title="Min profil — bytt passord">👤</button>
       </div>
 
       <div class="vfilter filterrow" id="mainbar">
@@ -504,6 +511,14 @@
       <div class="m-title">Sky-synk</div>
       <div id="cloudBody"></div>
       <div class="m-foot"><button class="btn" id="cloudClose">Lukk</button></div>
+    </div>
+  </div>
+
+  <div class="modal" id="profileModal">
+    <div class="m-card cloud-card">
+      <div class="m-title">Min profil</div>
+      <div id="profileBody"></div>
+      <div class="m-foot"><button class="btn" id="profileClose">Lukk</button></div>
     </div>
   </div>
 
@@ -667,6 +682,10 @@
     if(el){el.textContent=CLOUD_LBL[cloudState]||'Lokal';el.setAttribute('data-cs',cloudState);}
     const m=$('cloudModal');
     if(m&&m.classList.contains('open')&&!(document.activeElement&&document.activeElement.id==='cloudEmail'))renderCloudModalBody();
+    const pbtn=$('btnProfile');if(pbtn)pbtn.classList.toggle('is-in',!!sbUser);
+    const pm=$('profileModal');
+    const af=document.activeElement&&document.activeElement.id;
+    if(pm&&pm.classList.contains('open')&&af!=='pfEmail'&&af!=='pfPw'&&af!=='pfNewPw')renderProfileBody();
   }
 
   // skriv skydata til lokal cache UTEN å trigge ny push (ingen ekko)
@@ -746,7 +765,7 @@
     const c=getSupabaseClient();if(!c||!sbUser){toast('Logg inn først');return;}
     if(!pw||pw.length<6){toast('Passord må være minst 6 tegn');return;}
     try{const {error}=await c.auth.updateUser({password:pw});
-      if(error)throw error;toast('Passord lagret – bruk e-post + passord på hjemskjerm-appen');renderCloudModalBody();}
+      if(error)throw error;toast('Passord lagret – bruk e-post + passord på hjemskjerm-appen');renderCloudModalBody();renderProfileBody();closeProfileModal();}
     catch(e){toast('Kunne ikke lagre passord: '+(e&&e.message||''));}
   }
   async function cloudSignOut(){
@@ -797,6 +816,37 @@
   }
   function openCloudModal(){renderCloudModalBody();$('cloudModal').classList.add('open');}
   function closeCloudModal(){$('cloudModal').classList.remove('open');}
+  // ---- profil / bytt passord ----
+  function renderProfileBody(){
+    const b=$('profileBody');if(!b)return;
+    if(!isCloudConfigured()){
+      b.innerHTML='<div class="cloud-row cloud-muted">Konto er ikke satt opp ennå.</div>';return;}
+    if(sbUser){
+      b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
+        +'<div class="cloud-row cloud-muted">Skriv inn nytt passord (minst 6 tegn). Du trenger ikke det gamle.</div>'
+        +'<div class="cloud-row"><input id="pfNewPw" type="password" autocomplete="new-password" placeholder="nytt passord"></div>'
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button><button class="btn" id="pfLogout">Logg ut</button></div>';
+    }else{
+      b.innerHTML='<div class="cloud-row cloud-muted">Logg inn for å kunne bytte passord.</div>'
+        +'<div class="cloud-row"><input id="pfEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="din@epost.no"></div>'
+        +'<div class="cloud-row"><input id="pfPw" type="password" autocomplete="current-password" placeholder="passord"></div>'
+        +'<div class="cloud-row"><button class="btn primary" id="pfLogin">Logg inn</button></div>';
+    }
+  }
+  function openProfileModal(){renderProfileBody();$('profileModal').classList.add('open');}
+  function closeProfileModal(){$('profileModal').classList.remove('open');}
+  function wireProfileUI(){
+    const pb=$('btnProfile');if(pb)pb.addEventListener('click',openProfileModal);
+    const m=$('profileModal');
+    if(m)m.addEventListener('click',function(e){
+      if(e.target===m){closeProfileModal();return;}
+      const id=e.target.id;
+      if(id==='profileClose'){closeProfileModal();return;}
+      if(id==='pfLogin'){const em=($('pfEmail')&&$('pfEmail').value||'').trim();const pw=($('pfPw')&&$('pfPw').value||'');cloudSignInPassword(em,pw);return;}
+      if(id==='pfSavePw'){const pw=($('pfNewPw')&&$('pfNewPw').value||'');cloudSetPassword(pw);return;}
+      if(id==='pfLogout'){cloudSignOut().then(renderProfileBody);return;}
+    });
+  }
   function showCloudConflict(localData,cloudData,serverAt){
     conflictData={cloud:cloudData,serverAt:serverAt};
     const info=$('cloudConflictInfo');
@@ -1907,7 +1957,7 @@
     render();save();
     try{const k=await store.get(KEYK);if(k)aiKey=String(k);}catch(err){}
     warmupAI(); // varm opp AI-kanalen ved appstart (kaldstart gir SyntaxError)
-    wireCloudUI();cloudInit(); // sky-synk: kobler UI + starter (no-op hvis ikke konfigurert)
+    wireCloudUI();wireProfileUI();cloudInit(); // sky-synk: kobler UI + starter (no-op hvis ikke konfigurert)
   })();
 
   // ---------- auto-oppdatering: hent ny utrullet versjon uten manuell reload ----------
