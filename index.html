@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-33">
+<meta name="app-build" content="2026-06-21-34">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -329,7 +329,7 @@
   .f-field input,.f-field textarea{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
   .f-field input:focus,.f-field textarea:focus{border-color:rgba(61,245,197,.55)}
   .f-field textarea{resize:vertical;min-height:74px;line-height:1.45}
-  .dt-field{width:100%;text-align:left;cursor:pointer;font-family:"Schibsted Grotesk",sans-serif;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 32px 10px 12px}
+  .dt-field{width:100%;height:42px;display:flex;align-items:center;text-align:left;cursor:pointer;font-family:"Schibsted Grotesk",sans-serif;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:0 32px 0 12px}
   .dt-field:active{border-color:rgba(61,245,197,.55)}
   .dt-label{pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
   .dt-label.empty{color:var(--ink-faint)}
@@ -342,8 +342,11 @@
   .dtpop-daterow{display:flex;align-items:center;gap:12px;margin:6px 0 14px}
   .dtpop-daterow #fDate{flex:1;font-family:inherit;font-size:15px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
   .dtpop-lbl{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
-  .t-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 16px}
-  .t-mins{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 0 6px}
+  .dtpop-sec{margin-top:12px;margin-bottom:2px}
+  .t-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 4px}
+  .t-mins{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 4px}
+  .dtpop-foot{justify-content:space-between;align-items:center}
+  .dtpop-foot-left{display:flex;gap:9px}
   .t-grid button,.t-mins button{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:9px;padding:11px 0;cursor:pointer}
   .t-grid button.on,.t-mins button.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
   .dt-flag.ok{color:var(--mint)}
@@ -493,10 +496,15 @@
     <div class="m-card dtpop-card">
       <div class="m-title">Dato og tid</div>
       <div class="dtpop-daterow"><label class="dtpop-lbl" for="fDate">Dato</label><input type="date" id="fDate"></div>
-      <div class="dtpop-lbl">Klokkeslett</div>
+      <div class="dtpop-lbl dtpop-sec">Time</div>
       <div class="t-grid" id="fHours"></div>
+      <div class="dtpop-lbl dtpop-sec">Minutt</div>
       <div class="t-mins" id="fMins"></div>
-      <div class="m-foot"><button class="btn" id="fDtClear">Nullstill</button><button class="btn primary" id="fDtDone">Ferdig</button></div>
+      <input type="time" id="fTimeNative" step="60" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
+      <div class="m-foot dtpop-foot">
+        <div class="dtpop-foot-left"><button class="btn" id="fDtCustom" type="button">Custom</button><button class="btn" id="fDtClear" type="button">Nullstill</button></div>
+        <button class="btn primary" id="fDtDone" type="button">Ferdig</button>
+      </div>
     </div>
   </div>
 
@@ -1222,14 +1230,14 @@
     for(const t of heads){if(t<=cardTop+1)ownTop=t;else break;}
     if(ownTop!=null)for(const t of heads){if(t<ownTop)prevTop=t;else break;}
     // prøv forrige kategori øverst, så kortets egen — men kun hvis kortet da lander godt under midten og er synlig
-    const lowMin=H*0.55,highMax=H*0.82;
+    const lowMin=H*0.60,highMax=H*0.90;
     let chosen=null;
     [prevTop,ownTop].forEach(function(st){
       if(chosen!=null||st==null)return;
       const pos=cardTop-st; // hvor kortet havner fra toppen hvis vi legger overskriften øverst
       if(pos>=lowMin&&pos<=highMax)chosen=st;
     });
-    if(chosen==null)chosen=cardTop-H*0.6; // ingen overskrift passet → legg kortet et godt stykke ned uten å tvinge overskrift øverst
+    if(chosen==null)chosen=cardTop-H*0.65; // ingen overskrift passet → legg kortet et godt stykke ned uten å tvinge overskrift øverst
     listEl.scrollTop=Math.max(0,chosen);
     el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
     setTimeout(function(){el.classList.remove('justadded');},2200);
@@ -1548,7 +1556,7 @@
     // ingen dato → ingen rød ramme/kryss; blokka viser bare en strek «—» (se chipSync)
   }
   // ---- egen tappbar dato/tid-velger (alle timer synlige, kun 00/15/30/45) ----
-  const DT_HOURS=[];for(let _h=8;_h<=23;_h++)DT_HOURS.push(_h);
+  const DT_HOURS=[];for(let _h=10;_h<=21;_h++)DT_HOURS.push(_h);
   const DT_MINS=[0,15,30,45];
   function buildDtPicker(){
     const hg=$('fHours');if(hg&&!hg.children.length)DT_HOURS.forEach(function(h){const b=document.createElement('button');b.type='button';b.dataset.h=h;b.textContent=pad(h);hg.appendChild(b);});
@@ -1626,6 +1634,8 @@
   $('fDtClear').addEventListener('click',function(){fDatoVal=null;fChipSel=null;chipSync();liveCommit(true);closeDtPop();});
   $('fHours').addEventListener('click',function(e){const b=e.target.closest('button');if(b)setDtTime(+b.dataset.h,null);});
   $('fMins').addEventListener('click',function(e){const b=e.target.closest('button');if(b)setDtTime(null,+b.dataset.m);});
+  $('fDtCustom').addEventListener('click',function(){const t=$('fTimeNative');const cur=p(fDatoVal);if(cur)t.value=pad(cur.getHours())+':'+pad(cur.getMinutes());try{if(t.showPicker)t.showPicker();else{t.focus();t.click();}}catch(_){t.focus();}});
+  $('fTimeNative').addEventListener('change',function(){const v=this.value;if(!v)return;const pr=v.split(':');setDtTime(+pr[0],+pr[1]);});
   $('fDate').addEventListener('change',function(){
     if(!this.value){fDatoVal=null;fChipSel=null;chipSync();liveCommit(true);return;}
     const cur=p(fDatoVal);const time=cur?(pad(cur.getHours())+':'+pad(cur.getMinutes())):'12:00';
