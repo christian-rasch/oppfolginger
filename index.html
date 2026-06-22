@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-27">
+<meta name="app-build" content="2026-06-21-28">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -495,7 +495,7 @@
         <img id="pzPrev" alt="" style="display:none">
       </div>
       <div class="pz-status" id="pzStatus"></div>
-      <div class="m-foot" style="flex-direction:column;align-items:center;gap:12px">
+      <div class="m-foot" id="pzUploadRow" style="display:none;flex-direction:column;align-items:center;gap:12px">
         <label class="ghost-btn pz-file" for="pzFile" style="cursor:pointer">Last opp bilde</label>
       </div>
       <div class="m-foot" style="display:none;flex-direction:column;align-items:stretch;gap:12px">
@@ -1862,7 +1862,9 @@
     img.onerror=function(){cb(durl);};
     img.src=durl;
   }
+  function showUpload(on){const r=$('pzUploadRow');if(r)r.style.display=on?'flex':'none';} // «Last opp bilde» kun i nød-tilfellet
   function gotImage(durl){
+    showUpload(false); // bilde lastet → skjul «Last opp bilde»
     pendingImg=dataURLparts(durl);
     pendingCardImg=durl; // behold for å lagre som kortets kartbilde (lokalt)
     const pv=$('pzPrev');pv.src=durl;pv.style.display='';
@@ -1873,11 +1875,11 @@
     if(!file)return;
     const fr=new FileReader();
     fr.onload=function(){compress(String(fr.result),gotImage);};
-    fr.onerror=function(){setAiStatus('Klarte ikke å lese bildet.','err');};
+    fr.onerror=function(){setAiStatus('Klarte ikke å lese bildet.','err');showUpload(true);};
     fr.readAsDataURL(file);
   }
   function openPaste(){
-    pendingImg=null;analysing=false;
+    pendingImg=null;analysing=false;showUpload(false);
     const pv=$('pzPrev');pv.src='';pv.style.display='none';
     $('pzOverlay').style.display='';$('pzEdit').style.display='';
     $('pzEdit').innerHTML='';setAiStatus('');
@@ -1890,14 +1892,14 @@
   // → ingen vindu som blinker opp hvis man avbryter «Lim inn»-menyen, og trykket er mer paalitelig naar appen nettopp er vekket
   async function quickPasteAnalyze(){
     warmupAI();
-    if(!(navigator.clipboard&&navigator.clipboard.read)){openPaste();return;} // reserve: nettleser uten direkte liming → manuell boks
+    if(!(navigator.clipboard&&navigator.clipboard.read)){openPaste();showUpload(true);return;} // reserve: nettleser uten direkte liming → manuell boks
     try{
       const items=await navigator.clipboard.read();
       for(const it of items){
         const type=(it.types||[]).find(function(t){return t.indexOf('image/')===0;});
         if(type){const blob=await it.getType(type);openPaste();handleImageFile(blob);return;}
       }
-      openPaste();setAiStatus('Fant ikke noe bilde i utklippstavla — kopier kart-skjermbildet og prøv igjen.','err'); // ingen bilde → aapne for manuell liming
+      openPaste();setAiStatus('Fant ikke noe bilde i utklippstavla — kopier kart-skjermbildet og prøv igjen.','err');showUpload(true); // ingen bilde → tilby opplasting
     }catch(e){ /* «Lim inn» avbrutt/avvist → ingen popup, ingen flikring */ }
   }
   $('btnPaste').addEventListener('click',quickPasteAnalyze);
@@ -1914,7 +1916,7 @@
     setTimeout(function(){
       const im=$('pzEdit').querySelector('img');
       if(im&&/^data:image\//.test(im.src))compress(im.src,gotImage);
-      else setAiStatus('Fant ikke noe bilde i utklippstavla — kopier skjermbildet og prøv igjen.','err');
+      else{setAiStatus('Fant ikke noe bilde i utklippstavla — kopier skjermbildet og prøv igjen.','err');showUpload(true);}
       $('pzEdit').innerHTML='';
     },80);
   });
@@ -1922,7 +1924,7 @@
   // «Lim inn bilde»-knapp: les bildet rett fra utklippstavla (slipper hold-inne-menyen)
   async function pasteFromClipboard(){
     if(!(navigator.clipboard&&navigator.clipboard.read)){
-      setAiStatus('Nettleseren støtter ikke direkte liming — hold inne i boksen og velg «Lim inn».','err');return;
+      setAiStatus('Nettleseren støtter ikke direkte liming — hold inne i boksen og velg «Lim inn».','err');showUpload(true);return;
     }
     setAiStatus('Henter bilde fra utklippstavla …','busy');
     try{
@@ -1931,9 +1933,9 @@
         const type=(it.types||[]).find(function(t){return t.indexOf('image/')===0;});
         if(type){const blob=await it.getType(type);handleImageFile(blob);return;}
       }
-      setAiStatus('Fant ikke noe bilde i utklippstavla — kopier kart-skjermbildet og prøv igjen.','err');
+      setAiStatus('Fant ikke noe bilde i utklippstavla — kopier kart-skjermbildet og prøv igjen.','err');showUpload(true);
     }catch(e){
-      setAiStatus('Fikk ikke lest utklippstavla ('+((e&&e.message)||'avvist')+'). Hold inne i boksen og velg «Lim inn» i stedet.','err');
+      setAiStatus('Fikk ikke lest utklippstavla ('+((e&&e.message)||'avvist')+'). Hold inne i boksen og velg «Lim inn» i stedet.','err');showUpload(true);
     }
   }
   $('pzPaste').addEventListener('click',pasteFromClipboard);
