@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-63">
+<meta name="app-build" content="2026-06-21-65">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -91,7 +91,7 @@
   /* kategori-boks for Avtaler/Må gjøres — samme innramming som «Uten tidspunkt», men kun kategori-overskrift (ingen under-overskrift) */
   .grp-box{display:flex;flex-direction:column;gap:7px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.015);border-radius:12px;padding:11px 13px}
   .grp-box>*{flex:none}
-  .grp-box .grp{margin:0;padding-bottom:5px;border-bottom:none} /* kategori-overskrift — helt lik salgsrunde-overskriften i «Uten tidspunkt» (boksen rammer inn) */
+  .grp-box .grp{margin:0;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.05)} /* kategori-overskrift med luft ned mot skillelinja+kortene (som avstanden i «Uten tidspunkt») */
   .lcard{display:flex;align-items:center;gap:20px;padding:18px 22px;position:relative}
   .lcard .accent{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
   .lcard .when{display:flex;flex-direction:column;align-items:center;min-width:84px;padding-left:8px}
@@ -1515,12 +1515,12 @@
   function closeDpop(){$('dpop').classList.remove('open');dpItem=null;}
   function applyDp(v){
     if(!dpItem)return;
-    const it=dpItem,oldDato=it.dato,oldTab=it.dato?'avtaler':'uten';
+    const it=dpItem,oldDato=it.dato;
     it.dato=v;save();closeDpop();
     if(v===oldDato){render();return;} // ingen reell endring → ingen glow
-    const newTab=it.dato?'avtaler':'uten';
-    if(view==='gjore'){render();revealCard(it.id,true,'gjore',newTab);} // i Må gjøres: ikke følg kortet — vis kun pil dit det også havner
-    else{navToItem(it);render();revealCard(it.id,oldTab!==newTab,oldTab);} // ellers: følg kortet; fane-glow + pil kun ved fanebytte
+    const destTab=it.dato?'avtaler':'uten';
+    render(); // bli i gjeldende visning — følg ikke kortet
+    revealCard(it.id,destTab!==view,view,destTab); // kort-glow hvis synlig; pil + fane-blink kun ved hovedfanebytte
   }
   $('dpop').addEventListener('click',function(e){
     e.stopPropagation();
@@ -1751,15 +1751,13 @@
     let revealId=null,revealFlashTab=true,revealFrom=null,revealTo;
     if(editId){
       const it=byId(editId);
-      const oldTab=editOrigDato?'avtaler':'uten';
       Object.assign(it,f);
       if(fHandling)applyNA(it,fHandling); // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       toast('Lagret');
       if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: alltid fane-bytte + grønt blink som manuell
-      else if(it.dato!==editOrigDato){
-        const newTab=it.dato?'avtaler':'uten';
-        if(view==='gjore'){revealId=it.id;revealFrom='gjore';revealTo=newTab;revealFlashTab=true;} // i Må gjøres: bli stående — vis kun pil dit kortet havner
-        else{navToItem(it);revealId=it.id;revealFlashTab=(oldTab!==newTab);revealFrom=oldTab;} // ellers: følg kortet
+      else if(it.dato!==editOrigDato){ // redigering av eksisterende kort → bli i visningen; pil/blink kun ved hovedfanebytte (Avtaler ↔ Uten tidspunkt)
+        const destTab=it.dato?'avtaler':'uten';
+        revealId=it.id;revealFrom=view;revealTo=destTab;revealFlashTab=(destTab!==view);
       }
     }else{
       const o=migrate(f);
