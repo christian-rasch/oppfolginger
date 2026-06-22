@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-49">
+<meta name="app-build" content="2026-06-21-50">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -124,7 +124,8 @@
   .opf-card .when-edit .late-age{font-family:"JetBrains Mono",monospace;font-size:13.5px;font-weight:500;letter-spacing:.02em;opacity:.55;color:var(--ink);margin-top:7px;line-height:1.1;white-space:nowrap}
   .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub{margin-top:5px}
   .opf-card.late .when-edit .late-age,.opf-card.late .when-edit b,.opf-card.late .when-edit .r-label,.opf-card.late .when-edit .rail-weekday,.opf-card.late .when-edit .when-sub{color:#ff9b9e} /* forfalt-rail: klokkeslett + ukedag + uke-kontekst + «-N d.» i svak rød (kun forfalt-kort, ikke «Alle») */
-  .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink);opacity:.30;line-height:1} /* uten tidspunkt — rolig/dempet */
+  .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink);opacity:.30;line-height:1;position:relative} /* uten tidspunkt — rolig/dempet */
+  .opf-card .when-edit .when-dash::before{content:"";position:absolute;inset:-16px -18px} /* ~2,5× større trykkflate på «—» (usynlig, endrer ikke layout) */
   .nd-hide{display:none!important}
   .opf-meta .nd-why{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.12);border:1px solid rgba(232,194,107,.28);padding:3px 8px;border-radius:7px}
   .opf-meta .nd-why.sig{color:var(--mint);background:rgba(61,245,197,.1);border-color:rgba(61,245,197,.28)}
@@ -150,9 +151,9 @@
   .tab-arrow{position:absolute;pointer-events:none;z-index:5;overflow:visible;animation:taFade 2.3s ease forwards}
   .ta-shaft{fill:none;stroke:rgba(127,232,200,.42);stroke-width:3;stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:taDraw 2.3s cubic-bezier(.42,0,.25,1) forwards}
   .ta-head{fill:rgba(127,232,200,.5);opacity:0;filter:drop-shadow(0 0 4px rgba(127,232,200,.45));animation:taHead 2.3s ease forwards}
-  @keyframes taDraw{0%{stroke-dashoffset:var(--len)}34%{stroke-dashoffset:0}50%{stroke-dashoffset:0}100%{stroke-dashoffset:calc(var(--len)*-1)}}
-  @keyframes taHead{0%,30%{opacity:0}38%{opacity:1}56%{opacity:1}100%{opacity:0}}
-  @keyframes taFade{0%{opacity:0;transform:translateY(9px)}11%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}
+  @keyframes taDraw{0%{stroke-dashoffset:var(--len)}42%{stroke-dashoffset:0}100%{stroke-dashoffset:0}}
+  @keyframes taHead{0%,40%{opacity:0}47%{opacity:1}58%{opacity:1}100%{opacity:0}}
+  @keyframes taFade{0%{opacity:0;transform:translateY(9px)}11%{opacity:1;transform:translateY(0)}55%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(3px)}}
   /* handlingsområde: én rad — handling-chip + «Tilbud sendt»-status ved siden av */
   .opf-action{grid-area:action;display:flex;align-items:center;gap:10px;min-width:0}
   /* «Tilbud sendt …»-pill med klikkbar check-boks */
