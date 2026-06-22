@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-46">
+<meta name="app-build" content="2026-06-21-47">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -992,13 +992,13 @@
     if(railCtx==='gjore'){ // Må gjøres: kategoriene styres av når kortet kom hit → vis alltid tydelig dag-label (forfalt blir rød via .late)
       const diff=Math.round((+td-+d0)/864e5);
       const wkDiff=Math.round((+startOfWeek(t)-+wk0)/(7*864e5));
-      if(diff===0)return wd('I dag')+big(time);
-      if(diff===-1)return wd('I går')+big(time);
-      if(diff===1)return wd('I morgen')+big(time);
-      if(wkDiff===0)return wd(WDU[t.getDay()])+sub('denne uken')+big(time);
-      if(wkDiff===-1)return wd(WDU[t.getDay()])+sub('forrige uke')+big(time);
-      if(wkDiff===-2)return wd(WDU[t.getDay()])+sub('uken før')+big(time);
-      if(wkDiff===1)return wd(WDU[t.getDay()])+sub('neste uke')+big(time);
+      if(diff===0)return dt('I dag')+dt(time);
+      if(diff===-1)return dt('I går')+dt(time);
+      if(diff===1)return dt('I morgen')+dt(time);
+      if(wkDiff===0)return dt(WDU[t.getDay()])+sub('denne uken')+dt(time);
+      if(wkDiff===-1)return dt(WDU[t.getDay()])+sub('forrige uke')+dt(time);
+      if(wkDiff===-2)return dt(WDU[t.getDay()])+sub('uken før')+dt(time);
+      if(wkDiff===1)return dt(WDU[t.getDay()])+sub('neste uke')+dt(time);
       return dt(t.getDate()+'. '+MO[t.getMonth()]); // spesifikk dato lenger unna → uendret
     }
     if(t<n){ // ---------- forfalt (samme format som «Alle», men rød via .late) ----------
