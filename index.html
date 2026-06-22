@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-29">
+<meta name="app-build" content="2026-06-21-30">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -329,7 +329,9 @@
   .f-field input,.f-field textarea{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
   .f-field input:focus,.f-field textarea:focus{border-color:rgba(61,245,197,.55)}
   .f-field textarea{resize:vertical;min-height:74px;line-height:1.45}
-  #fDt{cursor:pointer}
+  #fDt{cursor:pointer;color:transparent} /* native dato-tekst skjules; vennlig etikett vises oppaa via .dt-label */
+  .dt-label{position:absolute;left:14px;right:38px;top:50%;transform:translateY(-50%);pointer-events:none;font-family:"Schibsted Grotesk",sans-serif;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dt-label.empty{color:var(--ink-faint)}
   #fDt::-webkit-calendar-picker-indicator{display:none} /* hele feltet er klikkbart (showPicker), eget ikon skjules */
   .dt-wrap{position:relative;margin-top:8px}
   .dt-flag{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:"JetBrains Mono",monospace;font-weight:800;font-size:14px;line-height:1;pointer-events:none}
@@ -470,7 +472,7 @@
             <button class="chip" data-dp="m21" type="button">I morgen 21:00</button>
             <button class="chip" data-dp="ingen" type="button">Ingen tidspunkt</button>
           </div>
-          <div class="dt-wrap"><input type="datetime-local" id="fDt"><span class="dt-flag" id="fDtFlag"></span></div>
+          <div class="dt-wrap"><input type="datetime-local" id="fDt"><span class="dt-label" id="fDtLabel"></span><span class="dt-flag" id="fDtFlag"></span></div>
         </div>
         <div class="f-field full"><label>Besøkskommentar</label><textarea id="fKom"></textarea></div>
       </div>
@@ -1479,10 +1481,27 @@
   // ---------- skjema (ny / rediger) med duplikatvern ----------
   let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null;
   function segSet(seg,v){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+  // vennlig dato-etikett: «I dag, 12:00» · «I morgen, 14:00» · «Torsdag, 14:00» · «Mandag neste uke, 14:00» · ellers «26. juni 2026, 14:00»
+  function friendlyDate(val){
+    const d=p(val);if(!d||isNaN(d))return '';
+    const n=now(),wk=['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
+    const d0=+startOfDay(d),t0=+startOfDay(n),diff=Math.round((d0-t0)/864e5);
+    const datofmt=d.getDate()+'. '+MOFULL[d.getMonth()]+(d.getFullYear()!==n.getFullYear()?' '+d.getFullYear():'');
+    let lab;
+    if(diff===0)lab='I dag';
+    else if(diff===1)lab='I morgen';
+    else if(diff<0)lab=datofmt;
+    else{const wk0=+startOfWeek(n),nw=wk0+7*864e5,wa=wk0+14*864e5;
+      if(d0<nw)lab=wk[d.getDay()];
+      else if(d0<wa)lab=wk[d.getDay()]+' neste uke';
+      else lab=datofmt;}
+    return lab+', '+hhmm(d);
+  }
   function chipSync(){
     // valgt hurtigvalg lyser grønt; «Ingen tidspunkt» lyser når ingen dato er satt
     Array.from($('fChips').children).forEach(c=>{const dp=c.dataset.dp;if(!dp)return;c.classList.toggle('on',dp==='ingen'?!fDatoVal:dp===fChipSel);});
     $('fDt').value=fDatoVal||'';
+    const lbl=$('fDtLabel');if(lbl){const t=friendlyDate(fDatoVal);lbl.textContent=t||'Velg dato og tid';lbl.classList.toggle('empty',!t);}
     dtFlagSync();
   }
   // viser om AI fant en dato: mint ramme + ✓ når satt, rød ramme + ✗ når tom. Kun i AI-import-skjemaet.
