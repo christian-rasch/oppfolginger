@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-11">
+<meta name="app-build" content="2026-06-21-12">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -454,7 +454,7 @@
         <div class="f-field"><label>Telefon</label><input id="fTel" inputmode="tel" autocomplete="off"></div>
         <div class="f-field"><label>Salgsrunde</label><input id="fRunde" autocomplete="off"></div>
         <div class="f-field full"><label>Adresse</label><input id="fAdr" autocomplete="off"></div>
-        <div class="f-field"><label>Status</label>
+        <div class="f-field"><label>Type</label>
           <div class="seg seg-col" id="fStatus"><div class="seg-row"><button data-v="HP" class="on">HP</button><button data-v="HC">HC</button><button data-v="Vula">Vula</button></div><div class="seg-row"><button data-v="Roll">Rollout</button></div></div></div>
         <div class="f-field"><label>Neste handling</label>
           <div class="seg" id="fKanal"><button data-v="send_offer">Mail</button><button data-v="call">Ring</button><button data-v="visit">Besøk</button><button data-v="trying_to_reach">Få tak i</button></div></div>
@@ -1020,7 +1020,7 @@
       +'<div class="opf-body">'
       +'<div class="opf-ident edit-zone" title="Trykk for å redigere">'
       +'<div class="opf-cust"><div class="cn"><span class="cn-name">'+(esc(shortName(it.navn))||'—')+'</span>'+age+'</div></div>'
-      +'<div class="opf-meta"><span class="type-chip '+typeCls(it.status)+'">'+esc(it.status)+'</span>'+runde+'</div>'
+      +'<div class="opf-meta">'+(it.status?'<span class="type-chip '+typeCls(it.status)+'">'+esc(it.status)+'</span>':'')+runde+'</div>'
       +'<div class="addr">'+esc(it.adresse)+'</div>'
       +'</div>'
       +'<div class="opf-action">'+actionControl(it)+tilbudInfo(it)+'</div>'
@@ -1504,8 +1504,8 @@
     clearTimeout(liveTimer);
     if(immediate)save();else liveTimer=setTimeout(save,400);
   }
-  $('fStatus').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fStatusV=b.dataset.v;segSet($('fStatus'),fStatusV);liveCommit(true);}});
-  $('fKanal').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fHandling=b.dataset.v;segSet($('fKanal'),fHandling);liveCommit(true);}});
+  $('fStatus').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fStatusV=(fStatusV===b.dataset.v)?'':b.dataset.v;segSet($('fStatus'),fStatusV);liveCommit(true);}});
+  $('fKanal').addEventListener('click',function(e){const b=e.target.closest('button');if(b){fHandling=(fHandling===b.dataset.v)?null:b.dataset.v;segSet($('fKanal'),fHandling);liveCommit(true);}});
   $('fChips').addEventListener('click',function(e){
     const c=e.target.closest('.chip');if(!c)return;
     const k=c.dataset.dp;fChipSel=k;
