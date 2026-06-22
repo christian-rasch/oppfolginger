@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-23">
+<meta name="app-build" content="2026-06-21-24">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1481,7 +1481,7 @@
     $('fRunde').value=it?it.salgsrunde:'';
     $('fAdr').value=it?it.adresse:'';
     $('fKom').value=it?it.kommentar:'';
-    fStatusV=it?it.status:'HP';segSet($('fStatus'),fStatusV);
+    fStatusV=it?it.status:'';segSet($('fStatus'),fStatusV);
     fHandling=(it&&['send_offer','call','visit','trying_to_reach'].includes(it.nextAction))?it.nextAction:null;segSet($('fKanal'),fHandling);
     fDatoVal=it?it.dato:null;fChipSel=null;chipSync();
     savingLock=false;$('fSave').disabled=false;
