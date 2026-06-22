@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-58">
+<meta name="app-build" content="2026-06-21-59">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1288,12 +1288,13 @@
     setTimeout(function(){if(svg.parentNode)svg.remove();},2200);
   }
   // scroll til et kort (litt over midten) + glow. flashTab → fanen blinker (default). fromTab → pil fra forrige fane
-  function revealCard(id,flashTab,fromTab){
+  function revealCard(id,flashTab,fromTab,toTab){
     if(flashTab===undefined)flashTab=true;
+    if(toTab===undefined)toTab=view; // hvilken fane pila peker mot + blinker (default: gjeldende visning)
     const listEl=$('list');if(!listEl)return;
-    if(flashTab){const tab=$('mainbar')&&$('mainbar').querySelector('button[data-v="'+view+'"]');
+    if(flashTab){const tab=$('mainbar')&&$('mainbar').querySelector('button[data-v="'+toTab+'"]');
       if(tab){tab.classList.remove('tab-flash');void tab.offsetWidth;tab.classList.add('tab-flash');setTimeout(function(){tab.classList.remove('tab-flash');},4100);}}
-    if(fromTab&&fromTab!==view)showTabArrow(fromTab,view); // pil ved fanebytte
+    if(fromTab&&fromTab!==toTab)showTabArrow(fromTab,toTab); // pil ved fanebytte
     const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
     const H=listEl.clientHeight,cardTop=el.offsetTop;
     // kategori-overskrifter (element + offsetTop) — finn kortets egen + den forrige
@@ -1512,8 +1513,9 @@
     const it=dpItem,oldDato=it.dato,oldTab=it.dato?'avtaler':'uten';
     it.dato=v;save();closeDpop();
     if(v===oldDato){render();return;} // ingen reell endring → ingen glow
-    navToItem(it);render();
-    revealCard(it.id,oldTab!==(it.dato?'avtaler':'uten'),oldTab); // kort-glow alltid; fane-glow + pil kun ved fanebytte
+    const newTab=it.dato?'avtaler':'uten';
+    if(view==='gjore'){render();revealCard(it.id,true,'gjore',newTab);} // i Må gjøres: ikke følg kortet — vis kun pil dit det også havner
+    else{navToItem(it);render();revealCard(it.id,oldTab!==newTab,oldTab);} // ellers: følg kortet; fane-glow + pil kun ved fanebytte
   }
   $('dpop').addEventListener('click',function(e){
     e.stopPropagation();
@@ -1741,7 +1743,7 @@
     const f={navn:navn,alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
       salgsrunde:$('fRunde').value.trim(),adresse:adr,status:fStatusV,
       dato:fDatoVal,kommentar:$('fKom').value.trim()};
-    let revealId=null,revealFlashTab=true,revealFrom=null;
+    let revealId=null,revealFlashTab=true,revealFrom=null,revealTo;
     if(editId){
       const it=byId(editId);
       const oldTab=editOrigDato?'avtaler':'uten';
@@ -1749,7 +1751,11 @@
       if(fHandling)applyNA(it,fHandling); // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       toast('Lagret');
       if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: alltid fane-bytte + grønt blink som manuell
-      else if(it.dato!==editOrigDato){navToItem(it);revealId=it.id;revealFlashTab=(oldTab!==(it.dato?'avtaler':'uten'));revealFrom=oldTab;} // redigering som flytter kortet → kort-glow; fane-glow + pil kun ved fanebytte
+      else if(it.dato!==editOrigDato){
+        const newTab=it.dato?'avtaler':'uten';
+        if(view==='gjore'){revealId=it.id;revealFrom='gjore';revealTo=newTab;revealFlashTab=true;} // i Må gjøres: bli stående — vis kun pil dit kortet havner
+        else{navToItem(it);revealId=it.id;revealFlashTab=(oldTab!==newTab);revealFrom=oldTab;} // ellers: følg kortet
+      }
     }else{
       const o=migrate(f);
       if(fHandling)applyNA(o,fHandling);
@@ -1760,7 +1766,7 @@
     }
     pendingCardImg=null;formFromPaste=false;
     save();closeForm();render();
-    if(revealId)revealCard(revealId,revealFlashTab,revealFrom);
+    if(revealId)revealCard(revealId,revealFlashTab,revealFrom,revealTo);
     setTimeout(function(){savingLock=false;},600);
   }
   $('fDelete').addEventListener('click',function(){
