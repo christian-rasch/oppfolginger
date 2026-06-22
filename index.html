@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-31">
+<meta name="app-build" content="2026-06-21-33">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -329,14 +329,23 @@
   .f-field input,.f-field textarea{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
   .f-field input:focus,.f-field textarea:focus{border-color:rgba(61,245,197,.55)}
   .f-field textarea{resize:vertical;min-height:74px;line-height:1.45}
-  #fDt{cursor:pointer;color:transparent} /* native dato-tekst skjules; vennlig etikett vises oppaa via .dt-label */
-  .dt-label{position:absolute;left:14px;right:38px;top:50%;transform:translateY(-50%);pointer-events:none;font-family:"Schibsted Grotesk",sans-serif;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dt-field{width:100%;text-align:left;cursor:pointer;font-family:"Schibsted Grotesk",sans-serif;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 32px 10px 12px}
+  .dt-field:active{border-color:rgba(61,245,197,.55)}
+  .dt-label{pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
   .dt-label.empty{color:var(--ink-faint)}
-  #fDt::-webkit-calendar-picker-indicator{display:none} /* hele feltet er klikkbart (showPicker), eget ikon skjules */
   .dt-wrap{position:relative;margin-top:8px}
   .dt-flag{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:"JetBrains Mono",monospace;font-weight:800;font-size:14px;line-height:1;pointer-events:none}
-  #fDt.ai-ok{border-color:var(--mint)!important;box-shadow:inset 0 0 0 1px rgba(61,245,197,.5),0 0 14px -6px rgba(61,245,197,.7)}
-  #fDt.ai-miss{border-color:var(--red)!important;box-shadow:inset 0 0 0 1px rgba(255,90,95,.55),0 0 14px -6px rgba(255,90,95,.55)}
+  .dt-field.ai-ok{border-color:var(--mint)!important;box-shadow:inset 0 0 0 1px rgba(61,245,197,.5),0 0 14px -6px rgba(61,245,197,.7)}
+  /* egen tappbar dato/tid-velger */
+  .dtpop-modal{z-index:200}
+  .dtpop-card{width:min(420px,94vw)}
+  .dtpop-daterow{display:flex;align-items:center;gap:12px;margin:6px 0 14px}
+  .dtpop-daterow #fDate{flex:1;font-family:inherit;font-size:15px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
+  .dtpop-lbl{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+  .t-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 16px}
+  .t-mins{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 0 6px}
+  .t-grid button,.t-mins button{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:9px;padding:11px 0;cursor:pointer}
+  .t-grid button.on,.t-mins button.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
   .dt-flag.ok{color:var(--mint)}
   .dt-flag.miss{color:var(--red)}
   .full{grid-column:1/-1}
@@ -472,11 +481,22 @@
             <button class="chip" data-dp="m21" type="button">I morgen 21:00</button>
             <button class="chip" data-dp="ingen" type="button">Ingen tidspunkt</button>
           </div>
-          <div class="dt-wrap"><input type="datetime-local" id="fDt"><span class="dt-label" id="fDtLabel"></span><span class="dt-flag" id="fDtFlag"></span></div>
+          <div class="dt-wrap"><button type="button" class="dt-field" id="fDtField"><span class="dt-label empty" id="fDtLabel">—</span></button><span class="dt-flag" id="fDtFlag"></span></div>
         </div>
         <div class="f-field full"><label>Besøkskommentar</label><textarea id="fKom"></textarea></div>
       </div>
       <div class="m-foot"><button class="btn primary" id="fSave">Lagre</button></div>
+    </div>
+  </div>
+
+  <div class="modal dtpop-modal" id="fDtPop">
+    <div class="m-card dtpop-card">
+      <div class="m-title">Dato og tid</div>
+      <div class="dtpop-daterow"><label class="dtpop-lbl" for="fDate">Dato</label><input type="date" id="fDate"></div>
+      <div class="dtpop-lbl">Klokkeslett</div>
+      <div class="t-grid" id="fHours"></div>
+      <div class="t-mins" id="fMins"></div>
+      <div class="m-foot"><button class="btn" id="fDtClear">Nullstill</button><button class="btn primary" id="fDtDone">Ferdig</button></div>
     </div>
   </div>
 
@@ -1195,7 +1215,22 @@
     const tab=$('mainbar')&&$('mainbar').querySelector('button[data-v="'+view+'"]');
     if(tab){tab.classList.remove('tab-flash');void tab.offsetWidth;tab.classList.add('tab-flash');setTimeout(function(){tab.classList.remove('tab-flash');},2200);}
     const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
-    listEl.scrollTop=Math.max(0,el.offsetTop-listEl.clientHeight*0.38);
+    const H=listEl.clientHeight,cardTop=el.offsetTop;
+    // kategori-overskrifter (offsetTop) — finn kortets egen + den forrige
+    const heads=Array.from(listEl.querySelectorAll('.grp')).map(g=>g.offsetTop).sort((a,b)=>a-b);
+    let ownTop=null,prevTop=null;
+    for(const t of heads){if(t<=cardTop+1)ownTop=t;else break;}
+    if(ownTop!=null)for(const t of heads){if(t<ownTop)prevTop=t;else break;}
+    // prøv forrige kategori øverst, så kortets egen — men kun hvis kortet da lander godt under midten og er synlig
+    const lowMin=H*0.55,highMax=H*0.82;
+    let chosen=null;
+    [prevTop,ownTop].forEach(function(st){
+      if(chosen!=null||st==null)return;
+      const pos=cardTop-st; // hvor kortet havner fra toppen hvis vi legger overskriften øverst
+      if(pos>=lowMin&&pos<=highMax)chosen=st;
+    });
+    if(chosen==null)chosen=cardTop-H*0.6; // ingen overskrift passet → legg kortet et godt stykke ned uten å tvinge overskrift øverst
+    listEl.scrollTop=Math.max(0,chosen);
     el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
     setTimeout(function(){el.classList.remove('justadded');},2200);
   }
@@ -1500,18 +1535,46 @@
   function chipSync(){
     // valgt hurtigvalg lyser grønt; «Ingen tidspunkt» lyser når ingen dato er satt
     Array.from($('fChips').children).forEach(c=>{const dp=c.dataset.dp;if(!dp)return;c.classList.toggle('on',dp==='ingen'?!fDatoVal:dp===fChipSel);});
-    $('fDt').value=fDatoVal||'';
     const lbl=$('fDtLabel');if(lbl){const t=friendlyDate(fDatoVal);lbl.textContent=t||'—';lbl.classList.toggle('empty',!t);}
+    syncDtPicker();
     dtFlagSync();
   }
   // viser om AI fant en dato: mint ramme + ✓ når satt, rød ramme + ✗ når tom. Kun i AI-import-skjemaet.
   function dtFlagSync(){
-    const dt=$('fDt'),fl=$('fDtFlag');
+    const dt=$('fDtField'),fl=$('fDtFlag');if(!dt)return;
     dt.classList.remove('ai-ok','ai-miss');fl.classList.remove('ok','miss');fl.textContent='';
     if(!aiDateMode)return;
     if(fDatoVal){dt.classList.add('ai-ok');fl.classList.add('ok');fl.textContent='✓';}
     // ingen dato → ingen rød ramme/kryss; blokka viser bare en strek «—» (se chipSync)
   }
+  // ---- egen tappbar dato/tid-velger (alle timer synlige, kun 00/15/30/45) ----
+  const DT_HOURS=[];for(let _h=8;_h<=23;_h++)DT_HOURS.push(_h);
+  const DT_MINS=[0,15,30,45];
+  function buildDtPicker(){
+    const hg=$('fHours');if(hg&&!hg.children.length)DT_HOURS.forEach(function(h){const b=document.createElement('button');b.type='button';b.dataset.h=h;b.textContent=pad(h);hg.appendChild(b);});
+    const mg=$('fMins');if(mg&&!mg.children.length)DT_MINS.forEach(function(m){const b=document.createElement('button');b.type='button';b.dataset.m=m;b.textContent=pad(m);mg.appendChild(b);});
+  }
+  function syncDtPicker(){
+    const d=p(fDatoVal);
+    const fd=$('fDate');if(fd)fd.value=d?toLocal(d).slice(0,10):'';
+    const hh=d?d.getHours():null,mm=d?d.getMinutes():null;
+    const hg=$('fHours');if(hg)Array.from(hg.children).forEach(b=>b.classList.toggle('on',+b.dataset.h===hh));
+    const mg=$('fMins');if(mg)Array.from(mg.children).forEach(b=>b.classList.toggle('on',+b.dataset.m===mm));
+  }
+  function dtComposeDate(){ // gjeldende dato-del (YYYY-MM-DD), ellers valgt dato, ellers i dag
+    if(fDatoVal)return fDatoVal.slice(0,10);
+    const fd=$('fDate');if(fd&&fd.value)return fd.value;
+    return toLocal(now()).slice(0,10);
+  }
+  function setDtTime(h,m){
+    const cur=p(fDatoVal);
+    const hh=(h!=null)?h:(cur?cur.getHours():12);
+    const mm=(m!=null)?m:(cur?cur.getMinutes():0);
+    fDatoVal=dtComposeDate()+'T'+pad(hh)+':'+pad(mm);
+    fChipSel=null;chipSync();liveCommit(true);
+  }
+  function openDtPop(){buildDtPicker();syncDtPicker();$('fDtPop').classList.add('open');}
+  function closeDtPop(){$('fDtPop').classList.remove('open');}
   function openForm(it){
     editId=it?it.id:null;
     aiRevealId=null; // manuell/redigering: ingen AI-reveal (openFormFromAI setter den etterpå)
@@ -1557,7 +1620,17 @@
     else if(k==='ingen')fDatoVal=null;
     chipSync();liveCommit(true);
   });
-  $('fDt').addEventListener('change',function(){fDatoVal=$('fDt').value||null;fChipSel=null;chipSync();liveCommit(true);});
+  $('fDtField').addEventListener('click',openDtPop);
+  $('fDtPop').addEventListener('click',function(e){if(e.target===$('fDtPop'))closeDtPop();});
+  $('fDtDone').addEventListener('click',closeDtPop);
+  $('fDtClear').addEventListener('click',function(){fDatoVal=null;fChipSel=null;chipSync();liveCommit(true);closeDtPop();});
+  $('fHours').addEventListener('click',function(e){const b=e.target.closest('button');if(b)setDtTime(+b.dataset.h,null);});
+  $('fMins').addEventListener('click',function(e){const b=e.target.closest('button');if(b)setDtTime(null,+b.dataset.m);});
+  $('fDate').addEventListener('change',function(){
+    if(!this.value){fDatoVal=null;fChipSel=null;chipSync();liveCommit(true);return;}
+    const cur=p(fDatoVal);const time=cur?(pad(cur.getHours())+':'+pad(cur.getMinutes())):'12:00';
+    fDatoVal=this.value+'T'+time;fChipSel=null;chipSync();liveCommit(true);
+  });
   ['fNavn','fAlder','fTel','fRunde','fAdr','fKom'].forEach(function(id){$(id).addEventListener('input',function(){liveCommit(false);});});
   function doSave(){
     if(savingLock)return;savingLock=true;$('fSave').disabled=true;
@@ -1603,7 +1676,7 @@
   $('formModal').addEventListener('keydown',function(e){ // Enter = lagre; Shift+Enter = linjeskift i kommentar
     if(e.key==='Enter'&&!e.shiftKey&&!savingLock&&$('formModal').classList.contains('open')){e.preventDefault();doSave();}
   });
-  $('fDt').addEventListener('click',function(){try{if(this.showPicker)this.showPicker();else this.focus();}catch(_){this.focus();}}); // hele datofeltet åpner kalenderen
+  $('fDate').setAttribute('inputmode','none'); // dato-input i velgeren: kun kalender, ingen manuell tasting
   $('btnNy').addEventListener('click',function(){closeProfileModal();pendingCardImg=null;formFromPaste=false;openForm(null);});
   // hent nyeste versjon (cache-omgåelse) — slipper å re-installere appen på hjemskjerm
   $('btnReload').addEventListener('click',function(){location.href=location.pathname+'?t='+Date.now();});
