@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-09">
+<meta name="app-build" content="2026-06-21-10">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -493,6 +493,9 @@
         <img id="pzPrev" alt="" style="display:none">
       </div>
       <div class="pz-status" id="pzStatus"></div>
+      <div class="m-foot" style="flex-direction:column;align-items:stretch;gap:12px">
+        <label class="btn primary pz-file" for="pzFile" style="text-align:center;cursor:pointer">🖼️ Last opp bilde fra iPad</label>
+      </div>
       <div class="m-foot" style="display:none;flex-direction:column;align-items:stretch;gap:12px">
         <button class="btn primary" id="pzPaste" style="font-size:18px;font-weight:800;padding:22px;width:100%">📋 Lim inn bilde</button>
         <span style="display:inline-flex;gap:8px;justify-content:center"><label class="ghost-btn pz-file" for="pzFile">Velg bilde …</label><input type="file" id="pzFile" accept="image/*" style="display:none"><button class="ghost-btn" id="btnKey" title="Egen Anthropic API-nøkkel — gjør at AI-importen virker utenfor Claude" style="display:none">API-nøkkel</button></span>
