@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-61">
+<meta name="app-build" content="2026-06-21-62">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -88,6 +88,10 @@
   .runde-box>*{flex:none}
   .runde-box .grp{margin:0;padding-bottom:5px;border-bottom:none} /* salgsrundenavn — boksen rammer inn */
   .runde-box .grp.sub{margin:0;padding-left:0;padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,.05)} /* underkategori — ingen innrykk, linje ut til kanten */
+  /* kategori-boks for Avtaler/Må gjøres — samme innramming som «Uten tidspunkt», men kun kategori-overskrift (ingen under-overskrift) */
+  .grp-box{display:flex;flex-direction:column;gap:7px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.015);border-radius:12px;padding:11px 13px}
+  .grp-box>*{flex:none}
+  .grp-box .grp{margin:0;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,.05)} /* kategori-overskrift med tynn skillelinje før kortene */
   .lcard{display:flex;align-items:center;gap:20px;padding:18px 22px;position:relative}
   .lcard .accent{position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:0 4px 4px 0}
   .lcard .when{display:flex;flex-direction:column;align-items:center;min-width:84px;padding-left:8px}
@@ -1223,8 +1227,9 @@
       const lab=g[0],arr=g[1],cls=g[2],force=g[3];
       if(cls==='raw'){html+=lab;any=true;return;} // forhåndsbygd HTML (salgsrunde-bokser i «Uten tidspunkt»)
       if(!arr.length&&!force)return;
-      html+='<div class="grp '+cls+'">'+lab+'</div>'+arr.map(it=>cardHTML(it,g[4])).join('');
-      if(arr.length)any=true;
+      const head='<div class="grp '+cls+'">'+lab+'</div>';
+      if(arr.length){html+='<div class="grp-box">'+head+arr.map(it=>cardHTML(it,g[4])).join('')+'</div>';any=true;} // boks rundt kategori + kort
+      else html+=head; // tom (force) overskrift uten boks
     });
     if(!any)html+='<div class="empty">'+empty+'</div>';
     $('list').innerHTML=html;
@@ -1300,8 +1305,8 @@
     // kategori-overskrifter (element + offsetTop) — finn kortets egen + den forrige
     const headEls=Array.from(listEl.querySelectorAll('.grp')).sort((a,b)=>a.offsetTop-b.offsetTop);
     let ownHeaderEl=null;
-    const box=el.closest('.runde-box');
-    if(box){ownHeaderEl=box.querySelector('.grp.runde')||box.querySelector('.grp');} // «Uten tidspunkt»: glow salgsrunde-overskriften, ikke under-overskriften
+    const box=el.closest('.runde-box,.grp-box');
+    if(box){ownHeaderEl=box.querySelector('.grp.runde')||box.querySelector('.grp');} // glow kategori-/salgsrunde-overskriften i boksen
     else{for(const g of headEls){if(g.offsetTop<=cardTop+1)ownHeaderEl=g;else break;}}
     if(ownHeaderEl){ownHeaderEl.classList.remove('cat-glow');void ownHeaderEl.offsetWidth;ownHeaderEl.classList.add('cat-glow');setTimeout(function(){ownHeaderEl.classList.remove('cat-glow');},6100);} // gult glow på valgt kategori
     const heads=headEls.map(g=>g.offsetTop);
