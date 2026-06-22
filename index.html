@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-17">
+<meta name="app-build" content="2026-06-21-20">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -391,9 +391,6 @@
     <section class="view active" id="view-oppfolg">
       <div class="topbar">
         <div class="spacer"></div>
-        <button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button>
-        <button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button>
-        <button class="btn primary" id="btnNy">+ Ny oppfølging</button>
         <button class="nodate-btn" id="btnPaste" title="Lim inn kartskjermbilde — AI fyller ut oppfølgingen">📷 Lim inn</button>
       </div>
 
@@ -522,9 +519,10 @@
 
   <div class="modal" id="profileModal">
     <div class="m-card cloud-card">
-      <div class="m-title">Min profil</div>
+      <div class="m-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span>Min profil</span><button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button></div>
+      <div class="cloud-row"><button class="btn primary" id="btnNy" style="width:100%">+ Ny oppfølging</button></div>
       <div id="profileBody"></div>
-      <div class="m-foot"><button class="btn" id="profileClose">Lukk</button></div>
+      <div class="m-foot" style="justify-content:space-between"><button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button><button class="btn" id="profileClose">Lukk</button></div>
     </div>
   </div>
 
@@ -1560,7 +1558,7 @@
     if(e.key==='Enter'&&!e.shiftKey&&!savingLock&&$('formModal').classList.contains('open')){e.preventDefault();doSave();}
   });
   $('fDt').addEventListener('click',function(){try{if(this.showPicker)this.showPicker();else this.focus();}catch(_){this.focus();}}); // hele datofeltet åpner kalenderen
-  $('btnNy').addEventListener('click',function(){pendingCardImg=null;formFromPaste=false;openForm(null);});
+  $('btnNy').addEventListener('click',function(){closeProfileModal();pendingCardImg=null;formFromPaste=false;openForm(null);});
   // hent nyeste versjon (cache-omgåelse) — slipper å re-installere appen på hjemskjerm
   $('btnReload').addEventListener('click',function(){location.href=location.pathname+'?t='+Date.now();});
 
