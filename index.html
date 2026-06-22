@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-40">
+<meta name="app-build" content="2026-06-21-41">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1232,7 +1232,10 @@
     const H=listEl.clientHeight,cardTop=el.offsetTop;
     // kategori-overskrifter (element + offsetTop) — finn kortets egen + den forrige
     const headEls=Array.from(listEl.querySelectorAll('.grp')).sort((a,b)=>a.offsetTop-b.offsetTop);
-    let ownHeaderEl=null;for(const g of headEls){if(g.offsetTop<=cardTop+1)ownHeaderEl=g;else break;}
+    let ownHeaderEl=null;
+    const box=el.closest('.runde-box');
+    if(box){ownHeaderEl=box.querySelector('.grp.runde')||box.querySelector('.grp');} // «Uten tidspunkt»: glow salgsrunde-overskriften, ikke under-overskriften
+    else{for(const g of headEls){if(g.offsetTop<=cardTop+1)ownHeaderEl=g;else break;}}
     if(ownHeaderEl){ownHeaderEl.classList.remove('cat-glow');void ownHeaderEl.offsetWidth;ownHeaderEl.classList.add('cat-glow');setTimeout(function(){ownHeaderEl.classList.remove('cat-glow');},2200);} // gult glow på valgt kategori
     const heads=headEls.map(g=>g.offsetTop);
     let ownTop=null,prevTop=null;
