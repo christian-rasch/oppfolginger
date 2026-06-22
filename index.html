@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-30">
+<meta name="app-build" content="2026-06-21-31">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1501,7 +1501,7 @@
     // valgt hurtigvalg lyser grønt; «Ingen tidspunkt» lyser når ingen dato er satt
     Array.from($('fChips').children).forEach(c=>{const dp=c.dataset.dp;if(!dp)return;c.classList.toggle('on',dp==='ingen'?!fDatoVal:dp===fChipSel);});
     $('fDt').value=fDatoVal||'';
-    const lbl=$('fDtLabel');if(lbl){const t=friendlyDate(fDatoVal);lbl.textContent=t||'Velg dato og tid';lbl.classList.toggle('empty',!t);}
+    const lbl=$('fDtLabel');if(lbl){const t=friendlyDate(fDatoVal);lbl.textContent=t||'—';lbl.classList.toggle('empty',!t);}
     dtFlagSync();
   }
   // viser om AI fant en dato: mint ramme + ✓ når satt, rød ramme + ✗ når tom. Kun i AI-import-skjemaet.
@@ -1510,7 +1510,7 @@
     dt.classList.remove('ai-ok','ai-miss');fl.classList.remove('ok','miss');fl.textContent='';
     if(!aiDateMode)return;
     if(fDatoVal){dt.classList.add('ai-ok');fl.classList.add('ok');fl.textContent='✓';}
-    else{dt.classList.add('ai-miss');fl.classList.add('miss');fl.textContent='✗';}
+    // ingen dato → ingen rød ramme/kryss; blokka viser bare en strek «—» (se chipSync)
   }
   function openForm(it){
     editId=it?it.id:null;
