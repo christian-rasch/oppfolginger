@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-65">
+<meta name="app-build" content="2026-06-21-67">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -127,7 +127,8 @@
   /* forfalt-alder «-N d.» under klokkeslett/ukedag — liten/dempet, litt ekstra luft over */
   .opf-card .when-edit .late-age{font-family:"JetBrains Mono",monospace;font-size:13.5px;font-weight:500;letter-spacing:.02em;opacity:.55;color:var(--ink);margin-top:7px;line-height:1.1;white-space:nowrap}
   .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub{margin-top:5px}
-  .opf-card.late .when-edit .late-age,.opf-card.late .when-edit b,.opf-card.late .when-edit .r-label,.opf-card.late .when-edit .rail-weekday,.opf-card.late .when-edit .when-sub{color:#ff9b9e} /* forfalt-rail: klokkeslett + ukedag + uke-kontekst + «-N d.» i svak rød (kun forfalt-kort, ikke «Alle») */
+  .opf-card.late .when-edit .late-age,.opf-card.late .when-edit b,.opf-card.late .when-edit .r-label,.opf-card.late .when-edit .rail-weekday,.opf-card.late .when-edit .when-sub,.opf-card.late .when-edit .rail-rel{color:#ff9b9e} /* forfalt-rail: klokkeslett + ukedag + uke-kontekst + «-N d.» i svak rød (kun forfalt-kort, ikke «Alle») */
+  .opf-card .when-edit .rail-rel{font-family:"Schibsted Grotesk",sans-serif;font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--ink);line-height:1.18;text-align:center} /* Må gjøres: kun relativ uke-tekst */
   .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink);opacity:.30;line-height:1;position:relative} /* uten tidspunkt — rolig/dempet */
   .opf-card .when-edit .when-dash::before{content:"";position:absolute;inset:-19px -26px;border-radius:14px;transition:background .12s} /* ~2,5× større trykkflate på «—» (endrer ikke layout) */
   .opf-card .when-edit:active .when-dash::before,.opf-card .when-edit:hover .when-dash::before{background:rgba(255,255,255,.14)} /* synlig at feltet er større ved trykk/mens dato-velgeren er åpen */
@@ -1000,15 +1001,19 @@
     const time=hhmm(t),wk0=startOfWeek(n);
     if(railCtx==='gjore'){ // Må gjøres: kategoriene styres av når kortet kom hit → vis alltid tydelig dag-label (forfalt blir rød via .late)
       const diff=Math.round((+td-+d0)/864e5);
-      const wkDiff=Math.round((+startOfWeek(t)-+wk0)/(7*864e5));
-      if(diff===0)return dt('I dag')+dt(time);
-      if(diff===-1)return dt('I går')+dt(time);
-      if(diff===1)return dt('I morgen')+dt(time);
-      if(wkDiff===0)return dt(WDU[t.getDay()])+sub('denne uken')+dt(time);
-      if(wkDiff===-1)return dt(WDU[t.getDay()])+sub('forrige uke')+dt(time);
-      if(wkDiff===-2)return dt(WDU[t.getDay()])+sub('uken før')+dt(time);
-      if(wkDiff===1)return dt(WDU[t.getDay()])+sub('neste uke')+dt(time);
-      return dt(t.getDate()+'. '+MO[t.getMonth()]); // spesifikk dato lenger unna → uendret
+      let lbl;
+      if(diff===0)lbl='I dag';
+      else if(diff===-1)lbl='I går';
+      else{
+        const wkDiff=Math.round((+startOfWeek(t)-+wk0)/(7*864e5)); // ukenummer-forskjell (mandag-uker), slik en selger teller
+        if(wkDiff===0)lbl='Denne uken';
+        else if(wkDiff===1)lbl='Neste uke';
+        else if(wkDiff>=2)lbl='2+ uker frem';
+        else if(wkDiff===-1)lbl='Forrige uke';
+        else if(wkDiff===-2)lbl='2 uker siden';
+        else lbl='2+ uker siden';
+      }
+      return '<span class="rail-rel">'+lbl+'</span>'; // kun relativ uke-tekst — ingen dato/dag/tid
     }
     if(t<n){ // ---------- forfalt (samme format som «Alle», men rød via .late) ----------
       const daysAgo=Math.round((+d0-+td)/864e5),ww=new Date(+wk0-14*864e5);
