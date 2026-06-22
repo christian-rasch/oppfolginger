@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-38">
+<meta name="app-build" content="2026-06-21-39">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -139,6 +139,9 @@
   /* nyopprettet kort: grønn lysende ytterkant ~1s, deretter ~1s fade */
   .opf-card.justadded{animation:justAdded 2.1s ease forwards}
   @keyframes justAdded{0%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--mint)}8%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}52%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}100%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--hair)}}
+  /* gult glow på dag-tekst i kortet + valgt kategori-overskrift (samme gull som fane-blinket) */
+  .opf-card.justadded .rail-day,.opf-card.justadded .rail-weekday,.opf-card.justadded .r-date,.grp.cat-glow{animation:dayGlow 2.1s ease}
+  @keyframes dayGlow{0%{text-shadow:0 0 0 rgba(242,207,106,0)}8%{color:#f2cf6a;text-shadow:0 0 10px rgba(242,207,106,.9)}52%{color:#f2cf6a;text-shadow:0 0 10px rgba(242,207,106,.9)}100%{text-shadow:0 0 0 rgba(242,207,106,0)}}
   .vfilter button.tab-flash{animation:tabFlash 2.1s ease}
   @keyframes tabFlash{0%{box-shadow:0 0 0 0 rgba(61,245,197,0)}8%{box-shadow:0 0 22px 4px rgba(61,245,197,.9);color:#f2cf6a}52%{box-shadow:0 0 22px 4px rgba(61,245,197,.9);color:#f2cf6a}100%{box-shadow:0 0 0 0 rgba(61,245,197,0)}}
   /* handlingsområde: én rad — handling-chip + «Tilbud sendt»-status ved siden av */
@@ -973,7 +976,8 @@
     const mid=s=>'<span class="when-mid">'+esc(s)+'</span>';     // forfalt topp-linje
     const sub=s=>'<span class="when-sub">'+esc(s)+'</span>';     // 12px undertekst
     const wd=s=>'<span class="rail-weekday">'+esc(s)+'</span>';  // 14px ukedag (denne/neste uke)
-    const lab=s=>'<span class="r-label">'+esc(s)+'</span>';      // 11px label «I DAG»/«I MORGEN»
+    const lab=s=>'<span class="r-label">'+esc(s)+'</span>';      // 11px label (også brukt til tid i uke-tilfellet)
+    const dlab=s=>'<span class="r-label rail-day">'+esc(s)+'</span>'; // dag-label «I DAG»/«I MORGEN» (egen klasse for glow)
     const dt=s=>'<b class="r-date tnum">'+esc(s)+'</b>';         // 16px dato lenger frem
     const la=s=>'<span class="late-age">'+esc(s)+'</span>';      // forfalt-alder «-N d.» (egen klasse, påvirker ikke «Alle»)
     const time=hhmm(t),wk0=startOfWeek(n);
@@ -981,15 +985,15 @@
       const daysAgo=Math.round((+d0-+td)/864e5),ww=new Date(+wk0-14*864e5);
       const dgr='-'+daysAgo+' d.';                                            // «-N d.» (kun i «Eldre»)
       // forfalt i dag: «I DAG» øverst KUN i Avtaler → I dag (ikke i Forfalte); klokkeslett, rød via .late, ingen «-0 d.»
-      if(daysAgo===0)return (railCtx==='idag'?lab('I DAG'):'')+big(time);
+      if(daysAgo===0)return (railCtx==='idag'?dlab('I DAG'):'')+big(time);
       if(daysAgo===1)return big(time);                                        // i går: kun klokkeslett (uten «-N d.»)
       if(+td>=+ww)return lab(time)+wd(WDU[t.getDay()].toUpperCase());         // denne/forrige/uken før: klokkeslett + 3-bokstavs ukedag (uten «-N d.»)
       return la(dgr);                                                         // eldre: kun «-N d.»
     }
     // ---------- kommende ----------
     const diff=Math.round((+td-+d0)/864e5),wk2=new Date(+wk0+14*864e5);
-    if(diff===0)return lab('I DAG')+big(time);                          // i dag: label 11px + klokkeslett 22px
-    if(diff===1)return lab('I MORGEN')+big(time);                       // i morgen: label 11px + klokkeslett 22px
+    if(diff===0)return dlab('I DAG')+big(time);                          // i dag: label 11px + klokkeslett 22px
+    if(diff===1)return dlab('I MORGEN')+big(time);                       // i morgen: label 11px + klokkeslett 22px
     if(+td<+wk2)return lab(time)+wd(WDU[t.getDay()].toUpperCase());     // denne/neste uke: klokkeslett liten øverst, forkortet ukedag (3 bokstaver) under
     return dt(t.getDate()+'. '+MO[t.getMonth()]);                      // senere: kun dato 16px
   }
@@ -1226,8 +1230,11 @@
       if(tab){tab.classList.remove('tab-flash');void tab.offsetWidth;tab.classList.add('tab-flash');setTimeout(function(){tab.classList.remove('tab-flash');},2200);}}
     const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
     const H=listEl.clientHeight,cardTop=el.offsetTop;
-    // kategori-overskrifter (offsetTop) — finn kortets egen + den forrige
-    const heads=Array.from(listEl.querySelectorAll('.grp')).map(g=>g.offsetTop).sort((a,b)=>a-b);
+    // kategori-overskrifter (element + offsetTop) — finn kortets egen + den forrige
+    const headEls=Array.from(listEl.querySelectorAll('.grp')).sort((a,b)=>a.offsetTop-b.offsetTop);
+    let ownHeaderEl=null;for(const g of headEls){if(g.offsetTop<=cardTop+1)ownHeaderEl=g;else break;}
+    if(ownHeaderEl){ownHeaderEl.classList.remove('cat-glow');void ownHeaderEl.offsetWidth;ownHeaderEl.classList.add('cat-glow');setTimeout(function(){ownHeaderEl.classList.remove('cat-glow');},2200);} // gult glow på valgt kategori
+    const heads=headEls.map(g=>g.offsetTop);
     let ownTop=null,prevTop=null;
     for(const t of heads){if(t<=cardTop+1)ownTop=t;else break;}
     if(ownTop!=null)for(const t of heads){if(t<ownTop)prevTop=t;else break;}
