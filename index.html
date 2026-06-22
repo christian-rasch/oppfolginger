@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-35">
+<meta name="app-build" content="2026-06-21-36">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -372,7 +372,7 @@
   .f-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
   .f-head .m-title{margin-bottom:0} /* tittel-margen styres av f-head her */
   .btn.f-del-btn{flex:none;color:#ff8a8e;border-color:rgba(255,90,95,.4);background:rgba(255,90,95,.08)}
-  #fSave,#fDelete{min-width:128px;padding:15px 30px;font-size:15px} /* Lagre + Slett: like store, begge større */
+  #fDelete{min-width:128px;padding:15px 30px;font-size:15px} /* Slett: større */
   .btn.f-del-btn:hover{border-color:var(--red);background:rgba(255,90,95,.16)}
   .m-foot .btn{padding:11px 18px}
   #impTa{width:100%;min-height:170px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px;outline:none}
@@ -490,7 +490,6 @@
         </div>
         <div class="f-field full"><label>Besøkskommentar</label><textarea id="fKom"></textarea></div>
       </div>
-      <div class="m-foot"><button class="btn primary" id="fSave">Lagre</button></div>
     </div>
   </div>
 
@@ -1600,7 +1599,7 @@
     fStatusV=it?it.status:'';segSet($('fStatus'),fStatusV);
     fHandling=(it&&['send_offer','call','visit','trying_to_reach'].includes(it.nextAction))?it.nextAction:null;segSet($('fKanal'),fHandling);
     fDatoVal=it?it.dato:null;fChipSel=null;chipSync();
-    savingLock=false;$('fSave').disabled=false;
+    savingLock=false;
     $('fAiNote').style.display='none';
     $('fDelete').style.display=''; // Slett vises alltid; sletter lagret kort, eller forkaster nytt
     $('formModal').classList.add('open');
@@ -1645,9 +1644,9 @@
   });
   ['fNavn','fAlder','fTel','fRunde','fAdr','fKom'].forEach(function(id){$(id).addEventListener('input',function(){liveCommit(false);});});
   function doSave(){
-    if(savingLock)return;savingLock=true;$('fSave').disabled=true;
+    if(savingLock)return;savingLock=true;
     const navn=$('fNavn').value.trim(),adr=$('fAdr').value.trim();
-    if(!navn&&!adr){toast('Skriv inn navn eller adresse');savingLock=false;$('fSave').disabled=false;return;}
+    if(!navn&&!adr){toast('Skriv inn navn eller adresse');savingLock=false;return;}
     const f={navn:navn,alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
       salgsrunde:$('fRunde').value.trim(),adresse:adr,status:fStatusV,
       dato:fDatoVal,kommentar:$('fKom').value.trim()};
@@ -1669,9 +1668,8 @@
     pendingCardImg=null;formFromPaste=false;
     save();closeForm();render();
     if(revealId)revealCard(revealId);
-    setTimeout(function(){savingLock=false;$('fSave').disabled=false;},600);
+    setTimeout(function(){savingLock=false;},600);
   }
-  $('fSave').addEventListener('click',doSave);
   $('fDelete').addEventListener('click',function(){
     if(editId){ // lagret kort → arkiver med 10s angre (auto-slettes etter 48t), ingen bekreftelse
       const it=byId(editId);closeForm();if(it)fullfor(it);
