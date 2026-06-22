@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-44">
+<meta name="app-build" content="2026-06-21-45">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -123,7 +123,7 @@
   /* forfalt-alder «-N d.» under klokkeslett/ukedag — liten/dempet, litt ekstra luft over */
   .opf-card .when-edit .late-age{font-family:"JetBrains Mono",monospace;font-size:13.5px;font-weight:500;letter-spacing:.02em;opacity:.55;color:var(--ink);margin-top:7px;line-height:1.1;white-space:nowrap}
   .opf-card .when-edit b+.when-sub,.opf-card .when-edit .when-mid+.when-sub{margin-top:5px}
-  .opf-card.late .when-edit .late-age,.opf-card.late .when-edit b,.opf-card.late .when-edit .r-label,.opf-card.late .when-edit .rail-weekday{color:#ff9b9e} /* forfalt-rail: klokkeslett + ukedag + «-N d.» i svak rød (kun forfalt-kort, ikke «Alle») */
+  .opf-card.late .when-edit .late-age,.opf-card.late .when-edit b,.opf-card.late .when-edit .r-label,.opf-card.late .when-edit .rail-weekday,.opf-card.late .when-edit .when-sub{color:#ff9b9e} /* forfalt-rail: klokkeslett + ukedag + uke-kontekst + «-N d.» i svak rød (kun forfalt-kort, ikke «Alle») */
   .opf-card .when-edit .when-dash{font-size:20px;font-weight:700;color:var(--ink);opacity:.30;line-height:1} /* uten tidspunkt — rolig/dempet */
   .nd-hide{display:none!important}
   .opf-meta .nd-why{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.12);border:1px solid rgba(232,194,107,.28);padding:3px 8px;border-radius:7px}
@@ -989,6 +989,18 @@
     const dt=s=>'<b class="r-date tnum">'+esc(s)+'</b>';         // 16px dato lenger frem
     const la=s=>'<span class="late-age">'+esc(s)+'</span>';      // forfalt-alder «-N d.» (egen klasse, påvirker ikke «Alle»)
     const time=hhmm(t),wk0=startOfWeek(n);
+    if(railCtx==='gjore'){ // Må gjøres: kategoriene styres av når kortet kom hit → vis alltid tydelig dag-label (forfalt blir rød via .late)
+      const diff=Math.round((+td-+d0)/864e5);
+      const wkDiff=Math.round((+startOfWeek(t)-+wk0)/(7*864e5));
+      if(diff===0)return wd('I dag')+big(time);
+      if(diff===-1)return wd('I går')+big(time);
+      if(diff===1)return wd('I morgen')+big(time);
+      if(wkDiff===0)return wd(WDU[t.getDay()])+sub('denne uken')+big(time);
+      if(wkDiff===-1)return wd(WDU[t.getDay()])+sub('forrige uke')+big(time);
+      if(wkDiff===-2)return wd(WDU[t.getDay()])+sub('uken før')+big(time);
+      if(wkDiff===1)return wd(WDU[t.getDay()])+sub('neste uke')+big(time);
+      return dt(t.getDate()+'. '+MO[t.getMonth()]); // spesifikk dato lenger unna → uendret
+    }
     if(t<n){ // ---------- forfalt (samme format som «Alle», men rød via .late) ----------
       const daysAgo=Math.round((+d0-+td)/864e5),ww=new Date(+wk0-14*864e5);
       const dgr='-'+daysAgo+' d.';                                            // «-N d.» (kun i «Eldre»)
@@ -1133,7 +1145,7 @@
       const fb=new Map([['idag',[]],['igar',[]],['denne',[]],['forrige',[]],['eldre',[]]]);
       so.forEach(function(i){fb.get(cat(i)).push(i);});
       [['idag','Fra i dag'],['igar','Fra i går'],['denne','Fra resten av uken'],['forrige','Fra forrige uke'],['eldre','Eldre']]
-        .forEach(function(p){const a=byCreated(fb.get(p[0]));if(a.length)G(L(p[1]),a);});
+        .forEach(function(p){const a=byCreated(fb.get(p[0]));if(a.length)G(L(p[1]),a,'',false,'gjore');});
     } else if(view==='uten'){
       // alle aktive kort UTEN dato (uansett handling). Per salgsrunde i en boks; underseksjoner «🔥Bør kontaktes» (nextAction==='lead') og «Uten tidspunkt» (alle andre)
       const inn=act.filter(i=>!i.dato);
