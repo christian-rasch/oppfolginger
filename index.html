@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-34">
+<meta name="app-build" content="2026-06-21-35">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -63,7 +63,8 @@
   #subbar button.on .cnt.red{background:rgba(255,90,95,.18);color:var(--red)}
   .spacer{margin-left:auto}
   /* Oppfølginger — "Ingen dato"-knapp (uten oppfølgingsdato, krever handling) */
-  .nodate-btn{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.1);border:1px solid rgba(232,194,107,.32);border-radius:11px;padding:8px 14px;cursor:pointer;transition:background .15s,border-color .15s}
+  .nodate-btn{position:relative;display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.1);border:1px solid rgba(232,194,107,.32);border-radius:11px;padding:8px 14px;cursor:pointer;transition:background .15s,border-color .15s}
+  .nodate-btn::before{content:"";position:absolute;inset:-16px;border-radius:22px} /* usynlig, større trykkflate enn selve boksen */
   .nodate-btn:hover{background:rgba(232,194,107,.18);border-color:rgba(232,194,107,.5)}
   .nodate-btn.on{color:#1a1407;background:linear-gradient(135deg,#f3d999,var(--gold));border-color:transparent}
   .nodate-btn .nd-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(232,194,107,.22);color:var(--gold);font-size:10px;font-weight:800}
@@ -331,8 +332,8 @@
   .f-field textarea{resize:vertical;min-height:74px;line-height:1.45}
   .dt-field{width:100%;height:42px;display:flex;align-items:center;text-align:left;cursor:pointer;font-family:"Schibsted Grotesk",sans-serif;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:0 32px 0 12px}
   .dt-field:active{border-color:rgba(61,245,197,.55)}
-  .dt-label{pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-  .dt-label.empty{color:var(--ink-faint)}
+  .dt-label{pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;flex:1;text-align:left}
+  .dt-label.empty{color:var(--ink-faint);text-align:center}
   .dt-wrap{position:relative;margin-top:8px}
   .dt-flag{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:"JetBrains Mono",monospace;font-weight:800;font-size:14px;line-height:1;pointer-events:none}
   .dt-field.ai-ok{border-color:var(--mint)!important;box-shadow:inset 0 0 0 1px rgba(61,245,197,.5),0 0 14px -6px rgba(61,245,197,.7)}
@@ -371,6 +372,7 @@
   .f-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
   .f-head .m-title{margin-bottom:0} /* tittel-margen styres av f-head her */
   .btn.f-del-btn{flex:none;color:#ff8a8e;border-color:rgba(255,90,95,.4);background:rgba(255,90,95,.08)}
+  #fSave,#fDelete{min-width:128px;padding:15px 30px;font-size:15px} /* Lagre + Slett: like store, begge større */
   .btn.f-del-btn:hover{border-color:var(--red);background:rgba(255,90,95,.16)}
   .m-foot .btn{padding:11px 18px}
   #impTa{width:100%;min-height:170px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px;outline:none}
