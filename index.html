@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-50">
+<meta name="app-build" content="2026-06-21-51">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -64,7 +64,7 @@
   .spacer{margin-left:auto}
   /* Oppfølginger — "Ingen dato"-knapp (uten oppfølgingsdato, krever handling) */
   .nodate-btn{position:relative;display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:rgba(232,194,107,.1);border:1px solid rgba(232,194,107,.32);border-radius:11px;padding:8px 14px;cursor:pointer;transition:background .15s,border-color .15s}
-  .nodate-btn::before{content:"";position:absolute;inset:-16px;border-radius:22px} /* usynlig, større trykkflate enn selve boksen */
+  .nodate-btn::before{content:"";position:absolute;inset:-16px -16px -32px -16px;border-radius:22px} /* usynlig, større trykkflate — ekstra utvidet nedover */
   .nodate-btn:hover{background:rgba(232,194,107,.18);border-color:rgba(232,194,107,.5)}
   .nodate-btn.on{color:#1a1407;background:linear-gradient(135deg,#f3d999,var(--gold));border-color:transparent}
   .nodate-btn .nd-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(232,194,107,.22);color:var(--gold);font-size:10px;font-weight:800}
@@ -170,7 +170,7 @@
   .cn-age.age-purple{color:#e2d6ff;background:rgba(150,122,255,.24)}
   .cn-age.age-green{color:#6ee8a4;background:rgba(46,212,119,.15)}
   .cn-age.age-yellow{color:#f2c64e;background:rgba(244,183,64,.16)}
-  .cn-age.age-brown{color:#e0a76a;background:rgba(102,74,34,.55)}
+  .cn-age.age-brown{color:#e6b277;background:rgba(58,36,14,.85)}
   /* identitetsstripe: type · salgsrunde (tags) */
   .opf-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
   .opf-meta .type-chip{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:800;letter-spacing:.05em;padding:6px 13px;border-radius:8px;flex:none}
