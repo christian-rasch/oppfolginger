@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-43">
+<meta name="app-build" content="2026-06-21-44">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1122,11 +1122,12 @@
     const G=(lab,arr,cls,force,railCtx)=>groups.push([lab,arr,cls||'',!!force,railCtx]);
 
     if(view==='gjore'){
-      // Må gjøres = kun «Husk å send tilbud» (send_offer), gruppert etter opprettet-dato (ikke oppfølgingsdato)
+      // Må gjøres = kun «Husk å send tilbud» (send_offer), gruppert etter NÅR handlingen ble satt (fallback: opprettet)
       const so=act.filter(i=>i.nextAction==='send_offer');
       const yd=+td0-864e5,wk0=+startOfWeek(n),lw=wk0-7*864e5;
-      const byCreated=arr=>arr.slice().sort((a,b)=>(b.opprettet||0)-(a.opprettet||0)); // nyest opprettet først
-      const cat=function(i){const o=+i.opprettet;if(!o||isNaN(o))return 'eldre'; // mangler trygg opprettet → Eldre
+      const ts=i=>+i.offerSince||+i.opprettet||0; // tidspunkt «send tilbud» ble satt; eldre kort uten stempel → opprettet
+      const byCreated=arr=>arr.slice().sort((a,b)=>ts(b)-ts(a)); // nyest satt først
+      const cat=function(i){const o=ts(i);if(!o||isNaN(o))return 'eldre';
         const d=+startOfDay(new Date(o));
         return d===+td0?'idag':d===yd?'igar':d>=wk0?'denne':d>=lw?'forrige':'eldre';};
       const fb=new Map([['idag',[]],['igar',[]],['denne',[]],['forrige',[]],['eldre',[]]]);
@@ -1278,17 +1279,23 @@
   $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
   $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
 
+  // sett nextAction og stempel når «send tilbud» settes (styrer kategori i «Må gjøres»)
+  function applyNA(it,na){
+    if(na==='send_offer'&&it.nextAction!=='send_offer')it.offerSince=Date.now();
+    it.nextAction=na;
+  }
   // ---------- neste handling: velg + huk av ----------
   // Velg handling fra popup
   function setAction(it,na){
     if(!NA_KEYS.includes(na))return;
-    const prev=it.nextAction,prevWS=it.waitingSince;
+    const prev=it.nextAction,prevWS=it.waitingSince,prevOS=it.offerSince;
+    if(na==='send_offer'&&prev!=='send_offer')it.offerSince=Date.now(); // stempel når «Husk å send tilbud» settes → styrer kategori i «Må gjøres»
     it.nextAction=na;
     if(na==='waiting_reply'){if(!it.waitingSince)it.waitingSince=Date.now();} // sett hvis mangler
     else it.waitingSince=null;
     save();render();
     toastUndo((na==='waiting_reply'?'Tilbud sendt ✅':NA_META[na].label)+' — '+(it.navn||''),
-      function(){it.nextAction=prev;it.waitingSince=prevWS;save();render();});
+      function(){it.nextAction=prev;it.waitingSince=prevWS;it.offerSince=prevOS;save();render();});
   }
   // Huk av valgt handling: send_offer → waiting_reply, alle andre → null
   function checkOffAction(it){
@@ -1652,7 +1659,7 @@
   function liveCommit(immediate){
     if(!editId)return;const it=byId(editId);if(!it)return;
     Object.assign(it,formGather());
-    if(fHandling)it.nextAction=fHandling;
+    if(fHandling)applyNA(it,fHandling);
     clearTimeout(liveTimer);
     if(immediate)save();else liveTimer=setTimeout(save,400);
   }
@@ -1695,13 +1702,13 @@
       const it=byId(editId);
       const oldTab=editOrigDato?'avtaler':'uten';
       Object.assign(it,f);
-      if(fHandling)it.nextAction=fHandling; // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
+      if(fHandling)applyNA(it,fHandling); // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       toast('Lagret');
       if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: alltid fane-bytte + grønt blink som manuell
       else if(it.dato!==editOrigDato){navToItem(it);revealId=it.id;revealFlashTab=(oldTab!==(it.dato?'avtaler':'uten'));revealFrom=oldTab;} // redigering som flytter kortet → kort-glow; fane-glow + pil kun ved fanebytte
     }else{
       const o=migrate(f);
-      if(fHandling)o.nextAction=fHandling;
+      if(fHandling)applyNA(o,fHandling);
       if(formFromPaste&&pendingCardImg){o.hasImg=true;setCardImg(o.id,pendingCardImg);} // lagre kartbildet (full kvalitet ≤1400px) lokalt
       items.push(o);
       toast('Oppfølging lagt til');
@@ -2114,7 +2121,7 @@
     const card=migrate({navn:navn,alder:o.alder||null,telefon:o.telefon,salgsrunde:o.salgsrunde,
       adresse:o.adresse,status:o.status,dato:o.dato||null,kommentar:o.kommentar,sfNr:o.sfNr});
     const na=o.nextAction||(o.lovetMail?'send_offer':'');
-    if(na&&NA_KEYS.includes(na))card.nextAction=na;
+    if(na&&NA_KEYS.includes(na))applyNA(card,na);
     if(pendingCardImg){card.hasImg=true;setCardImg(card.id,pendingCardImg);} // full kvalitet ≤1400px, lokalt
     pendingCardImg=null;formFromPaste=false;
     items.push(card);save();render();
