@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-53">
+<meta name="app-build" content="2026-06-21-57">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -150,12 +150,13 @@
   @keyframes tabFlash{0%{color:#06120e;box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}3%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}53%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}100%{color:#06120e;box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}}
   /* buet, animert spyd-pil fra → til fane (svak grønn): skyter opp, planter spissen, trekker seg sakte inn og forsvinner */
   #mainbar{position:relative}
-  .tab-arrow{position:absolute;pointer-events:none;z-index:5;overflow:visible;animation:taFade 2.3s ease forwards}
-  .ta-shaft{fill:none;stroke:rgba(127,232,200,.42);stroke-width:3;stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:taDraw 2.3s cubic-bezier(.42,0,.25,1) forwards}
-  .ta-head{fill:rgba(127,232,200,.5);opacity:0;filter:drop-shadow(0 0 4px rgba(127,232,200,.45));animation:taHead 2.3s ease forwards}
-  @keyframes taDraw{0%{stroke-dashoffset:var(--len)}42%{stroke-dashoffset:0}100%{stroke-dashoffset:0}}
-  @keyframes taHead{0%,40%{opacity:0}47%{opacity:1}58%{opacity:1}100%{opacity:0}}
-  @keyframes taFade{0%{opacity:0;transform:translateY(9px)}11%{opacity:1;transform:translateY(0)}55%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(3px)}}
+  .tab-arrow{position:absolute;pointer-events:none;z-index:5;overflow:visible;animation:taFade 2.1s ease forwards}
+  .ta-shaft{fill:none;stroke:rgba(127,232,200,.45);stroke-width:3;stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:taDraw 2.1s cubic-bezier(.4,0,.25,1) forwards}
+  .ta-head{fill:rgba(127,232,200,.52);opacity:0;filter:drop-shadow(0 0 4px rgba(127,232,200,.45));animation:taHead 2.1s ease forwards}
+  /* buen står helt i ro; skaftet tegnes inn (ett kast) og blir stående — myk maske løser det opp bakfra mot spissen */
+  @keyframes taDraw{0%{stroke-dashoffset:var(--len)}40%{stroke-dashoffset:0}100%{stroke-dashoffset:0}}
+  @keyframes taHead{0%,40%{opacity:0}48%{opacity:1}90%{opacity:1}98%{opacity:0}100%{opacity:0}}
+  @keyframes taFade{0%{opacity:0;transform:translateY(9px)}11%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}
   /* handlingsområde: én rad — handling-chip + «Tilbud sendt»-status ved siden av */
   .opf-action{grid-area:action;display:flex;align-items:center;gap:10px;min-width:0}
   /* «Tilbud sendt …»-pill med klikkbar check-boks */
@@ -1264,14 +1265,27 @@
     svg.setAttribute('class','tab-arrow');svg.setAttribute('viewBox','0 0 '+W+' '+H);
     svg.setAttribute('width',W);svg.setAttribute('height',H);
     svg.style.left=(left-pad)+'px';svg.style.top=(-H+12)+'px';
-    const shaft=document.createElementNS(NS,'path');shaft.setAttribute('class','ta-shaft');shaft.setAttribute('d',d);
+    // myk maske langs banen A→B: bakenden (A) løses opp først, mot spissen (B) — bløt kant, ingen «kast»
+    const anim=function(from,to){const a=document.createElementNS(NS,'animate');a.setAttribute('attributeName','offset');a.setAttribute('begin','0.86s');a.setAttribute('dur','1.05s');a.setAttribute('from',from);a.setAttribute('to',to);a.setAttribute('fill','freeze');return a;};
+    const defs=document.createElementNS(NS,'defs');
+    const grad=document.createElementNS(NS,'linearGradient');grad.setAttribute('id','taGradN');grad.setAttribute('gradientUnits','userSpaceOnUse');
+    grad.setAttribute('x1',sx);grad.setAttribute('y1',baseY);grad.setAttribute('x2',ex);grad.setAttribute('y2',tipY);
+    const mk=function(off,op,a1,a2){const s=document.createElementNS(NS,'stop');s.setAttribute('offset',off);s.setAttribute('stop-color','#fff');s.setAttribute('stop-opacity',op);if(a1!=null)s.appendChild(anim(a1,a2));return s;};
+    grad.appendChild(mk('0','0'));                 // A-enden gjennomsiktig
+    grad.appendChild(mk('0','0','0','1'));         // bløt kant som sveiper A→B
+    grad.appendChild(mk('0.16','1','0.16','1.16'));// synlig bak kanten
+    grad.appendChild(mk('1','1'));                 // spiss-enden synlig lengst
+    const mask=document.createElementNS(NS,'mask');mask.setAttribute('id','taMaskN');mask.setAttribute('maskUnits','userSpaceOnUse');mask.setAttribute('x','-8');mask.setAttribute('y','-8');mask.setAttribute('width',W+16);mask.setAttribute('height',H+16);
+    const mr=document.createElementNS(NS,'rect');mr.setAttribute('x','-8');mr.setAttribute('y','-8');mr.setAttribute('width',W+16);mr.setAttribute('height',H+16);mr.setAttribute('fill','url(#taGradN)');
+    mask.appendChild(mr);defs.appendChild(grad);defs.appendChild(mask);svg.appendChild(defs);
+    const shaft=document.createElementNS(NS,'path');shaft.setAttribute('class','ta-shaft');shaft.setAttribute('d',d);shaft.setAttribute('mask','url(#taMaskN)');
     const head=document.createElementNS(NS,'path');head.setAttribute('class','ta-head');
     head.setAttribute('d','M 0 0 L -21 -9 Q -12 0 -21 9 Z');        // bred spydspiss, buet bakside; spiss i origo
     const ang=Math.atan2(tipY-topY,ex-c2x)*180/Math.PI;             // pek langs banens retning ved spissen
     head.setAttribute('transform','translate('+ex+' '+tipY+') rotate('+ang+')');
     svg.appendChild(shaft);svg.appendChild(head);bar.appendChild(svg);
     shaft.style.setProperty('--len',shaft.getTotalLength());
-    setTimeout(function(){if(svg.parentNode)svg.remove();},2400);
+    setTimeout(function(){if(svg.parentNode)svg.remove();},2200);
   }
   // scroll til et kort (litt over midten) + glow. flashTab → fanen blinker (default). fromTab → pil fra forrige fane
   function revealCard(id,flashTab,fromTab){
