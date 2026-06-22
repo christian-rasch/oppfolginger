@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-20">
+<meta name="app-build" content="2026-06-21-23">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -519,10 +519,9 @@
 
   <div class="modal" id="profileModal">
     <div class="m-card cloud-card">
-      <div class="m-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span>Min profil</span><button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button></div>
-      <div class="cloud-row"><button class="btn primary" id="btnNy" style="width:100%">+ Ny oppfølging</button></div>
+      <div class="m-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span>Min profil</span><span style="display:flex;align-items:center;gap:9px"><button class="btn primary" id="btnNy" style="padding:9px 13px;font-size:12.5px">+ Ny manuell</button><button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button><button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button></span></div>
       <div id="profileBody"></div>
-      <div class="m-foot" style="justify-content:space-between"><button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button><button class="btn" id="profileClose">Lukk</button></div>
+      <div class="m-foot"><button class="btn" id="profileClose">Lukk</button></div>
     </div>
   </div>
 
@@ -809,7 +808,7 @@
     if(sbUser){
       b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
         +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>'
-        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="cloudSyncNow">Synk nå</button><button class="btn" id="cloudLogout">Logg ut</button></div>';
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="cloudSyncNow">Synk nå</button></div>';
     }else{
       b.innerHTML='<div class="cloud-row cloud-muted">Logg inn med e-post + passord for å synke på tvers av enheter.</div>'
         +'<div class="cloud-row"><input id="cloudEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="din@epost.no"></div>'
@@ -829,7 +828,7 @@
       b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
         +'<div class="cloud-row cloud-muted">Skriv inn nytt passord (minst 6 tegn).</div>'
         +'<div class="cloud-row"><input id="pfNewPw" type="password" autocomplete="new-password" placeholder="nytt passord"></div>'
-        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button><button class="btn" id="pfLogout">Logg ut</button></div>';
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button></div>';
     }else{
       b.innerHTML='<div class="cloud-row cloud-muted">Logg inn for å kunne bytte passord.</div>'
         +'<div class="cloud-row"><input id="pfEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="din@epost.no"></div>'
@@ -858,7 +857,7 @@
     $('cloudConflictModal').classList.add('open');
   }
   function wireCloudUI(){
-    const ind=$('cloudInd');if(ind)ind.addEventListener('click',openCloudModal);
+    const ind=$('cloudInd');if(ind)ind.addEventListener('click',function(){closeProfileModal();openCloudModal();});
     const m=$('cloudModal');
     if(m)m.addEventListener('click',function(e){
       if(e.target===m){closeCloudModal();return;}
