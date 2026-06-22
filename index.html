@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-03">
+<meta name="app-build" content="2026-06-21-04">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -51,7 +51,7 @@
   .app-head h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:7px}
   /* ---- delt header/topbar/vfilter/nodate (uttrekk) ---- */
   /* ===== shared view header ===== */
-  .topbar{display:flex;align-items:center;gap:18px;margin-bottom:16px;flex:none}
+  .topbar{display:flex;align-items:flex-end;gap:18px;margin-bottom:16px;flex:none}
   .topbar .tt{font-size:25px;font-weight:800;letter-spacing:-.01em}
   .topbar .tsub{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-faint);margin-top:3px}
   .vfilter{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:11px;padding:4px;gap:2px}
@@ -308,6 +308,7 @@
     font-size:18px;line-height:1;transition:border-color .15s,background .15s}
   .profile-btn:hover{background:rgba(255,255,255,.08)}
   .profile-btn.is-in{border-color:rgba(61,245,197,.55)}
+  .paste-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
   .cloud-row input{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
   .cloud-row input:focus{border-color:rgba(61,245,197,.55)}
   .cloud-muted{color:var(--ink-dim);font-size:13px;line-height:1.5}
@@ -390,8 +391,10 @@
         <button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button>
         <button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button>
         <button class="btn primary" id="btnNy">+ Ny oppfølging</button>
-        <button class="nodate-btn" id="btnPaste" title="Lim inn kartskjermbilde — AI fyller ut oppfølgingen">📷 Lim inn</button>
-        <button class="profile-btn" id="btnProfile" title="Min profil — bytt passord">👤</button>
+        <div class="paste-col">
+          <button class="profile-btn" id="btnProfile" title="Min profil — bytt passord">👤</button>
+          <button class="nodate-btn" id="btnPaste" title="Lim inn kartskjermbilde — AI fyller ut oppfølgingen">📷 Lim inn</button>
+        </div>
       </div>
 
       <div class="vfilter filterrow" id="mainbar">
@@ -823,7 +826,7 @@
       b.innerHTML='<div class="cloud-row cloud-muted">Konto er ikke satt opp ennå.</div>';return;}
     if(sbUser){
       b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
-        +'<div class="cloud-row cloud-muted">Skriv inn nytt passord (minst 6 tegn). Du trenger ikke det gamle.</div>'
+        +'<div class="cloud-row cloud-muted">Skriv inn nytt passord (minst 6 tegn).</div>'
         +'<div class="cloud-row"><input id="pfNewPw" type="password" autocomplete="new-password" placeholder="nytt passord"></div>'
         +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button><button class="btn" id="pfLogout">Logg ut</button></div>';
     }else{
