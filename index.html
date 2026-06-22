@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-37">
+<meta name="app-build" content="2026-06-21-38">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -140,7 +140,7 @@
   .opf-card.justadded{animation:justAdded 2.1s ease forwards}
   @keyframes justAdded{0%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--mint)}8%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}52%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}100%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--hair)}}
   .vfilter button.tab-flash{animation:tabFlash 2.1s ease}
-  @keyframes tabFlash{0%{box-shadow:0 0 0 0 rgba(61,245,197,0)}8%{box-shadow:0 0 30px 7px rgba(61,245,197,1),0 0 10px 1px rgba(61,245,197,.9);color:#ffd633}52%{box-shadow:0 0 30px 7px rgba(61,245,197,1),0 0 10px 1px rgba(61,245,197,.9);color:#ffd633}100%{box-shadow:0 0 0 0 rgba(61,245,197,0)}}
+  @keyframes tabFlash{0%{box-shadow:0 0 0 0 rgba(61,245,197,0)}8%{box-shadow:0 0 22px 4px rgba(61,245,197,.9);color:#f2cf6a}52%{box-shadow:0 0 22px 4px rgba(61,245,197,.9);color:#f2cf6a}100%{box-shadow:0 0 0 0 rgba(61,245,197,0)}}
   /* handlingsområde: én rad — handling-chip + «Tilbud sendt»-status ved siden av */
   .opf-action{grid-area:action;display:flex;align-items:center;gap:10px;min-width:0}
   /* «Tilbud sendt …»-pill med klikkbar check-boks */
@@ -1217,12 +1217,13 @@
     else if(p(it.dato)<n2){view='avtaler';sub='forfalte';}
     else{view='avtaler';sub='alle';}
   }
-  // scroll til et nyopprettet kort (litt over midten) + grønt lysende blink
-  function revealCard(id){
+  // scroll til et kort (litt over midten) + grønt lysende blink. flashTab=true → fanen blinker også (default)
+  function revealCard(id,flashTab){
+    if(flashTab===undefined)flashTab=true;
     const listEl=$('list');if(!listEl)return;
-    // samme grønne blink på fanen (Avtaler / Uten tidspunkt) som kortet får
-    const tab=$('mainbar')&&$('mainbar').querySelector('button[data-v="'+view+'"]');
-    if(tab){tab.classList.remove('tab-flash');void tab.offsetWidth;tab.classList.add('tab-flash');setTimeout(function(){tab.classList.remove('tab-flash');},2200);}
+    // grønt blink på fanen (Avtaler / Uten tidspunkt) — kun når ønsket
+    if(flashTab){const tab=$('mainbar')&&$('mainbar').querySelector('button[data-v="'+view+'"]');
+      if(tab){tab.classList.remove('tab-flash');void tab.offsetWidth;tab.classList.add('tab-flash');setTimeout(function(){tab.classList.remove('tab-flash');},2200);}}
     const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
     const H=listEl.clientHeight,cardTop=el.offsetTop;
     // kategori-overskrifter (offsetTop) — finn kortets egen + den forrige
@@ -1424,7 +1425,14 @@
     dp.classList.add('open');
   }
   function closeDpop(){$('dpop').classList.remove('open');dpItem=null;}
-  function applyDp(v){if(!dpItem)return;dpItem.dato=v;save();closeDpop();render();}
+  function applyDp(v){
+    if(!dpItem)return;
+    const it=dpItem,oldDato=it.dato,oldTab=it.dato?'avtaler':'uten';
+    it.dato=v;save();closeDpop();
+    if(v===oldDato){render();return;} // ingen reell endring → ingen glow
+    navToItem(it);render();
+    revealCard(it.id,oldTab!==(it.dato?'avtaler':'uten')); // kort-glow alltid; fane-glow kun ved fanebytte
+  }
   $('dpop').addEventListener('click',function(e){
     e.stopPropagation();
     const b=e.target.closest('button');if(!b)return;
@@ -1523,7 +1531,7 @@
   $('list').addEventListener('scroll',closeQpop);
 
   // ---------- skjema (ny / rediger) med duplikatvern ----------
-  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null;
+  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null,editOrigDato=null;
   function segSet(seg,v){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
   // vennlig dato-etikett: «I dag, 12:00» · «I morgen, 14:00» · «Torsdag, 14:00» · «Mandag neste uke, 14:00» · ellers «26. juni 2026, 14:00»
   function friendlyDate(val){
@@ -1586,6 +1594,7 @@
   function closeDtPop(){$('fDtPop').classList.remove('open');}
   function openForm(it){
     editId=it?it.id:null;
+    editOrigDato=it?it.dato:null; // husk opprinnelig dato → reveal kun hvis den endres
     aiRevealId=null; // manuell/redigering: ingen AI-reveal (openFormFromAI setter den etterpå)
     aiDateMode=false; // dato-indikator av som standard; openFormFromAI slår den på
     if(it){formFromPaste=false;pendingCardImg=null;} // redigering av eksisterende kort → ingen innlimt bilde
@@ -1650,13 +1659,15 @@
     const f={navn:navn,alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
       salgsrunde:$('fRunde').value.trim(),adresse:adr,status:fStatusV,
       dato:fDatoVal,kommentar:$('fKom').value.trim()};
-    let revealId=null;
+    let revealId=null,revealFlashTab=true;
     if(editId){
       const it=byId(editId);
+      const oldTab=editOrigDato?'avtaler':'uten';
       Object.assign(it,f);
       if(fHandling)it.nextAction=fHandling; // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       toast('Lagret');
-      if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: samme fane-bytte + grønt blink som manuell
+      if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: alltid fane-bytte + grønt blink som manuell
+      else if(it.dato!==editOrigDato){navToItem(it);revealId=it.id;revealFlashTab=(oldTab!==(it.dato?'avtaler':'uten'));} // redigering som flytter kortet → kort-glow; fane-glow kun ved fanebytte
     }else{
       const o=migrate(f);
       if(fHandling)o.nextAction=fHandling;
@@ -1667,7 +1678,7 @@
     }
     pendingCardImg=null;formFromPaste=false;
     save();closeForm();render();
-    if(revealId)revealCard(revealId);
+    if(revealId)revealCard(revealId,revealFlashTab);
     setTimeout(function(){savingLock=false;},600);
   }
   $('fDelete').addEventListener('click',function(){
