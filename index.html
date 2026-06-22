@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-12">
+<meta name="app-build" content="2026-06-21-14">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -151,7 +151,7 @@
   .cn-age.age-purple{color:#e2d6ff;background:rgba(150,122,255,.24)}
   .cn-age.age-green{color:#6ee8a4;background:rgba(46,212,119,.15)}
   .cn-age.age-yellow{color:#f2c64e;background:rgba(244,183,64,.16)}
-  .cn-age.age-brown{color:#d6a878;background:rgba(180,120,70,.18)}
+  .cn-age.age-brown{color:#c07b45;background:rgba(140,78,40,.26)}
   /* identitetsstripe: type · salgsrunde (tags) */
   .opf-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
   .opf-meta .type-chip{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:800;letter-spacing:.05em;padding:6px 13px;border-radius:8px;flex:none}
@@ -930,7 +930,7 @@
   }
 
   // ---------- kort ----------
-  const ageCls=a=>a>=65?'age-brown':a>=50?'age-yellow':a>=30?'age-green':'age-purple';
+  const ageCls=a=>a>=70?'age-brown':a>=45?'age-yellow':a>=30?'age-green':'age-purple';
   const typeCls=s=>({HP:'type-hp',HC:'type-hc',Vula:'type-vula',Roll:'type-roll'}[s]||'type-hc');
   function railHTML(it,railCtx){
     const t=it.dato?p(it.dato):null;
@@ -1938,7 +1938,9 @@
   });
   function openFormFromAI(o){
     // opprett + lagre oppfølgingen med en gang, og åpne den i redigering (videre endringer auto-lagres)
-    const card=migrate({navn:o.navn,alder:o.alder||null,telefon:o.telefon,salgsrunde:o.salgsrunde,
+    // fant AI-en ikke et ekte navn (plassholder «Unknown»/«Ukjent» e.l.)? → la navnefeltet stå tomt
+    const navn=(o.navn&&!/^(unknown|ukjent|n\/?a|ingen|—|-)$/i.test(String(o.navn).trim()))?o.navn:'';
+    const card=migrate({navn:navn,alder:o.alder||null,telefon:o.telefon,salgsrunde:o.salgsrunde,
       adresse:o.adresse,status:o.status,dato:o.dato||null,kommentar:o.kommentar,sfNr:o.sfNr});
     const na=o.nextAction||(o.lovetMail?'send_offer':'');
     if(na&&NA_KEYS.includes(na))card.nextAction=na;
