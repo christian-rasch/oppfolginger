@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-24">
+<meta name="app-build" content="2026-06-21-26">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -70,7 +70,7 @@
   .nodate-btn.on .nd-count{background:rgba(26,20,7,.22);color:#1a1407}
   /* ---- oppfølgingskort + lightbox + knapper (uttrekk) ---- */
   /* ===== OPPFØLGINGER / ANNULLERINGER lists ===== */
-  .vlist{flex:1;display:flex;flex-direction:column;gap:12px;overflow:auto;padding-right:4px}
+  .vlist{flex:1;display:flex;flex-direction:column;gap:12px;overflow:auto;padding-right:4px;position:relative}
   .vlist>*{flex:none} /* hindre at mange kort krympes/overlapper i flex-kolonnen — behold naturlig høyde, la lista scrolle */
   .grp{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#9fb6c7;margin:24px 0 -2px;padding-bottom:8px;border-bottom:1px solid var(--hair-2);display:flex;align-items:baseline;gap:8px} /* dempet blågrå/slate — tydeligere gruppeoverskrift; .forfalt/.sub overstyrer fargen under */
   .grp:first-child{margin-top:4px}
@@ -135,6 +135,9 @@
   .opf-ident.edit-zone:hover{background:rgba(255,255,255,.04)}
   .opf-ident.edit-zone.flash{animation:zoneFlash .5s ease} /* kjapt grønt blink ved trykk */
   @keyframes zoneFlash{0%,35%{background:rgba(61,245,197,.30)}100%{background:rgba(61,245,197,0)}}
+  /* nyopprettet kort: grønn lysende ytterkant ~1s, deretter ~1s fade */
+  .opf-card.justadded{animation:justAdded 2.1s ease forwards}
+  @keyframes justAdded{0%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--mint)}8%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}52%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}100%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--hair)}}
   /* handlingsområde: én rad — handling-chip + «Tilbud sendt»-status ved siden av */
   .opf-action{grid-area:action;display:flex;align-items:center;gap:10px;min-width:0}
   /* «Tilbud sendt …»-pill med klikkbar check-boks */
@@ -1174,6 +1177,21 @@
   }
   function setView(v){view=v;render();}
   function setSub(s){sub=s;render();}
+  // velg fanen der et kort havner (dato → Avtaler; forfalt → Forfalte; ingen dato → Uten tidspunkt)
+  function navToItem(it){
+    const n2=now();
+    if(!it.dato){view='uten';}
+    else if(p(it.dato)<n2){view='avtaler';sub='forfalte';}
+    else{view='avtaler';sub='alle';}
+  }
+  // scroll til et nyopprettet kort (litt over midten) + grønt lysende blink
+  function revealCard(id){
+    const listEl=$('list');if(!listEl)return;
+    const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
+    listEl.scrollTop=Math.max(0,el.offsetTop-listEl.clientHeight*0.38);
+    el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
+    setTimeout(function(){el.classList.remove('justadded');},2200);
+  }
   $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
   $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
 
@@ -1454,7 +1472,7 @@
   $('list').addEventListener('scroll',closeQpop);
 
   // ---------- skjema (ny / rediger) med duplikatvern ----------
-  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false,fChipSel=null;
+  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null;
   function segSet(seg,v){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
   function chipSync(){
     // valgt hurtigvalg lyser grønt; «Ingen tidspunkt» lyser når ingen dato er satt
@@ -1472,6 +1490,7 @@
   }
   function openForm(it){
     editId=it?it.id:null;
+    aiRevealId=null; // manuell/redigering: ingen AI-reveal (openFormFromAI setter den etterpå)
     aiDateMode=false; // dato-indikator av som standard; openFormFromAI slår den på
     if(it){formFromPaste=false;pendingCardImg=null;} // redigering av eksisterende kort → ingen innlimt bilde
     $('fTitle').textContent=it?'Rediger oppfølging':'Ny oppfølging';
@@ -1523,20 +1542,24 @@
     const f={navn:navn,alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
       salgsrunde:$('fRunde').value.trim(),adresse:adr,status:fStatusV,
       dato:fDatoVal,kommentar:$('fKom').value.trim()};
+    let revealId=null;
     if(editId){
       const it=byId(editId);
       Object.assign(it,f);
       if(fHandling)it.nextAction=fHandling; // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       toast('Lagret');
+      if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: samme fane-bytte + grønt blink som manuell
     }else{
       const o=migrate(f);
       if(fHandling)o.nextAction=fHandling;
       if(formFromPaste&&pendingCardImg){o.hasImg=true;setCardImg(o.id,pendingCardImg);} // lagre kartbildet (full kvalitet ≤1400px) lokalt
       items.push(o);
       toast('Oppfølging lagt til');
+      navToItem(o);revealId=o.id; // bytt til fanen der den nye havner, så selger ser hvor den la seg
     }
     pendingCardImg=null;formFromPaste=false;
     save();closeForm();render();
+    if(revealId)revealCard(revealId);
     setTimeout(function(){savingLock=false;$('fSave').disabled=false;},600);
   }
   $('fSave').addEventListener('click',doSave);
@@ -1945,6 +1968,7 @@
     pendingCardImg=null;formFromPaste=false;
     items.push(card);save();render();
     openForm(card); // edit-modus → live-lagring
+    aiRevealId=card.id; // når dette AI-kortet lukkes/lagres → bytt fane + grønt blink, som manuell
     $('fTitle').textContent='Ny oppfølging';
     aiDateMode=true;dtFlagSync(); // vis om AI fant en dato (mint ✓ / rød ✗)
     const nEl=$('fAiNote');
