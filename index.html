@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-21-08">
+<meta name="app-build" content="2026-06-21-09">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -215,7 +215,7 @@
   .qpop button:hover{background:rgba(255,255,255,.14);border-color:var(--hair)}
   .qpop button[data-qc-remove]{grid-column:1/-1;color:var(--ink-dim)}
   /* KOL 3 — kart + handlinger */
-  .opf-side{display:flex;flex-direction:row;gap:10px;align-items:center}
+  .opf-side{display:flex;flex-direction:row;gap:10px;align-items:center;align-self:end}
   .side-btns{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
   .opf-thumb{width:118px;height:106px;flex:none;border-radius:11px;overflow:hidden;position:relative;cursor:pointer;text-decoration:none;border:1px solid var(--hair);background-size:cover;background-position:center;background-color:#24492f}
   .opf-thumb .thumb-lbl{position:absolute;left:0;right:0;bottom:0;text-align:center;font-family:"JetBrains Mono",monospace;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent);padding:10px 0 4px;z-index:2}
@@ -383,7 +383,6 @@
 <body>
   <div class="scaler"><div class="stage">
     <div class="app-head">
-      <div class="ey">Min side</div>
       <div class="head-row">
         <h1>Oppfølginger</h1>
         <button class="profile-btn" id="btnProfile" title="Min profil — bytt passord">👤</button>
