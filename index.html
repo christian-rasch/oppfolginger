@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-22-71">
+<meta name="app-build" content="2026-06-22-72">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -152,7 +152,7 @@
   @keyframes dayGlow{0%{text-shadow:0 0 0 rgba(216,169,58,0)}2%{color:#d8a93a;opacity:1;text-shadow:0 0 10px rgba(216,169,58,.9)}68%{color:#d8a93a;opacity:1;text-shadow:0 0 10px rgba(216,169,58,.9)}100%{text-shadow:0 0 0 rgba(216,169,58,0)}}
   /* fane-blink: mørkere gul tekst (les bedre mot grønn bakgrunn) + gul ytterkant */
   .vfilter button.tab-flash{animation:tabFlash 2.1s ease}
-  @keyframes tabFlash{0%{color:#06120e;box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}6%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}66%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}100%{color:#06120e;box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}}
+  @keyframes tabFlash{0%{color:var(--ink-dim);box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}6%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}66%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}100%{color:var(--ink-dim);box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}}
   /* buet, animert spyd-pil fra → til fane (svak grønn): skyter opp, planter spissen, trekker seg sakte inn og forsvinner */
   #mainbar{position:relative}
   .tab-arrow{position:absolute;pointer-events:none;z-index:5;overflow:visible;animation:taFade 2.1s ease forwards}
@@ -1358,6 +1358,8 @@
     if(prev==='send_offer'){
       it.nextAction='waiting_reply';it.waitingSince=Date.now(); // tilbud sendt nå
       save();render();
+      const destTab=it.dato?'avtaler':'uten'; // kortet forlater «Må gjøres» → pil mot fanen der duplikatet fortsatt står
+      if(destTab!==view)revealCard(it.id,false,view,destTab); // KUN pil-illustrasjonen — ingen fane-blink på «Avtaler»/«Uten tidspunkt»
       toastUndo('Tilbud sendt → Venter på svar — '+(it.navn||''),
         function(){it.nextAction='send_offer';it.waitingSince=prevWS;save();render();});
     }else{
@@ -1525,7 +1527,8 @@
     if(v===oldDato){render();return;} // ingen reell endring → ingen glow
     const destTab=it.dato?'avtaler':'uten';
     render(); // bli i gjeldende visning — følg ikke kortet
-    revealCard(it.id,destTab!==view,view,destTab); // kort-glow hvis synlig; pil + fane-blink kun ved hovedfanebytte
+    if(view==='gjore')revealCard(it.id,false); // Må gjøres: kortet blir værende (handling uendret) → kun glow, ingen pil/fane-blink ved datoendring
+    else revealCard(it.id,destTab!==view,view,destTab); // andre faner: kort-glow + pil/fane-blink ved hovedfanebytte
   }
   $('dpop').addEventListener('click',function(e){
     e.stopPropagation();
@@ -1762,7 +1765,8 @@
       if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: alltid fane-bytte + grønt blink som manuell
       else if(it.dato!==editOrigDato){ // redigering av eksisterende kort → bli i visningen; pil/blink kun ved hovedfanebytte (Avtaler ↔ Uten tidspunkt)
         const destTab=it.dato?'avtaler':'uten';
-        revealId=it.id;revealFrom=view;revealTo=destTab;revealFlashTab=(destTab!==view);
+        if(view==='gjore'){revealId=it.id;revealFlashTab=false;revealFrom=null;} // Må gjøres: kortet blir værende → kun glow, ingen pil ved datoendring
+        else{revealId=it.id;revealFrom=view;revealTo=destTab;revealFlashTab=(destTab!==view);}
       }
     }else{
       const o=migrate(f);
