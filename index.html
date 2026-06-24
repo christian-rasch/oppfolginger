@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-22-72">
+<meta name="app-build" content="2026-06-25-73">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -153,6 +153,10 @@
   /* fane-blink: mørkere gul tekst (les bedre mot grønn bakgrunn) + gul ytterkant */
   .vfilter button.tab-flash{animation:tabFlash 2.1s ease}
   @keyframes tabFlash{0%{color:var(--ink-dim);box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}6%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}66%{color:#7a5200;box-shadow:0 0 0 2px #d8a93a,0 0 16px 3px rgba(216,169,58,.7)}100%{color:var(--ink-dim);box-shadow:0 0 0 0 rgba(216,169,58,0),0 0 0 0 rgba(216,169,58,0)}}
+  /* fjern-kort: kortet falmer + glir mot høyre, så kollapser høyden så lista lukker hullet mykt. JS setter konkret start-max-height. */
+  .opf-card.card-removing{overflow:hidden;pointer-events:none;will-change:transform,opacity,max-height;animation:cardRemove .42s cubic-bezier(.4,0,.55,1) forwards}
+  @keyframes cardRemove{0%{opacity:1;transform:translateX(0) scale(1)}45%{opacity:.4;transform:translateX(16px) scale(.985)}100%{opacity:0;transform:translateX(48px) scale(.955);max-height:0;padding-top:0;padding-bottom:0;margin-top:-7px}}
+  @media (prefers-reduced-motion:reduce){.opf-card.card-removing{animation-duration:.18s}}
   /* buet, animert spyd-pil fra → til fane (svak grønn): skyter opp, planter spissen, trekker seg sakte inn og forsvinner */
   #mainbar{position:relative}
   .tab-arrow{position:absolute;pointer-events:none;z-index:5;overflow:visible;animation:taFade 2.1s ease forwards}
@@ -1297,14 +1301,18 @@
     shaft.style.setProperty('--len',shaft.getTotalLength());
     setTimeout(function(){if(svg.parentNode)svg.remove();},2200);
   }
+  // pil mellom faner (+ valgfri gul fane-blink på mål-fanen). Brukes både av revealCard og av glir-ut (fyres ved halvveis).
+  function flashAndArrow(fromTab,toTab,doFlash){
+    if(doFlash){const tab=$('mainbar')&&$('mainbar').querySelector('button[data-v="'+toTab+'"]');
+      if(tab){tab.classList.remove('tab-flash');void tab.offsetWidth;tab.classList.add('tab-flash');setTimeout(function(){tab.classList.remove('tab-flash');},2200);}}
+    if(fromTab&&fromTab!==toTab)showTabArrow(fromTab,toTab); // pil ved fanebytte
+  }
   // scroll til et kort (litt over midten) + glow. flashTab → fanen blinker (default). fromTab → pil fra forrige fane
   function revealCard(id,flashTab,fromTab,toTab){
     if(flashTab===undefined)flashTab=true;
     if(toTab===undefined)toTab=view; // hvilken fane pila peker mot + blinker (default: gjeldende visning)
     const listEl=$('list');if(!listEl)return;
-    if(flashTab){const tab=$('mainbar')&&$('mainbar').querySelector('button[data-v="'+toTab+'"]');
-      if(tab){tab.classList.remove('tab-flash');void tab.offsetWidth;tab.classList.add('tab-flash');setTimeout(function(){tab.classList.remove('tab-flash');},2200);}}
-    if(fromTab&&fromTab!==toTab)showTabArrow(fromTab,toTab); // pil ved fanebytte
+    flashAndArrow(fromTab,toTab,flashTab); // gul fane-blink + pil
     const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
     const H=listEl.clientHeight,cardTop=el.offsetTop;
     // kategori-overskrifter (element + offsetTop) — finn kortets egen + den forrige
@@ -1356,12 +1364,15 @@
   function checkOffAction(it){
     const prev=it.nextAction,prevWS=it.waitingSince;if(!NA_KEYS.includes(prev))return;
     if(prev==='send_offer'){
-      it.nextAction='waiting_reply';it.waitingSince=Date.now(); // tilbud sendt nå
-      save();render();
-      const destTab=it.dato?'avtaler':'uten'; // kortet forlater «Må gjøres» → pil mot fanen der duplikatet fortsatt står
-      if(destTab!==view)revealCard(it.id,false,view,destTab); // KUN pil-illustrasjonen — ingen fane-blink på «Avtaler»/«Uten tidspunkt»
-      toastUndo('Tilbud sendt → Venter på svar — '+(it.navn||''),
-        function(){it.nextAction='send_offer';it.waitingSince=prevWS;save();render();});
+      const destTab=it.dato?'avtaler':'uten',fromV=view; // kortet forlater «Må gjøres» → pil mot fanen der duplikatet fortsatt står
+      const commit=function(){
+        it.nextAction='waiting_reply';it.waitingSince=Date.now(); // tilbud sendt nå
+        save();render();
+        toastUndo('Tilbud sendt → Venter på svar — '+(it.navn||''),
+          function(){it.nextAction='send_offer';it.waitingSince=prevWS;save();render();});
+      };
+      // glir ut når kortet forlater fanen (f.eks. «Må gjøres»); pila (uten fane-blink) fyres når kortet er halvveis ute
+      if(destTab!==view)animateRemoveCard(it.id,commit,function(){flashAndArrow(fromV,destTab,false);});else commit();
     }else{
       it.nextAction=null;if(prev==='waiting_reply')it.waitingSince=null; // nullstill ved avsluttet venting
       save();render();
@@ -1379,13 +1390,29 @@
       if(i.state==='fulgt'&&(!i.avgjort||i.avgjort<cutoff)){delCardImg(i.id);items.splice(k,1);changed=true;}}
     if(changed){save();render();}
   }
+  // spill «glir ut + kollaps»-animasjon på kortet. onStart fyres med en gang (pila starter idet man klikker).
+  // commit (faktisk fjerning + opptegning) kjøres når animasjonen er ferdig, så lista lukker hullet etter at kortet er borte.
+  function animateRemoveCard(id,commit,onStart){
+    if(onStart)onStart(); // pila starter umiddelbart
+    const el=$('list')&&$('list').querySelector('.opf-card[data-id="'+id+'"]');
+    if(!el){commit();return;} // ikke synlig (annen fane) → fjern uten animasjon
+    el.style.maxHeight=el.offsetHeight+'px'; // konkret starthøyde så høyde-kollapsen kan animeres
+    void el.offsetWidth;                      // tving reflow før klassen, ellers hopper den
+    el.classList.add('card-removing');
+    let done=false;const fin=function(){if(done)return;done=true;commit();};
+    el.addEventListener('animationend',fin,{once:true});
+    setTimeout(fin,560); // failsafe hvis animationend ikke fyrer
+  }
   function fullfor(it){ // «Fjern»: arkiver straks (skjul fra lista), 10s angrevindu. Auto-slettes permanent etter 48t.
     if(!it||it.state==='fulgt')return;
     const id=it.id;
-    it.state='fulgt';it.avgjort=Date.now();save();render();
-    toastUndo('Fjernet — '+(it.navn||''),function(){
-      const x=byId(id);if(x){x.state='aktiv';x.avgjort=null;save();render();}
-    },10000);
+    animateRemoveCard(id,function(){
+      const x=byId(id);if(!x||x.state==='fulgt')return;
+      x.state='fulgt';x.avgjort=Date.now();save();render();
+      toastUndo('Fjernet — '+(x.navn||''),function(){
+        const y=byId(id);if(y){y.state='aktiv';y.avgjort=null;save();render();}
+      },10000);
+    });
   }
   // logg/re-logg kontakt (kun sistKontakt + kontaktlogg; rører ikke nextAction/dato/waitingSince)
   function logK(it){
@@ -1522,13 +1549,16 @@
   function closeDpop(){$('dpop').classList.remove('open');dpItem=null;}
   function applyDp(v){
     if(!dpItem)return;
-    const it=dpItem,oldDato=it.dato;
+    const it=dpItem,oldDato=it.dato,id=it.id;
     it.dato=v;save();closeDpop();
     if(v===oldDato){render();return;} // ingen reell endring → ingen glow
     const destTab=it.dato?'avtaler':'uten';
-    render(); // bli i gjeldende visning — følg ikke kortet
-    if(view==='gjore')revealCard(it.id,false); // Må gjøres: kortet blir værende (handling uendret) → kun glow, ingen pil/fane-blink ved datoendring
-    else revealCard(it.id,destTab!==view,view,destTab); // andre faner: kort-glow + pil/fane-blink ved hovedfanebytte
+    if(view!=='gjore'&&destTab!==view){ // kortet forlater fanen → glir ut; pila + gul glød fyres når kortet er halvveis ute
+      const fromV=view;
+      animateRemoveCard(id,function(){render();},function(){flashAndArrow(fromV,destTab,true);});
+    }else{ // samme fane (eller «Må gjøres» der handlingen er uendret) → bare glow på stedet
+      render();revealCard(id,false);
+    }
   }
   $('dpop').addEventListener('click',function(e){
     e.stopPropagation();
@@ -1777,8 +1807,14 @@
       navToItem(o);revealId=o.id; // bytt til fanen der den nye havner, så selger ser hvor den la seg
     }
     pendingCardImg=null;formFromPaste=false;
-    save();closeForm();render();
-    if(revealId)revealCard(revealId,revealFlashTab,revealFrom,revealTo);
+    save();closeForm();
+    if(revealId&&revealFrom&&revealFrom!==revealTo){ // kortet forlater fanen → glir ut; pila/glød fyres halvveis
+      const rId=revealId,rFlash=revealFlashTab,rFrom=revealFrom,rTo=revealTo;
+      animateRemoveCard(rId,function(){render();},function(){flashAndArrow(rFrom,rTo,rFlash);});
+    }else{
+      render();
+      if(revealId)revealCard(revealId,revealFlashTab,revealFrom,revealTo);
+    }
     setTimeout(function(){savingLock=false;},600);
   }
   $('fDelete').addEventListener('click',function(){
