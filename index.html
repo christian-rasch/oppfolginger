@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-25-73">
+<meta name="app-build" content="2026-06-25-74">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -365,14 +365,32 @@
   /* egen tappbar dato/tid-velger */
   .dtpop-modal{z-index:200}
   .dtpop-card{width:min(420px,94vw)}
-  .dtpop-daterow{display:flex;align-items:center;gap:12px;margin:6px 0 14px}
-  .dtpop-daterow #fDate{flex:1;font-family:inherit;font-size:15px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
+  .dtpop-daterow{display:flex;align-items:center;gap:12px;margin:14px 0 2px}
   .dtpop-lbl{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
   .dtpop-sec{margin-top:12px;margin-bottom:2px}
   .t-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 4px}
   .t-mins{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 4px}
   .dtpop-foot{justify-content:space-between;align-items:center}
-  .dtpop-foot-left{display:flex;gap:9px}
+  .dtpop-foot-right{display:flex;gap:9px}
+  .dtpop-datefield{flex:1;text-align:left;font-family:inherit;font-size:15px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;cursor:pointer}
+  /* egen kalender / tid-velger — legges (via JS) over Tid-rutenettet, lukkes ved valg eller klikk utenfor */
+  .dtmini{position:absolute;z-index:10;background:#11141f;border:1px solid var(--hair);border-radius:12px;padding:12px;box-shadow:0 24px 70px -16px rgba(0,0,0,.9)}
+  .dtcal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .dtcal-head button{font-size:18px;line-height:1;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--hair);border-radius:8px;width:32px;height:30px;cursor:pointer}
+  .dtcal-title{font-family:"Schibsted Grotesk",sans-serif;font-size:14px;font-weight:700;color:var(--ink)}
+  .dtcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .dtcal-grid .wd{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-faint);text-align:center;padding:2px 0}
+  .dtcal-grid button{font-family:"JetBrains Mono",monospace;font-size:13px;padding:7px 0;border-radius:7px;border:1px solid transparent;background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer}
+  .dtcal-grid button:disabled{background:none;cursor:default}
+  .dtcal-grid button.today{border-color:var(--hair-2)}
+  .dtcal-grid button.sel{background:linear-gradient(135deg,var(--mint),#19c79a);color:#06120e;border-color:transparent}
+  .dttime-cols{display:flex;gap:10px}
+  .dttime-colwrap{flex:1}
+  .dttime-lbl{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);text-align:center;margin-bottom:5px}
+  .dttime-col{max-height:188px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+  .dttime-col button{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700;padding:8px 0;border-radius:7px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer}
+  .dttime-col button.on{background:linear-gradient(135deg,var(--mint),#19c79a);color:#06120e;border-color:transparent}
+  .dtmini-foot{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}
   .t-grid button,.t-mins button{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:9px;padding:11px 0;cursor:pointer}
   .t-grid button.on,.t-mins button.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
   .dt-flag.ok{color:var(--mint)}
@@ -521,15 +539,16 @@
   <div class="modal dtpop-modal" id="fDtPop">
     <div class="m-card dtpop-card">
       <div class="m-title">Dato og tid</div>
-      <div class="dtpop-daterow"><label class="dtpop-lbl" for="fDate">Dato</label><input type="date" id="fDate"></div>
-      <div class="dtpop-lbl dtpop-sec">Time</div>
+      <div class="dtpop-lbl dtpop-sec">Tid</div>
       <div class="t-grid" id="fHours"></div>
       <div class="dtpop-lbl dtpop-sec">Minutt</div>
       <div class="t-mins" id="fMins"></div>
-      <input type="time" id="fTimeNative" step="60" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
-      <div class="m-foot dtpop-foot">
-        <div class="dtpop-foot-left"><button class="btn" id="fDtCustom" type="button">Custom</button><button class="btn" id="fDtClear" type="button">Nullstill</button></div>
-        <button class="btn primary" id="fDtDone" type="button">Ferdig</button>
+      <div class="dtpop-daterow"><span class="dtpop-lbl">Dato</span><button type="button" class="dtpop-datefield" id="fDateBtn">—</button></div>
+      <div class="dtmini dtcal" id="fCal" hidden></div>
+      <div class="dtmini" id="fTimePop" hidden></div>
+      <div class="m-foot dtpop-foot" id="fDtFoot">
+        <button class="btn" id="fDtCustom" type="button">Custom</button>
+        <div class="dtpop-foot-right"><button class="btn" id="fDtBack" type="button">Tilbake</button><button class="btn primary" id="fDtDone" type="button">Lagre</button></div>
       </div>
     </div>
   </div>
@@ -1658,7 +1677,7 @@
   $('list').addEventListener('scroll',closeQpop);
 
   // ---------- skjema (ny / rediger) med duplikatvern ----------
-  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null,editOrigDato=null;
+  let editId=null,fDatoVal=null,fHandling=null,fStatusV='HP',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null,editOrigDato=null,dtSnapshot=null;
   function segSet(seg,v){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
   // vennlig dato-etikett: «I dag, 12:00» · «I morgen, 14:00» · «Torsdag, 14:00» · «Mandag neste uke, 14:00» · ellers «26. juni 2026, 14:00»
   function friendlyDate(val){
@@ -1700,14 +1719,14 @@
   }
   function syncDtPicker(){
     const d=p(fDatoVal);
-    const fd=$('fDate');if(fd)fd.value=d?toLocal(d).slice(0,10):'';
     const hh=d?d.getHours():null,mm=d?d.getMinutes():null;
     const hg=$('fHours');if(hg)Array.from(hg.children).forEach(b=>b.classList.toggle('on',+b.dataset.h===hh));
     const mg=$('fMins');if(mg)Array.from(mg.children).forEach(b=>b.classList.toggle('on',+b.dataset.m===mm));
+    const db=$('fDateBtn');if(db)db.textContent=d?(pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear()+', '+pad(d.getHours())+':'+pad(d.getMinutes())):'—'; // dato + valgt tidspunkt
+    syncTimePop();
   }
-  function dtComposeDate(){ // gjeldende dato-del (YYYY-MM-DD), ellers valgt dato, ellers i dag
+  function dtComposeDate(){ // gjeldende dato-del (YYYY-MM-DD), ellers i dag
     if(fDatoVal)return fDatoVal.slice(0,10);
-    const fd=$('fDate');if(fd&&fd.value)return fd.value;
     return toLocal(now()).slice(0,10);
   }
   function setDtTime(h,m){
@@ -1715,10 +1734,63 @@
     const hh=(h!=null)?h:(cur?cur.getHours():12);
     const mm=(m!=null)?m:(cur?cur.getMinutes():0);
     fDatoVal=dtComposeDate()+'T'+pad(hh)+':'+pad(mm);
-    fChipSel=null;chipSync();liveCommit(true);
+    fChipSel=null;chipSync(); // kun forhåndsvisning i velgeren — lagres først ved «Lagre»
   }
-  function openDtPop(){buildDtPicker();syncDtPicker();$('fDtPop').classList.add('open');}
-  function closeDtPop(){$('fDtPop').classList.remove('open');}
+  // ---- egen kalender + tid-velger (legges over Tid-rutenettet; lukkes ved valg / klikk utenfor) ----
+  let calYM=null,timeSnapshot=null,tpH=false,tpM=false;
+  function placeMini(el){const grid=$('fHours');if(!grid)return;el.style.left=grid.offsetLeft+'px';el.style.top=grid.offsetTop+'px';el.style.width=grid.offsetWidth+'px';}
+  function placeCal(){const grid=$('fHours'),foot=$('fDtFoot'),el=$('fCal');if(!grid||!el)return;el.style.left=grid.offsetLeft+'px';el.style.top=grid.offsetTop+'px';el.style.width=grid.offsetWidth+'px';const bottom=foot?(foot.offsetTop+foot.offsetHeight):0;el.style.minHeight=Math.max(120,bottom-grid.offsetTop)+'px';} // kalenderen dekker ned forbi knappene
+  function dtMainFoot(show){const f=$('fDtFoot');if(f)f.style.display=show?'':'none';} // skjul hoved-knappene mens tid-velgeren er åpen
+  function closeMinis(){['fCal','fTimePop'].forEach(function(id){const e=$(id);if(e)e.hidden=true;});dtMainFoot(true);document.removeEventListener('click',miniOutside,true);}
+  function miniOutside(e){
+    const cal=$('fCal'),tp=$('fTimePop');
+    const inCal=cal&&!cal.hidden&&cal.contains(e.target),inTp=tp&&!tp.hidden&&tp.contains(e.target);
+    const onTrig=e.target.closest&&e.target.closest('#fDateBtn,#fDtCustom');
+    if(!inCal&&!inTp&&!onTrig)closeMinis();
+  }
+  function armMiniOutside(){document.removeEventListener('click',miniOutside,true);setTimeout(function(){document.addEventListener('click',miniOutside,true);},0);}
+  function renderCal(){
+    const el=$('fCal');if(!el)return;const y=calYM.y,m=calYM.m;
+    const startWd=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+    const sel=p(fDatoVal),td=now(),WD=['Ma','Ti','On','To','Fr','Lø','Sø'];
+    let h='<div class="dtcal-head"><button type="button" data-nav="-1">‹</button><div class="dtcal-title">'+MOFULL[m].charAt(0).toUpperCase()+MOFULL[m].slice(1)+' '+y+'</div><button type="button" data-nav="1">›</button></div><div class="dtcal-grid">';
+    WD.forEach(function(w){h+='<div class="wd">'+w+'</div>';});
+    for(let i=0;i<startWd;i++)h+='<button type="button" disabled></button>';
+    for(let dd=1;dd<=days;dd++){
+      const isSel=sel&&sel.getFullYear()===y&&sel.getMonth()===m&&sel.getDate()===dd;
+      const isTd=td.getFullYear()===y&&td.getMonth()===m&&td.getDate()===dd;
+      h+='<button type="button" data-day="'+dd+'"'+(isSel?' class="sel"':(isTd?' class="today"':''))+'>'+dd+'</button>';
+    }
+    el.innerHTML=h+'</div>';
+  }
+  function openCal(){const d=p(fDatoVal)||now();calYM={y:d.getFullYear(),m:d.getMonth()};renderCal();const el=$('fCal');$('fTimePop').hidden=true;el.hidden=false;placeCal();armMiniOutside();}
+  function buildTimePop(){
+    const el=$('fTimePop');if(!el)return;
+    let hc='';for(let hh=0;hh<24;hh++)hc+='<button type="button" data-th="'+hh+'">'+pad(hh)+'</button>';
+    let mc='';for(let mm=0;mm<60;mm++)mc+='<button type="button" data-tm="'+mm+'">'+pad(mm)+'</button>';
+    el.innerHTML='<div class="dttime-cols"><div class="dttime-colwrap"><div class="dttime-lbl">Time</div><div class="dttime-col" id="fTpH">'+hc+'</div></div><div class="dttime-colwrap"><div class="dttime-lbl">Min</div><div class="dttime-col" id="fTpM">'+mc+'</div></div></div>'
+      +'<div class="dtmini-foot"><button class="btn" id="fTpBack" type="button">Tilbake</button></div>'; // kun Tilbake; tid lagres når både time+minutt er valgt
+  }
+  function syncTimePop(){
+    const el=$('fTimePop');if(!el||el.hidden)return;
+    const cur=p(fDatoVal),ch=cur?cur.getHours():null,cm=cur?cur.getMinutes():null;
+    el.querySelectorAll('[data-th]').forEach(b=>b.classList.toggle('on',+b.dataset.th===ch));
+    el.querySelectorAll('[data-tm]').forEach(b=>b.classList.toggle('on',+b.dataset.tm===cm));
+  }
+  function openTimePop(){
+    timeSnapshot=fDatoVal;tpH=false;tpM=false; // «Tilbake» angrer til dette; tiden lagres når både time+minutt er trykket
+    buildTimePop();const el=$('fTimePop');$('fCal').hidden=true;el.hidden=false;placeMini(el);syncTimePop();
+    dtMainFoot(false); // skjul hoved-knappene; tid-velgeren har egne Tilbake/Lagre
+    document.removeEventListener('click',miniOutside,true); // tid-velgeren lukkes kun via egne knapper
+    const on=el.querySelector('.on');if(on)on.scrollIntoView({block:'center'}); // rull valgt verdi til synlig
+  }
+  function closeTimePop(keep){ // Lagre (keep=true): behold valgt tid. Tilbake (keep=false): angre til snapshot.
+    if(!keep){fDatoVal=timeSnapshot;fChipSel=null;chipSync();}
+    $('fTimePop').hidden=true;dtMainFoot(true); // tilbake til rutenettet med hoved-knappene
+  }
+  function openDtPop(){dtSnapshot=fDatoVal;buildDtPicker();closeMinis();syncDtPicker();$('fDtPop').classList.add('open');} // husk verdi ved åpning → «Tilbake» kan angre
+  function closeDtPop(){closeMinis();$('fDtPop').classList.remove('open');}
+  function cancelDtPop(){fDatoVal=dtSnapshot;fChipSel=null;chipSync();closeDtPop();} // «Tilbake»/klikk utenfor: forkast endring (ingen lagring)
   function openForm(it){
     editId=it?it.id:null;
     editOrigDato=it?it.dato:null; // husk opprinnelig dato → reveal kun hvis den endres
@@ -1766,17 +1838,25 @@
     chipSync();liveCommit(true);
   });
   $('fDtField').addEventListener('click',openDtPop);
-  $('fDtPop').addEventListener('click',function(e){if(e.target===$('fDtPop'))closeDtPop();});
-  $('fDtDone').addEventListener('click',closeDtPop);
-  $('fDtClear').addEventListener('click',function(){fDatoVal=null;fChipSel=null;chipSync();liveCommit(true);closeDtPop();});
+  $('fDtPop').addEventListener('click',function(e){if(e.target===$('fDtPop'))cancelDtPop();}); // klikk på bakgrunn = avbryt (lagrer ikke)
+  $('fDtDone').addEventListener('click',function(){liveCommit(true);closeDtPop();}); // «Lagre»: skriv valgt dato/tid
+  $('fDtBack').addEventListener('click',cancelDtPop); // «Tilbake»: forkast endringen
   $('fHours').addEventListener('click',function(e){const b=e.target.closest('button');if(b)setDtTime(+b.dataset.h,null);});
   $('fMins').addEventListener('click',function(e){const b=e.target.closest('button');if(b)setDtTime(null,+b.dataset.m);});
-  $('fDtCustom').addEventListener('click',function(){const t=$('fTimeNative');const cur=p(fDatoVal);if(cur)t.value=pad(cur.getHours())+':'+pad(cur.getMinutes());try{if(t.showPicker)t.showPicker();else{t.focus();t.click();}}catch(_){t.focus();}});
-  $('fTimeNative').addEventListener('change',function(){const v=this.value;if(!v)return;const pr=v.split(':');setDtTime(+pr[0],+pr[1]);});
-  $('fDate').addEventListener('change',function(){
-    if(!this.value){fDatoVal=null;fChipSel=null;chipSync();liveCommit(true);return;}
-    const cur=p(fDatoVal);const time=cur?(pad(cur.getHours())+':'+pad(cur.getMinutes())):'12:00';
-    fDatoVal=this.value+'T'+time;fChipSel=null;chipSync();liveCommit(true);
+  $('fDtCustom').addEventListener('click',function(){if($('fTimePop').hidden)openTimePop();else closeMinis();}); // Custom: egen tid-velger (toggle)
+  $('fDateBtn').addEventListener('click',function(){if($('fCal').hidden)openCal();else closeMinis();}); // Dato: egen kalender (toggle)
+  $('fCal').addEventListener('click',function(e){
+    const nav=e.target.closest('[data-nav]');
+    if(nav){let m=calYM.m+(+nav.dataset.nav),y=calYM.y;if(m<0){m=11;y--;}else if(m>11){m=0;y++;}calYM={y:y,m:m};renderCal();return;}
+    const db=e.target.closest('[data-day]');if(!db)return;
+    const ymd=calYM.y+'-'+pad(calYM.m+1)+'-'+pad(+db.dataset.day);
+    const cur=p(fDatoVal),time=cur?(pad(cur.getHours())+':'+pad(cur.getMinutes())):'12:00';
+    fDatoVal=ymd+'T'+time;fChipSel=null;chipSync();closeMinis(); // lukk kalender ved valg
+  });
+  $('fTimePop').addEventListener('click',function(e){
+    if(e.target.closest('#fTpBack')){closeTimePop(false);return;} // Tilbake: angre, ut av velgeren
+    const hb=e.target.closest('[data-th]');if(hb){setDtTime(+hb.dataset.th,null);tpH=true;if(tpH&&tpM)closeTimePop(true);return;} // velg time
+    const mb=e.target.closest('[data-tm]');if(mb){setDtTime(null,+mb.dataset.tm);tpM=true;if(tpH&&tpM)closeTimePop(true);} // velg minutt → begge valgt = lagre + lukk
   });
   ['fNavn','fAlder','fTel','fRunde','fAdr','fKom'].forEach(function(id){$(id).addEventListener('input',function(){liveCommit(false);});});
   function doSave(){
@@ -1833,7 +1913,6 @@
   $('formModal').addEventListener('keydown',function(e){ // Enter = lagre; Shift+Enter = linjeskift i kommentar
     if(e.key==='Enter'&&!e.shiftKey&&!savingLock&&$('formModal').classList.contains('open')){e.preventDefault();doSave();}
   });
-  $('fDate').setAttribute('inputmode','none'); // dato-input i velgeren: kun kalender, ingen manuell tasting
   $('btnNy').addEventListener('click',function(){closeProfileModal();pendingCardImg=null;formFromPaste=false;openForm(null);});
   // hent nyeste versjon (cache-omgåelse) — slipper å re-installere appen på hjemskjerm
   $('btnReload').addEventListener('click',function(){location.href=location.pathname+'?t='+Date.now();});
