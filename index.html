@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-25-74">
+<meta name="app-build" content="2026-06-25-75">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -145,10 +145,10 @@
   .opf-ident.edit-zone.flash{animation:zoneFlash .5s ease} /* kjapt grønt blink ved trykk */
   @keyframes zoneFlash{0%,35%{background:rgba(61,245,197,.30)}100%{background:rgba(61,245,197,0)}}
   /* nyopprettet kort: grønn lysende ytterkant ~1s, deretter ~1s fade */
-  .opf-card.justadded{animation:justAdded 6s ease forwards}
+  .opf-card.justadded{animation:justAdded 3s ease forwards}
   @keyframes justAdded{0%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--mint)}2%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}68%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}100%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--hair)}}
   /* gult glow på dag-tekst i kortet + valgt kategori-overskrift (samme gull som fane-blinket) */
-  .opf-card.justadded .rail-day,.opf-card.justadded .rail-weekday,.opf-card.justadded .r-date,.grp.cat-glow{animation:dayGlow 6s ease}
+  .opf-card.justadded .rail-day,.opf-card.justadded .rail-weekday,.opf-card.justadded .r-date,.grp.cat-glow{animation:dayGlow 3s ease}
   @keyframes dayGlow{0%{text-shadow:0 0 0 rgba(216,169,58,0)}2%{color:#d8a93a;opacity:1;text-shadow:0 0 10px rgba(216,169,58,.9)}68%{color:#d8a93a;opacity:1;text-shadow:0 0 10px rgba(216,169,58,.9)}100%{text-shadow:0 0 0 rgba(216,169,58,0)}}
   /* fane-blink: mørkere gul tekst (les bedre mot grønn bakgrunn) + gul ytterkant */
   .vfilter button.tab-flash{animation:tabFlash 2.1s ease}
@@ -1340,7 +1340,7 @@
     const box=el.closest('.runde-box,.grp-box');
     if(box){ownHeaderEl=box.querySelector('.grp.runde')||box.querySelector('.grp');} // glow kategori-/salgsrunde-overskriften i boksen
     else{for(const g of headEls){if(g.offsetTop<=cardTop+1)ownHeaderEl=g;else break;}}
-    if(ownHeaderEl){ownHeaderEl.classList.remove('cat-glow');void ownHeaderEl.offsetWidth;ownHeaderEl.classList.add('cat-glow');setTimeout(function(){ownHeaderEl.classList.remove('cat-glow');},6100);} // gult glow på valgt kategori
+    if(ownHeaderEl){ownHeaderEl.classList.remove('cat-glow');void ownHeaderEl.offsetWidth;ownHeaderEl.classList.add('cat-glow');setTimeout(function(){ownHeaderEl.classList.remove('cat-glow');},3100);} // gult glow på valgt kategori
     const heads=headEls.map(g=>g.offsetTop);
     let ownTop=null,prevTop=null;
     for(const t of heads){if(t<=cardTop+1)ownTop=t;else break;}
@@ -1356,7 +1356,7 @@
     if(chosen==null)chosen=cardTop-H*0.65; // ingen overskrift passet → legg kortet et godt stykke ned uten å tvinge overskrift øverst
     listEl.scrollTop=Math.max(0,chosen);
     el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
-    setTimeout(function(){el.classList.remove('justadded');},6100);
+    setTimeout(function(){el.classList.remove('justadded');},3100);
   }
   $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
   $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
@@ -1575,7 +1575,9 @@
     if(view!=='gjore'&&destTab!==view){ // kortet forlater fanen → glir ut; pila + gul glød fyres når kortet er halvveis ute
       const fromV=view;
       animateRemoveCard(id,function(){render();},function(){flashAndArrow(fromV,destTab,true);});
-    }else{ // samme fane (eller «Må gjøres» der handlingen er uendret) → bare glow på stedet
+    }else if(view==='gjore'){ // Må gjøres: kortet blir værende → ingen glow ved datoendring
+      render();
+    }else{ // samme fane (f.eks. annen dag i Avtaler) → bare glow på stedet
       render();revealCard(id,false);
     }
   }
@@ -1875,8 +1877,7 @@
       if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: alltid fane-bytte + grønt blink som manuell
       else if(it.dato!==editOrigDato){ // redigering av eksisterende kort → bli i visningen; pil/blink kun ved hovedfanebytte (Avtaler ↔ Uten tidspunkt)
         const destTab=it.dato?'avtaler':'uten';
-        if(view==='gjore'){revealId=it.id;revealFlashTab=false;revealFrom=null;} // Må gjøres: kortet blir værende → kun glow, ingen pil ved datoendring
-        else{revealId=it.id;revealFrom=view;revealTo=destTab;revealFlashTab=(destTab!==view);}
+        if(view!=='gjore'){revealId=it.id;revealFrom=view;revealTo=destTab;revealFlashTab=(destTab!==view);} // Må gjøres: ingen glow/pil ved datoendring
       }
     }else{
       const o=migrate(f);
