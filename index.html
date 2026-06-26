@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-92">
+<meta name="app-build" content="2026-06-27-93">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -917,6 +917,77 @@
     else bar.style.display='none';
   }
 
+  /* ---- PUSH-VARSLER (påminnelse 5 min før avtale) ---- */
+  const VAPID_PUBLIC='BNqXFxMvX7bEAp6Pj0OwVrT-U_uTpaCTUO2gKwG9QX0RddehoWmreLDnvx46pI6pFUJulkPVqvyE11sbBSoJ97Y';
+  let swReg=null;
+  function pushSupported(){return ('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);}
+  function pushPermission(){try{return Notification.permission;}catch(e){return 'default';}}
+  function urlB64ToU8(b64){
+    const pad='='.repeat((4-b64.length%4)%4);
+    const s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');
+    const raw=atob(s),arr=new Uint8Array(raw.length);
+    for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+    return arr;
+  }
+  async function ensureSwReg(){
+    if(!('serviceWorker' in navigator))return null;
+    if(swReg)return swReg;
+    try{swReg=await navigator.serviceWorker.register('sw.js');}catch(e){swReg=null;}
+    return swReg;
+  }
+  // lagre push-påmeldingen i Supabase (én rad pr. enhet/endpoint)
+  async function savePushSub(sub){
+    const c=getSupabaseClient();if(!c||!sbUser||!sub)return false;
+    try{const j=sub.toJSON?sub.toJSON():sub;
+      const {error}=await c.from('push_subscriptions').upsert(
+        {endpoint:j.endpoint,user_id:sbUser.id,sub:j,enabled:true},{onConflict:'endpoint'});
+      return !error;
+    }catch(e){return false;}
+  }
+  // hele påmeldingsflyten — MÅ kalles fra et brukerklikk (krav på iOS)
+  async function enablePush(){
+    if(!pushSupported()){toast('Varsler støttes ikke her');return;}
+    if(!sbUser){toast('Logg inn først');return;}
+    let perm=pushPermission();
+    if(perm!=='granted'){try{perm=await Notification.requestPermission();}catch(e){}}
+    if(perm!=='granted'){toast('Varsler ble ikke tillatt');renderProfileBody();return;}
+    const reg=await ensureSwReg();if(!reg){toast('Kunne ikke starte varsler');return;}
+    try{
+      let sub=await reg.pushManager.getSubscription();
+      if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
+      const ok=await savePushSub(sub);
+      toast(ok?'Varsler er på ✓':'Varsler på enheten, men lagring feilet');
+    }catch(e){toast('Kunne ikke slå på varsler: '+((e&&e.message)||''));}
+    renderProfileBody();
+  }
+  async function disablePush(){
+    const reg=await ensureSwReg();
+    try{const sub=reg&&await reg.pushManager.getSubscription();
+      if(sub){const j=sub.toJSON();const c=getSupabaseClient();
+        if(c&&sbUser){try{await c.from('push_subscriptions').update({enabled:false}).eq('endpoint',j.endpoint);}catch(e){}}
+        await sub.unsubscribe();}
+    }catch(e){}
+    toast('Varsler er av');renderProfileBody();
+  }
+  // ved oppstart (innlogget + allerede tillatt): hold påmeldingen frisk i Supabase
+  async function pushRefresh(){
+    if(!pushSupported()||!sbUser||pushPermission()!=='granted')return;
+    const reg=await ensureSwReg();if(!reg)return;
+    try{let sub=await reg.pushManager.getSubscription();
+      if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
+      await savePushSub(sub);}catch(e){}
+  }
+  function pushSectionHtml(){
+    const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Varsler</b></div>';
+    if(!pushSupported())return head+'<div class="cloud-row cloud-muted">Varsler støttes ikke her. På iPad: legg appen til på Hjem-skjerm og åpne den derfra (iOS 16.4+).</div>';
+    const perm=pushPermission();
+    if(perm==='granted')return head+'<div class="cloud-row cloud-muted">På ✓ — du får påminnelse 5 min før en avtale.</div>'
+      +'<div class="cloud-row cloud-btns"><button class="btn" id="pushOff">Slå av varsler</button></div>';
+    if(perm==='denied')return head+'<div class="cloud-row cloud-muted">Varsler er blokkert. Skru på «Varsler» for appen i iPad-innstillinger for å bruke dette.</div>';
+    return head+'<div class="cloud-row cloud-muted">Få en påminnelse 5 min før hver avtale.</div>'
+      +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pushOn">🔔 Slå på varsler</button></div>';
+  }
+
   // Magic link = «første gang»-bootstrap (åpne lenken i Safari på samme enhet).
   async function cloudSignIn(email){
     const c=getSupabaseClient();if(!c){toast('Sky-synk ikke konfigurert');return;}
@@ -959,8 +1030,8 @@
       try{history.replaceState(null,'',location.origin+location.pathname+location.search);}catch(e){}}
     c.auth.onAuthStateChange(function(_evt,session){
       const was=!!sbUser;sbUser=session?session.user:null;renderCloudStatus();
-      if(!was&&sbUser){cloudReconcile();flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();}});
-    if(sbUser){await cloudReconcile();flushPendingImgs();cloudFetchApiKey();} else setCloudState('login');
+      if(!was&&sbUser){cloudReconcile();flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();}});
+    if(sbUser){await cloudReconcile();flushPendingImgs();cloudFetchApiKey();pushRefresh();} else setCloudState('login');
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
   }
   // hent felles Anthropic-nøkkel fra app_config (sentralt styrt) → selgeren slipper å lime inn noe
@@ -1003,6 +1074,7 @@
         +'<div class="cloud-row cloud-muted">Skriv inn nytt passord (minst 6 tegn).</div>'
         +'<div class="cloud-row"><input id="pfNewPw" type="password" autocomplete="new-password" placeholder="nytt passord"></div>'
         +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button></div>'
+        +pushSectionHtml()
         +adminSectionHtml();
     }else{
       b.innerHTML='<div class="cloud-row cloud-muted">Logg inn for å kunne bytte passord.</div>'
@@ -1044,6 +1116,8 @@
       if(id==='pfLogin'){const em=($('pfEmail')&&$('pfEmail').value||'').trim();const pw=($('pfPw')&&$('pfPw').value||'');cloudSignInPassword(em,pw);return;}
       if(id==='pfSavePw'){const pw=($('pfNewPw')&&$('pfNewPw').value||'');cloudSetPassword(pw);return;}
       if(id==='pfLogout'){cloudSignOut().then(renderProfileBody);return;}
+      if(id==='pushOn'){enablePush();return;}
+      if(id==='pushOff'){disablePush();return;}
       if(id==='adminLoad'){adminLoadSellers();return;}
       const sb=e.target.closest&&e.target.closest('.admin-seller');
       if(sb){adminEnterView(sb.getAttribute('data-uid'),sb.getAttribute('data-em'));return;}
