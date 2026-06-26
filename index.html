@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-89">
+<meta name="app-build" content="2026-06-27-91">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -185,7 +185,7 @@
   .cn-age.age-brown{color:#cf9355;background:#33200d}
   /* identitetsstripe: type · salgsrunde (tags) */
   .opf-meta{display:flex;align-items:center;gap:9px;flex-wrap:nowrap;min-width:0}
-  .opf-meta .type-chip{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:800;letter-spacing:.05em;padding:6px 13px;border-radius:8px;flex:none}
+  .opf-meta .type-chip{font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:800;letter-spacing:.05em;padding:6px 13px;border-radius:8px;flex:none}
   .opf-meta .type-hp{color:#06120e;background:#34E07F}
   .opf-meta .type-hc{color:#0b0d14;background:#eef2f7}
   .opf-meta .type-vula{color:#fff;background:#E0364B}
@@ -510,9 +510,9 @@
         <button data-dp="t1">I dag om 1t</button>
         <button data-dp="t2">I dag om 2t</button>
         <button data-dp="i2100">I dag 21:00</button>
-        <button data-dp="m13">I morgen 13:00</button>
-        <button data-dp="m16">I morgen 16:00</button>
-        <button data-dp="m21">I morgen 21:00</button>
+        <button data-dp="m13">I mrg 13:00</button>
+        <button data-dp="m16">I mrg 16:00</button>
+        <button data-dp="m21">I mrg 21:00</button>
         <div class="dp-custom"><input type="date" id="dpDate"><select id="dpHour"></select><select id="dpMin"><option>00</option><option>15</option><option>45</option></select><button class="dp-set" id="dpSet">Sett</button></div>
         <button data-dp="ingen">Ingen dato</button>
       </div>
@@ -541,8 +541,8 @@
             <button class="chip" data-dp="t2" type="button">I dag +2t</button>
             <button class="chip" data-dp="i2100" type="button">I dag 21:00</button>
             <div class="chips-break"></div>
-            <button class="chip" data-dp="m15" type="button">I morgen 15:00</button>
-            <button class="chip" data-dp="m21" type="button">I morgen 21:00</button>
+            <button class="chip" data-dp="m15" type="button">I mrg 15:00</button>
+            <button class="chip" data-dp="m21" type="button">I mrg 21:00</button>
             <button class="chip" data-dp="ingen" type="button">Ingen tidspunkt</button>
           </div>
           <div class="dt-wrap"><button type="button" class="dt-field" id="fDtField"><span class="dt-label empty" id="fDtLabel">(ingen tidspunkt)</span></button><span class="dt-flag" id="fDtFlag"></span></div>
@@ -1848,7 +1848,7 @@
     const hh=d?d.getHours():null,mm=d?d.getMinutes():null;
     const hg=$('fHours');if(hg)Array.from(hg.children).forEach(b=>b.classList.toggle('on',+b.dataset.h===hh));
     const mg=$('fMins');if(mg)Array.from(mg.children).forEach(b=>b.classList.toggle('on',+b.dataset.m===mm));
-    const db=$('fDateBtn');if(db)db.textContent=d?(pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear()+', '+pad(d.getHours())+':'+pad(d.getMinutes())):'—'; // dato + valgt tidspunkt
+    const db=$('fDateBtn');if(db)db.textContent=d?friendlyDate(fDatoVal):'—'; // samme vennlige format som skjemaet («I morgen, 21:00»)
     syncTimePop();
   }
   function dtComposeDate(){ // gjeldende dato-del (YYYY-MM-DD), ellers i dag
