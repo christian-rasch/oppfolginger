@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-26-78">
+<meta name="app-build" content="2026-06-26-79">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -442,9 +442,21 @@
   .ai-note{margin:0 0 14px;padding:8px 11px;border-radius:9px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.04em}
   .ai-note.ok{color:var(--mint);background:rgba(61,245,197,.08);border:1px solid rgba(61,245,197,.3)}
   .ai-note.warn{color:var(--gold);background:rgba(232,194,107,.08);border:1px solid rgba(232,194,107,.32)}
+  /* admin: ser på en annen selgers oppfølginger */
+  #adminBar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:8px 14px;background:rgba(232,194,107,.16);border-bottom:1px solid rgba(232,194,107,.5);
+    font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;color:var(--gold);backdrop-filter:blur(6px)}
+  #adminBar .btn{padding:6px 12px;font-size:12px}
+  #adminBar[data-st="saved"] #adminBarTxt::after{content:" · lagret";color:var(--mint)}
+  #adminBar[data-st="error"] #adminBarTxt::after{content:" · synk feilet";color:var(--red)}
+  .admin-seller{display:block;width:100%;text-align:left;margin:4px 0;font-size:13px}
 </style>
 </head>
 <body>
+  <div id="adminBar" style="display:none">
+    <span id="adminBarTxt"></span>
+    <button id="adminBack" class="btn">Tilbake til mine</button>
+  </div>
   <div class="scaler"><div class="stage">
     <div class="app-head">
       <div class="head-row">
@@ -712,7 +724,10 @@
   const KEY='oppf:index';
   let items=[];
   const byId=id=>items.find(i=>i.id===id);
-  function save(){store.set(KEY,JSON.stringify(items));cloudOnLocalSave();}
+  function save(){
+    if(adminView){adminOnEdit();return;} // admin: endringer går til selgerens rad, din lokale data røres ikke
+    store.set(KEY,JSON.stringify(items));cloudOnLocalSave();
+  }
 
   /* ============================================================
      SKY-SYNK (valgfri, Supabase). Lokal localStorage er alltid primær;
@@ -729,6 +744,10 @@
   const CKEY={dev:'oppf:cloud:deviceId',hash:'oppf:cloud:lastHash',srv:'oppf:cloud:lastServerAt',pull:'oppf:cloud:lastPullAt'};
   const CLOUD_LBL={off:'Lokal',unconfigured:'Sky av',login:'Logg inn',syncing:'Synker…',synced:'Synket',dirty:'Ikke synket',conflict:'Konflikt',error:'Feil'};
   let sbClient=null,sbUser=null,cloudState='off',cloudPushTimer=null,conflictData=null;
+  // ---- admin: se/endre andre selgeres oppfølginger ----
+  const ADMIN_EMAILS=['christian.rasch@snodriv.no']; // kun disse e-postene får admin-tilgang
+  let adminView=null,adminPushTimer=null,adminSellersCache=null; // adminView={userId,email,stash} når du ser på en annen selger
+  function isAdmin(){return !!(sbUser&&ADMIN_EMAILS.indexOf((sbUser.email||'').toLowerCase())>=0);}
 
   function isCloudConfigured(){
     const c=CLOUD_SYNC_CONFIG;
@@ -791,8 +810,10 @@
     const c=getSupabaseClient();if(!c||!sbUser)return false;
     try{
       const data=items;
-      const {error}=await c.from(CLOUD_SYNC_CONFIG.table).upsert(
-        {user_id:sbUser.id,data:data,client_id:deviceId(),schema_version:1},{onConflict:'user_id'});
+      const base={user_id:sbUser.id,data:data,client_id:deviceId(),schema_version:1};
+      // ta med e-post (lar admin se en lesbar liste); faller tilbake uten hvis kolonnen ikke finnes ennå
+      let {error}=await c.from(CLOUD_SYNC_CONFIG.table).upsert(Object.assign({email:(sbUser.email||null)},base),{onConflict:'user_id'});
+      if(error&&/email/i.test(error.message||'')){({error}=await c.from(CLOUD_SYNC_CONFIG.table).upsert(base,{onConflict:'user_id'}));}
       if(error)throw error;
       setCmeta(CKEY.hash,stableFollowupHash(data));
       const {data:row}=await c.from(CLOUD_SYNC_CONFIG.table).select('updated_at').eq('user_id',sbUser.id).maybeSingle();
@@ -802,6 +823,7 @@
   }
   // hent + sammenlign; push/pull/konflikt etter reglene
   async function cloudReconcile(){
+    if(adminView)return; // i admin-visning er `items` en annen selgers data — aldri synk mot egen rad
     const c=getSupabaseClient();if(!c||!sbUser)return;
     setCloudState('syncing');
     const row=await cloudPull();
@@ -823,6 +845,65 @@
     setCloudState('dirty');
     clearTimeout(cloudPushTimer);
     cloudPushTimer=setTimeout(function(){cloudReconcile();},1500);
+  }
+
+  /* ---- ADMIN: se/endre andre selgeres oppfølginger ---- */
+  // hent lista over selgere (RLS slipper bare admin til alle rader; ellers kommer kun egen rad → tom liste)
+  async function adminLoadSellers(){
+    const c=getSupabaseClient();if(!c||!isAdmin())return;
+    try{
+      const {data,error}=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at');
+      if(error)throw error;
+      adminSellersCache=(data||[]).filter(function(r){return r.user_id!==sbUser.id;})
+        .map(function(r){return {userId:r.user_id,email:r.email||'(uten e-post)',at:r.updated_at};})
+        .sort(function(a,b){return (a.email||'').localeCompare(b.email||'');});
+      renderProfileBody();
+    }catch(e){toast('Kunne ikke hente selgere (kjørt SQL-en?)');}
+  }
+  // gå inn i en selgers visning: legg din egen liste til side i minnet, last selgerens data
+  async function adminEnterView(userId,email){
+    if(!isAdmin())return;
+    const c=getSupabaseClient();if(!c)return;
+    clearTimeout(cloudPushTimer); // stopp evt. ventende synk mot egen konto
+    let row=null;
+    try{const r=await c.from(CLOUD_SYNC_CONFIG.table).select('data').eq('user_id',userId).maybeSingle();row=r.data;if(r.error)throw r.error;}
+    catch(e){toast('Kunne ikke hente selgerens data');return;}
+    adminView={userId:userId,email:email,stash:items}; // din egen liste bevares i minnet (localStorage røres ikke)
+    items=(row&&Array.isArray(row.data)?row.data:[]).map(migrate);
+    closeProfileModal();
+    renderAdminBar();
+    render();
+    toast('Viser '+email);
+  }
+  // tilbake til din egen liste — selgerens data forlates, din lokale data er urørt
+  function adminExitView(){
+    if(!adminView)return;
+    clearTimeout(adminPushTimer);
+    items=adminView.stash;
+    adminView=null;
+    renderAdminBar();
+    render();
+  }
+  function adminOnEdit(){
+    if(!adminView)return;
+    const bar=$('adminBar');if(bar)bar.removeAttribute('data-st');
+    clearTimeout(adminPushTimer);
+    adminPushTimer=setTimeout(adminPushView,1200); // debounced skriving til selgerens rad
+  }
+  async function adminPushView(){
+    const c=getSupabaseClient();if(!c||!sbUser||!adminView)return;
+    try{
+      const {error}=await c.from(CLOUD_SYNC_CONFIG.table).upsert(
+        {user_id:adminView.userId,data:items,client_id:deviceId(),schema_version:1},{onConflict:'user_id'});
+      if(error)throw error;
+      const bar=$('adminBar');if(bar)bar.setAttribute('data-st','saved');
+    }catch(e){const bar=$('adminBar');if(bar)bar.setAttribute('data-st','error');}
+  }
+  function renderAdminBar(){
+    const bar=$('adminBar');if(!bar)return;
+    if(adminView){bar.style.display='flex';bar.removeAttribute('data-st');
+      const t=$('adminBarTxt');if(t)t.textContent='👁 Redigerer: '+adminView.email;}
+    else bar.style.display='none';
   }
 
   // Magic link = «første gang»-bootstrap (åpne lenken i Safari på samme enhet).
@@ -853,6 +934,8 @@
   }
   async function cloudSignOut(){
     const c=getSupabaseClient();if(c){try{await c.auth.signOut();}catch(e){}}
+    if(adminView)adminExitView(); // tilbake til egen liste før utlogging
+    adminSellersCache=null;
     sbUser=null;setCloudState('login'); // lokal data beholdes urørt
   }
   async function cloudInit(){
@@ -908,13 +991,27 @@
       b.innerHTML='<div class="cloud-row">Innlogget som <b>'+esc(sbUser.email||'innlogget')+'</b></div>'
         +'<div class="cloud-row cloud-muted">Skriv inn nytt passord (minst 6 tegn).</div>'
         +'<div class="cloud-row"><input id="pfNewPw" type="password" autocomplete="new-password" placeholder="nytt passord"></div>'
-        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button></div>';
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button></div>'
+        +adminSectionHtml();
     }else{
       b.innerHTML='<div class="cloud-row cloud-muted">Logg inn for å kunne bytte passord.</div>'
         +'<div class="cloud-row"><input id="pfEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="din@epost.no"></div>'
         +'<div class="cloud-row"><input id="pfPw" type="password" autocomplete="current-password" placeholder="passord"></div>'
         +'<div class="cloud-row"><button class="btn primary" id="pfLogin">Logg inn</button></div>';
     }
+  }
+  function adminSectionHtml(){
+    if(!isAdmin())return '';
+    let lst;
+    if(adminSellersCache==null){lst='<div class="cloud-row cloud-muted">Trykk «Hent selgere» for å laste lista.</div>';}
+    else if(!adminSellersCache.length){lst='<div class="cloud-row cloud-muted">Ingen andre selgere funnet.</div>';}
+    else{lst=adminSellersCache.map(function(s){
+      return '<button class="btn admin-seller" data-uid="'+esc(s.userId)+'" data-em="'+esc(s.email)+'">'+esc(s.email)+'</button>';
+    }).join('');}
+    return '<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Selgere (admin)</b></div>'
+      +'<div class="cloud-row cloud-muted">Velg en selger for å se og endre oppfølgingene deres. Din egen liste er trygg imens.</div>'
+      +'<div class="cloud-row cloud-btns"><button class="btn" id="adminLoad">Hent selgere</button></div>'
+      +'<div>'+lst+'</div>';
   }
   function openProfileModal(){renderProfileBody();$('profileModal').classList.add('open');}
   function closeProfileModal(){$('profileModal').classList.remove('open');}
@@ -928,7 +1025,11 @@
       if(id==='pfLogin'){const em=($('pfEmail')&&$('pfEmail').value||'').trim();const pw=($('pfPw')&&$('pfPw').value||'');cloudSignInPassword(em,pw);return;}
       if(id==='pfSavePw'){const pw=($('pfNewPw')&&$('pfNewPw').value||'');cloudSetPassword(pw);return;}
       if(id==='pfLogout'){cloudSignOut().then(renderProfileBody);return;}
+      if(id==='adminLoad'){adminLoadSellers();return;}
+      const sb=e.target.closest&&e.target.closest('.admin-seller');
+      if(sb){adminEnterView(sb.getAttribute('data-uid'),sb.getAttribute('data-em'));return;}
     });
+    const ab=$('adminBack');if(ab)ab.addEventListener('click',adminExitView);
   }
   function showCloudConflict(localData,cloudData,serverAt){
     conflictData={cloud:cloudData,serverAt:serverAt};
