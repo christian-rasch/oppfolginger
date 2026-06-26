@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-82">
+<meta name="app-build" content="2026-06-27-83">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1327,9 +1327,9 @@
         const fb=new Map([['idag',[]],['igar',[]],['denne',[]],['forrige',[]],['ukenfor',[]],['eldre',[]]]);
         od.forEach(function(i){const d=+startOfDay(P(i));
           fb.get(d===+td0?'idag':d===yd?'igar':d>=+wk0?'denne':d>=lw?'forrige':d>=ww?'ukenfor':'eldre').push(i);});
-        [['idag','I dag'],['igar','I går'],['denne','Denne uken'],['forrige','Forrige uke'],['ukenfor','Uken før'],['eldre','Eldre']]
+        [['idag','Forfalt i dag'],['igar','Forfalt i går'],['denne','Forfalt denne uken'],['forrige','Forfalt forrige uke'],['ukenfor','Forfalt uken før'],['eldre','Forfalt eldre']]
           .forEach(function(p){const a=fb.get(p[0]);if(!a.length)return;
-            const lab=p[0]==='eldre'?'Eldre<button class="grp-action" data-act="purge-eldre">Fjern alle eldre</button>':p[1];
+            const lab=p[0]==='eldre'?'Forfalt eldre<button class="grp-action" data-act="purge-eldre">Fjern alle eldre</button>':p[1];
             G(lab,a,'forfalt');});
       } else { // alle (avtaler-subfane): kun kommende — I dag / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (forfalte vises kun under Forfalte)
         const wk1=new Date(+startOfWeek(n)+7*864e5),wk2=new Date(+startOfWeek(n)+14*864e5);
