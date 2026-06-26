@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-88">
+<meta name="app-build" content="2026-06-27-89">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -184,13 +184,13 @@
   .cn-age.age-yellow{color:#f2c64e;background:rgba(244,183,64,.16)}
   .cn-age.age-brown{color:#cf9355;background:#33200d}
   /* identitetsstripe: type · salgsrunde (tags) */
-  .opf-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+  .opf-meta{display:flex;align-items:center;gap:9px;flex-wrap:nowrap;min-width:0}
   .opf-meta .type-chip{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:800;letter-spacing:.05em;padding:6px 13px;border-radius:8px;flex:none}
   .opf-meta .type-hp{color:#06120e;background:#34E07F}
   .opf-meta .type-hc{color:#0b0d14;background:#eef2f7}
   .opf-meta .type-vula{color:#fff;background:#E0364B}
   .opf-meta .type-roll{color:#fff;background:#4C7EF3}
-  .opf-meta .runde{font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--ink-dim);padding:6px 12px;border-radius:8px;border:1px solid var(--hair-2);background:rgba(255,255,255,.04)}
+  .opf-meta .runde{font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--ink-dim);padding:6px 12px;border-radius:8px;border:1px solid var(--hair-2);background:rgba(255,255,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto} /* alltid ved siden av Type-chip; kuttes om for lang */
   /* ===== Neste handling: trigger-knapp + valgt handling (actchip) ===== */
   .act-next{font-family:"JetBrains Mono",monospace;font-size:8px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-dim);background:rgba(255,255,255,.05);border:1px dashed var(--hair);border-radius:9px;padding:6px 8px;width:128px;box-sizing:border-box;text-align:left;cursor:pointer;white-space:nowrap;transition:.15s}
   .act-next:hover{color:var(--ink);border-color:var(--mint);background:rgba(61,245,197,.07)}
@@ -1218,6 +1218,8 @@
     if(!it.quickComment)return '';
     return '<div class="qc-tag" contenteditable="false">'+esc(it.quickComment)+' <span class="qc-age">('+qcAge(it.quickCommentAt||Date.now())+')</span></div>';
   }
+  // adresse til visning: fjern norsk 4-sifret postnummer (beholder gate + sted). Full adresse beholdes til Naviger.
+  function addrShort(a){return String(a||'').replace(/(^|,\s*)\d{4}\s+/g,'$1').trim();}
   function cardHTML(it,railCtx){
     const n=now(),t=it.dato?p(it.dato):null;
     const late=(t&&t<n)?' late':'';
@@ -1236,7 +1238,7 @@
       +'<div class="opf-ident edit-zone" title="Trykk for å redigere">'
       +'<div class="opf-cust"><div class="cn"><span class="cn-name">'+(esc(shortName(it.navn))||'—')+'</span>'+age+'</div></div>'
       +'<div class="opf-meta">'+(it.status?'<span class="type-chip '+typeCls(it.status)+'">'+esc(it.status)+'</span>':'')+runde+'</div>'
-      +'<div class="addr">'+esc(it.adresse)+'</div>'
+      +'<div class="addr">'+esc(addrShort(it.adresse))+'</div>'
       +'</div>'
       +'<div class="opf-action">'+actionControl(it)+tilbudInfo(it)+'</div>'
       +'<div class="opf-note" title="Trykk for å skrive kommentar">'+qc+'<span class="opf-note-text">'+kom+'</span><button class="qc-add" type="button" title="Hurtigvalg">+</button></div>'
