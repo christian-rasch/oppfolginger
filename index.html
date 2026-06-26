@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-26-79">
+<meta name="app-build" content="2026-06-26-80">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -450,6 +450,8 @@
   #adminBar[data-st="saved"] #adminBarTxt::after{content:" · lagret";color:var(--mint)}
   #adminBar[data-st="error"] #adminBarTxt::after{content:" · synk feilet";color:var(--red)}
   .admin-seller{display:block;width:100%;text-align:left;margin:4px 0;font-size:13px}
+  .admin-seller .as-em{display:block}
+  .admin-seller .as-sub{display:block;font-size:11px;color:var(--ink-dim);font-weight:400;margin-top:2px}
 </style>
 </head>
 <body>
@@ -1006,7 +1008,9 @@
     if(adminSellersCache==null){lst='<div class="cloud-row cloud-muted">Trykk «Hent selgere» for å laste lista.</div>';}
     else if(!adminSellersCache.length){lst='<div class="cloud-row cloud-muted">Ingen andre selgere funnet.</div>';}
     else{lst=adminSellersCache.map(function(s){
-      return '<button class="btn admin-seller" data-uid="'+esc(s.userId)+'" data-em="'+esc(s.email)+'">'+esc(s.email)+'</button>';
+      var sub=s.at?('Sist aktiv: '+fmtRel(s.at)):'Aldri synket';
+      return '<button class="btn admin-seller" data-uid="'+esc(s.userId)+'" data-em="'+esc(s.email)+'">'
+        +'<span class="as-em">'+esc(s.email)+'</span><span class="as-sub">'+esc(sub)+'</span></button>';
     }).join('');}
     return '<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Selgere (admin)</b></div>'
       +'<div class="cloud-row cloud-muted">Velg en selger for å se og endre oppfølgingene deres. Din egen liste er trygg imens.</div>'
