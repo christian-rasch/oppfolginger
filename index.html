@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-26-81">
+<meta name="app-build" content="2026-06-27-82">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -870,20 +870,24 @@
     let row=null;
     try{const r=await c.from(CLOUD_SYNC_CONFIG.table).select('data').eq('user_id',userId).maybeSingle();row=r.data;if(r.error)throw r.error;}
     catch(e){toast('Kunne ikke hente selgerens data');return;}
-    adminView={userId:userId,email:email,stash:items}; // din egen liste bevares i minnet (localStorage røres ikke)
+    const stash=adminView?adminView.stash:items; // ved bytte mellom selgere: behold ORIGINAL egen liste
+    adminView={userId:userId,email:email,stash:stash};
     items=(row&&Array.isArray(row.data)?row.data:[]).map(migrate);
     closeProfileModal();
     renderAdminBar();
     render();
     toast('Viser '+email);
   }
-  // tilbake til din egen liste — selgerens data forlates, din lokale data er urørt
-  function adminExitView(){
+  // tilbake til din egen liste — hent fra lokal lagring (fasit, urørt i admin-visning); minne-kopi som reserve
+  async function adminExitView(){
     if(!adminView)return;
     clearTimeout(adminPushTimer);
-    items=adminView.stash;
+    const stash=adminView.stash;
     adminView=null;
     renderAdminBar();
+    let mine=null;
+    try{const raw=await store.get(KEY);if(raw)mine=JSON.parse(raw);}catch(e){}
+    items=(Array.isArray(mine)?mine:(Array.isArray(stash)?stash:[])).map(migrate);
     render();
   }
   function adminOnEdit(){
@@ -1018,7 +1022,7 @@
       +'<div>'+lst+'</div>';
   }
   function openProfileModal(){renderProfileBody();$('profileModal').classList.add('open');}
-  function closeProfileModal(){$('profileModal').classList.remove('open');}
+  function closeProfileModal(){$('profileModal').classList.remove('open');adminSellersCache=null;}
   function wireProfileUI(){
     const pb=$('btnProfile');if(pb)pb.addEventListener('click',openProfileModal);
     const m=$('profileModal');
