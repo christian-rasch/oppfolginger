@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-91">
+<meta name="app-build" content="2026-06-27-92">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -480,8 +480,7 @@
         <button data-v="uten">Uten tidspunkt <span class="cnt" id="cntUten">0</span></button>
       </div>
       <div class="vfilter filterrow" id="subbar">
-        <button data-s="idag" class="on">I dag</button>
-        <button data-s="alle">Alle</button>
+        <button data-s="alle" class="on">Alle</button>
         <button data-s="forfalte">Forfalte <span class="cnt" id="cntForf">0</span></button>
       </div>
 
@@ -1249,8 +1248,8 @@
   }
 
   // ---------- rendering + gruppering ----------
-  // view = hovedvisning: avtaler | gjore | uten | alle.  sub = Avtaler-underfilter: idag | imorgen | uken | alle
-  let view='avtaler', sub='idag';
+  // view = hovedvisning: avtaler | gjore | uten | alle.  sub = Avtaler-underfilter: alle | forfalte
+  let view='avtaler', sub='alle';
   function updateBars(){
     Array.from($('mainbar').children).forEach(b=>b.classList.toggle('on',b.dataset.v===view));
     Array.from($('subbar').children).forEach(b=>b.classList.toggle('on',b.dataset.s===sub));
@@ -1330,12 +1329,7 @@
     } else { // avtaler (hovedfanen «Alle» er fjernet; ev. view==='alle' faller hit)
       const dated=act.filter(i=>i.dato);
       const fut=byDate(dated.filter(i=>!overdue(i)));
-      const forfIdag=byDate(dated.filter(i=>overdue(i)&&P(i)>=td0)); // dato i dag, tid passert (vises også i «I dag»-visningen)
-      if(sub==='idag'){
-        if(forfIdag.length)G(L('Forfalt i dag'),forfIdag,'forfalt',false,'idag'); // rail viser «I DAG» over klokkeslett (kun her)
-        const today=fut.filter(i=>P(i)<tm0);
-        G(L('I dag'),today,'',true);
-      } else if(sub==='forfalte'){ // gruppert: I dag · I går · Denne uken · Forrige uke · Uken før · Eldre (nyest øverst, kun ikke-tomme)
+      if(sub==='forfalte'){ // gruppert: I dag · I går · Denne uken · Forrige uke · Uken før · Eldre (nyest øverst, kun ikke-tomme)
         const od=byDateDesc(dated.filter(overdue)),wk0=startOfWeek(n);
         const yd=+td0-864e5,lw=+wk0-7*864e5,ww=+wk0-14*864e5;
         const fb=new Map([['idag',[]],['igar',[]],['denne',[]],['forrige',[]],['ukenfor',[]],['eldre',[]]]);
@@ -1368,9 +1362,8 @@
     if(view==='uten')empty='Ingen kunder uten tidspunkt';
     else if(view==='gjore')empty='Ingenting å gjøre nå';
     else if(view==='avtaler'){
-      if(sub==='idag')empty='Ingen avtaler i dag';
-      else if(sub==='alle')empty='Ingen kommende avtaler';
-      else if(sub==='forfalte')empty='Ingen forfalte avtaler';
+      if(sub==='forfalte')empty='Ingen forfalte avtaler';
+      else empty='Ingen kommende avtaler';
     }
 
     let html='',any=false;
