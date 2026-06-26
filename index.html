@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-26-80">
+<meta name="app-build" content="2026-06-26-81">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -2109,7 +2109,8 @@
   function idbSet(id,durl){return imgDB().then(function(db){if(!db)return;return new Promise(function(res){try{const tx=db.transaction('img','readwrite');tx.objectStore('img').put(durl,id);tx.oncomplete=function(){res();};tx.onerror=function(){res();};tx.onabort=function(){res();};}catch(e){res();}});});}
   function idbDel(id){return imgDB().then(function(db){if(!db)return;try{db.transaction('img','readwrite').objectStore('img').delete(id);}catch(e){}});}
   // ---- server (Supabase Storage) ----
-  function imgPath(id){return sbUser?(sbUser.id+'/'+id+'.jpg'):null;}
+  // i admin-visning hentes/lagres bilder i selgerens mappe (krever admin-policy på storage); ellers egen mappe
+  function imgPath(id){const uid=adminView?adminView.userId:(sbUser?sbUser.id:null);return uid?(uid+'/'+id+'.jpg'):null;}
   function dataURLtoBlob(durl){const i=durl.indexOf(';base64,');const mime=durl.slice(5,i)||'image/jpeg';const bin=atob(durl.slice(i+8));const len=bin.length,arr=new Uint8Array(len);for(let k=0;k<len;k++)arr[k]=bin.charCodeAt(k);return new Blob([arr],{type:mime});}
   function blobToDataURL(b){return new Promise(function(res,rej){const fr=new FileReader();fr.onload=function(){res(String(fr.result));};fr.onerror=function(){rej(fr.error);};fr.readAsDataURL(b);});}
   async function imgUpload(id,durl){const c=getSupabaseClient(),path=imgPath(id);if(!c||!path)return false;try{const blob=dataURLtoBlob(durl);const {error}=await c.storage.from(IMG_BUCKET).upload(path,blob,{upsert:true,contentType:blob.type||'image/jpeg'});if(error)throw error;return true;}catch(e){return false;}}
