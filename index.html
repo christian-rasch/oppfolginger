@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-87">
+<meta name="app-build" content="2026-06-27-88">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -357,8 +357,9 @@
   .f-field textarea{resize:vertical;min-height:74px;line-height:1.45}
   .dt-field{width:100%;height:42px;display:flex;align-items:center;text-align:left;cursor:pointer;font-family:"Schibsted Grotesk",sans-serif;font-size:14px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:0 32px 0 12px}
   .dt-field:active{border-color:rgba(61,245,197,.55)}
-  .dt-label{pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;flex:1;text-align:left}
-  .dt-label.empty{color:var(--ink-faint);text-align:center}
+  .dt-label{pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;flex:1;text-align:center}
+  .dt-label.empty{color:var(--ink-faint);text-align:center} /* «(ingen tidspunkt)» — svak grå */
+  .dt-label:not(.empty){color:var(--mint);font-weight:600} /* satt dato: midtstilt grønn */
   .dt-wrap{position:relative;margin-top:8px}
   .dt-flag{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:"JetBrains Mono",monospace;font-weight:800;font-size:14px;line-height:1;pointer-events:none}
   .dt-field.ai-ok{border-color:var(--mint)!important;box-shadow:inset 0 0 0 1px rgba(61,245,197,.5),0 0 14px -6px rgba(61,245,197,.7)}
@@ -544,7 +545,7 @@
             <button class="chip" data-dp="m21" type="button">I morgen 21:00</button>
             <button class="chip" data-dp="ingen" type="button">Ingen tidspunkt</button>
           </div>
-          <div class="dt-wrap"><button type="button" class="dt-field" id="fDtField"><span class="dt-label empty" id="fDtLabel">—</span></button><span class="dt-flag" id="fDtFlag"></span></div>
+          <div class="dt-wrap"><button type="button" class="dt-field" id="fDtField"><span class="dt-label empty" id="fDtLabel">(ingen tidspunkt)</span></button><span class="dt-flag" id="fDtFlag"></span></div>
         </div>
         <div class="f-field full"><label>Besøkskommentar</label><textarea id="fKom"></textarea></div>
       </div>
@@ -1821,7 +1822,7 @@
   function chipSync(){
     // valgt hurtigvalg lyser grønt; «Ingen tidspunkt» lyser når ingen dato er satt
     Array.from($('fChips').children).forEach(c=>{const dp=c.dataset.dp;if(!dp)return;c.classList.toggle('on',dp==='ingen'?!fDatoVal:dp===fChipSel);});
-    const lbl=$('fDtLabel');if(lbl){const t=friendlyDate(fDatoVal);lbl.textContent=t||'—';lbl.classList.toggle('empty',!t);}
+    const lbl=$('fDtLabel');if(lbl){const t=friendlyDate(fDatoVal);lbl.textContent=t||'(ingen tidspunkt)';lbl.classList.toggle('empty',!t);}
     syncDtPicker();
     dtFlagSync();
   }
