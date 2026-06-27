@@ -79,9 +79,7 @@ Deno.serve(async (req) => {
         it && it.state !== 'fulgt' && it.nextAction === 'send_offer' &&
         it.offerSince && osloDate(it.offerSince) === today)
       if (!due.length) continue
-      const names = due.map((d: any) => (d.navn || '').trim()).filter(Boolean)
-      const list = names.slice(0, 5).join(', ') + (names.length > 5 ? ' +' + (names.length - 5) : '')
-      await sendTo(row.user_id, { title: 'Husk å sende tilbud (test)', body: due.length + ' tilbud fra i dag er ikke sendt' + (list ? ': ' + list : ''), tag: 'daily-offer-test', url: './' })
+      await sendTo(row.user_id, { title: due.length === 1 ? '1 nytt tilbud å sende ut fra i dag' : due.length + ' nye tilbud å sende ut fra i dag', tag: 'daily-offer-test', url: './' })
       n++
     }
     return Response.json({ ok: true, test: 'offers', sent: n })
@@ -139,11 +137,9 @@ Deno.serve(async (req) => {
         .upsert({ user_id: row.user_id, item_id: 'daily-offer', dato: today },
                 { onConflict: 'user_id,item_id,dato', ignoreDuplicates: true }).select()
       if (!ins.data || !ins.data.length) continue
-      const names = due.map((d: any) => (d.navn || '').trim()).filter(Boolean)
-      const list = names.slice(0, 5).join(', ') + (names.length > 5 ? ' +' + (names.length - 5) : '')
+      const n = due.length
       await sendTo(row.user_id, {
-        title: 'Husk å sende tilbud',
-        body: due.length + (due.length === 1 ? ' tilbud' : ' tilbud') + ' fra i dag er ikke sendt' + (list ? ': ' + list : ''),
+        title: n === 1 ? '1 nytt tilbud å sende ut fra i dag' : n + ' nye tilbud å sende ut fra i dag',
         tag: 'daily-offer-' + today, url: './'
       })
       offers++
