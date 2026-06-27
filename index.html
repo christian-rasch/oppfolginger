@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-98">
+<meta name="app-build" content="2026-06-27-99">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -497,6 +497,10 @@
       <div class="vfilter filterrow" id="subbar">
         <button data-s="alle" class="on">Alle</button>
         <button data-s="forfalte">Forfalte <span class="cnt" id="cntForf">0</span></button>
+      </div>
+      <div class="vfilter filterrow" id="subbarGjore">
+        <button data-sg="send_offer" class="on">Send tilbud</button>
+        <button data-sg="waiting_reply">Venter på svar <span class="cnt" id="cntWait">0</span></button>
       </div>
 
       <div class="vlist" id="list"></div>
@@ -1383,13 +1387,15 @@
 
   // ---------- rendering + gruppering ----------
   // view = hovedvisning: avtaler | gjore | uten | alle.  sub = Avtaler-underfilter: alle | forfalte
-  let view='avtaler', sub='alle', searchQuery='';
+  let view='avtaler', sub='alle', gjoreSub='send_offer', searchQuery='';
   function updateBars(){
     const searching=!!searchQuery;
     $('mainbar').style.display=searching?'none':'';
     Array.from($('mainbar').children).forEach(b=>b.classList.toggle('on',b.dataset.v===view));
     Array.from($('subbar').children).forEach(b=>b.classList.toggle('on',b.dataset.s===sub));
+    Array.from($('subbarGjore').children).forEach(b=>b.classList.toggle('on',b.dataset.sg===gjoreSub));
     $('subbar').style.display=(!searching&&view==='avtaler')?'':'none';
+    $('subbarGjore').style.display=(!searching&&view==='gjore')?'':'none';
   }
   const OFFER_STALE_DAYS=5; // «venter på svar» eldre enn dette = purres i «Må gjøres»
   const isStaleOffer=i=>i&&i.nextAction==='waiting_reply'&&i.waitingSince&&daysSince(i.waitingSince)>=OFFER_STALE_DAYS;
@@ -1420,6 +1426,9 @@
     const gjoreN=muste.length+staleW.length;
     $('cntGjore').textContent=gjoreN;
     $('cntGjore').style.display=gjoreN?'':'none'; // skjul teller ved 0 — vis kun tall ≥1
+    const waitN=act.filter(i=>i.nextAction==='waiting_reply').length; // «Venter på svar»-underfane
+    $('cntWait').textContent=waitN;
+    $('cntWait').style.display=waitN?'':'none';
     $('cntGjore').classList.toggle('red',false); // ingen rød (Må gjøres viser ikke forfalt lenger)
     const utenN=act.filter(i=>!i.dato).length; // alle aktive kort uten dato (uansett handling), hver én gang
     $('cntUten').textContent=utenN;
@@ -1437,11 +1446,12 @@
       const matches=act.filter(function(i){return ((i.navn||'')+' '+(i.adresse||'')+' '+(i.kommentar||'')).toLowerCase().indexOf(q)>=0;})
         .sort(function(a,b){return (a.navn||'').localeCompare(b.navn||'');});
       if(matches.length)G(L(matches.length+' treff'),matches,'');
+    } else if(view==='gjore'&&gjoreSub==='waiting_reply'){
+      // Venter på svar: alle waiting_reply, synkende etter når de sist ble lagt til (waitingSince) — nyeste øverst
+      const wr=act.filter(i=>i.nextAction==='waiting_reply').sort(function(a,b){return (b.waitingSince||0)-(a.waitingSince||0);});
+      if(wr.length)G(L('Venter på svar'),wr,'',false,'gjore');
     } else if(view==='gjore'){
-      // tilbud som har ventet på svar 5+ dager → purres øverst i «Må gjøres»
-      if(staleW.length){const byWait=staleW.slice().sort(function(a,b){return (a.waitingSince||0)-(b.waitingSince||0);});
-        G(L('Tilbud uten svar (5+ dager)'),byWait,'',false,'gjore');}
-      // «Husk å send tilbud» (send_offer), gruppert etter NÅR handlingen ble satt (fallback: opprettet)
+      // Send tilbud: «Husk å send tilbud» (send_offer), gruppert etter NÅR handlingen ble satt (fallback: opprettet)
       const so=act.filter(i=>i.nextAction==='send_offer');
       const yd=+td0-864e5,wk0=+startOfWeek(n),lw=wk0-7*864e5;
       const ts=i=>+i.offerSince||+i.opprettet||0; // tidspunkt «send tilbud» ble satt; eldre kort uten stempel → opprettet
@@ -1509,7 +1519,7 @@
     let empty='Ingen oppfølginger her';
     if(searchQuery)empty='Ingen treff';
     else if(view==='uten')empty='Ingen kunder uten tidspunkt';
-    else if(view==='gjore')empty='Ingenting å gjøre nå';
+    else if(view==='gjore')empty=(gjoreSub==='waiting_reply')?'Ingen tilbud venter på svar':'Ingen tilbud å sende';
     else if(view==='avtaler'){
       if(sub==='forfalte')empty='Ingen forfalte avtaler';
       else empty='Ingen kommende avtaler';
@@ -1625,6 +1635,7 @@
   }
   $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
   $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
+  $('subbarGjore').addEventListener('click',e=>{const b=e.target.closest('button');if(b){gjoreSub=b.dataset.sg;render();}});
   $('searchBox').addEventListener('input',function(){searchQuery=this.value.trim();render();});
 
   // sett nextAction og stempel når «send tilbud» settes (styrer kategori i «Må gjøres»)
