@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-99">
+<meta name="app-build" content="2026-06-27-100">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -768,7 +768,7 @@
   let sbClient=null,sbUser=null,cloudState='off',cloudPushTimer=null,conflictData=null;
   // ---- admin: se/endre andre selgeres oppfølginger ----
   const ADMIN_EMAILS=['christian.rasch@snodriv.no']; // kun disse e-postene får admin-tilgang
-  let adminView=null,adminPushTimer=null,adminSellersCache=null; // adminView={userId,email,stash} når du ser på en annen selger
+  let adminView=null,adminPushTimer=null,adminSellersCache=null,adminLoading=false; // adminView={userId,email,stash} når du ser på en annen selger
   function isAdmin(){return !!(sbUser&&ADMIN_EMAILS.indexOf((sbUser.email||'').toLowerCase())>=0);}
 
   function isCloudConfigured(){
@@ -884,18 +884,27 @@
     return {idag:idag,forf:forf,tilbud:tilbud};
   }
   // hent lista over selgere (RLS slipper bare admin til alle rader; ellers kommer kun egen rad → tom liste)
+  // To-fase: (1) rask, lett liste vises straks. (2) nøkkeltall (tyngre data) fylles inn etterpå.
   async function adminLoadSellers(){
     const c=getSupabaseClient();if(!c||!isAdmin())return;
+    adminLoading=true;renderProfileBody(); // umiddelbar «Henter…»-tilbakemelding
     try{
-      let sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at,app_build,data');
+      let sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at,app_build');
       if(sel.error&&/(app_build|column|schema cache)/i.test(sel.error.message||'')) // app_build mangler → hent uten
-        sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at,data');
+        sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at');
       if(sel.error)throw sel.error;
       adminSellersCache=(sel.data||[]).filter(function(r){return r.user_id!==sbUser.id;})
-        .map(function(r){return {userId:r.user_id,email:r.email||'(uten e-post)',at:r.updated_at,build:r.app_build||null,stats:adminStats(r.data)};})
+        .map(function(r){return {userId:r.user_id,email:r.email||'(uten e-post)',at:r.updated_at,build:r.app_build||null,stats:null};})
         .sort(function(a,b){return (a.email||'').localeCompare(b.email||'');});
-      renderProfileBody();
-    }catch(e){toast('Kunne ikke hente selgere (kjørt SQL-en?)');}
+      adminLoading=false;renderProfileBody(); // lista vises straks (uten nøkkeltall)
+      // fase 2: hent data og regn ut nøkkeltall i bakgrunnen
+      const d=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,data');
+      if(!d.error&&d.data&&adminSellersCache){
+        const m={};d.data.forEach(function(r){m[r.user_id]=adminStats(r.data);});
+        adminSellersCache.forEach(function(s){if(m[s.userId])s.stats=m[s.userId];});
+        renderProfileBody();
+      }
+    }catch(e){adminLoading=false;toast('Kunne ikke hente selgere (kjørt SQL-en?)');renderProfileBody();}
   }
   // gå inn i en selgers visning: legg din egen liste til side i minnet, last selgerens data
   async function adminEnterView(userId,email){
@@ -1140,7 +1149,8 @@
   function adminSectionHtml(){
     if(!isAdmin())return '';
     let lst;
-    if(adminSellersCache==null){lst='<div class="cloud-row cloud-muted">Trykk «Hent selgere» for å laste lista.</div>';}
+    if(adminLoading&&adminSellersCache==null){lst='<div class="cloud-row cloud-muted">Henter selgere…</div>';}
+    else if(adminSellersCache==null){lst='<div class="cloud-row cloud-muted">Trykk «Hent selgere» for å laste lista.</div>';}
     else if(!adminSellersCache.length){lst='<div class="cloud-row cloud-muted">Ingen andre selgere funnet.</div>';}
     else{
       var curB=(document.querySelector('meta[name="app-build"]')||{}).content||'';
@@ -1148,21 +1158,21 @@
         var sub=s.at?('Sist aktiv: '+fmtRel(s.at)):'Aldri synket';
         var stale=!s.build||s.build!==curB;
         var ver=stale?('⚠ Versjon '+(s.build||'ukjent (gammel)')+' — utdatert'):('✓ Versjon '+s.build);
-        var st=s.stats||{idag:0,forf:0,tilbud:0};
-        var statLine='I dag: '+st.idag+'  ·  Forfalte: '+st.forf+'  ·  Tilbud: '+st.tilbud;
+        var statLine=s.stats?('I dag: '+s.stats.idag+'  ·  Forfalte: '+s.stats.forf+'  ·  Tilbud: '+s.stats.tilbud):'Laster nøkkeltall…';
         return '<button class="btn admin-seller" data-uid="'+esc(s.userId)+'" data-em="'+esc(s.email)+'">'
           +'<span class="as-em">'+esc(s.email)+'</span>'
-          +'<span class="as-sub as-stat">'+esc(statLine)+'</span>'
+          +'<span class="as-sub'+(s.stats?' as-stat':'')+'">'+esc(statLine)+'</span>'
           +'<span class="as-sub">'+esc(sub)+'</span>'
           +'<span class="as-sub'+(stale?' as-stale':'')+'">'+esc(ver)+'</span></button>';
       }).join('');}
+    var btnTxt=adminLoading?'Henter…':(adminSellersCache?'Oppdater':'Hent selgere');
     return '<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Selgere (admin)</b></div>'
       +'<div class="cloud-row cloud-muted">Velg en selger for å se og endre oppfølgingene deres. Din egen liste er trygg imens.</div>'
-      +'<div class="cloud-row cloud-btns"><button class="btn" id="adminLoad">Hent selgere</button></div>'
+      +'<div class="cloud-row cloud-btns"><button class="btn" id="adminLoad"'+(adminLoading?' disabled':'')+'>'+btnTxt+'</button></div>'
       +'<div>'+lst+'</div>';
   }
   function openProfileModal(){renderProfileBody();$('profileModal').classList.add('open');}
-  function closeProfileModal(){$('profileModal').classList.remove('open');adminSellersCache=null;}
+  function closeProfileModal(){$('profileModal').classList.remove('open');adminSellersCache=null;adminLoading=false;}
   function wireProfileUI(){
     const pb=$('btnProfile');if(pb)pb.addEventListener('click',openProfileModal);
     const m=$('profileModal');
