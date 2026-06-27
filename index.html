@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-93">
+<meta name="app-build" content="2026-06-27-94">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -454,6 +454,15 @@
   .admin-seller .as-em{display:block}
   .admin-seller .as-sub{display:block;font-size:11px;color:var(--ink-dim);font-weight:400;margin-top:2px}
   .admin-seller .as-stale{color:var(--gold);font-weight:700}
+  /* varsel-port: blokkerer hele appen til varsler er på */
+  #pushGate{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(6,12,14,.94);backdrop-filter:blur(10px);padding:24px;font-family:"Schibsted Grotesk",sans-serif}
+  #pushGate .pg-card{max-width:430px;width:100%;background:#0d1418;border:1px solid var(--hair-2);border-radius:20px;padding:30px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  #pushGate .pg-ico{font-size:44px;line-height:1;margin-bottom:10px}
+  #pushGate h2{margin:0 0 12px;font-size:22px;font-weight:800;color:var(--ink)}
+  #pushGate p{margin:0 0 14px;font-size:15px;line-height:1.5;color:var(--ink-dim)}
+  #pushGate .pg-steps{font-size:13.5px;color:var(--ink-dim);background:rgba(255,255,255,.04);border:1px solid var(--hair);border-radius:12px;padding:12px 14px;text-align:left}
+  #pushGate .pg-btn{margin-top:6px;width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--mint),#19c79a);color:#06120e;font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:800;cursor:pointer}
+  #pushGate .pg-btn:active{opacity:.85}
 </style>
 </head>
 <body>
@@ -461,6 +470,7 @@
     <span id="adminBarTxt"></span>
     <button id="adminBack" class="btn">Tilbake til mine</button>
   </div>
+  <div id="pushGate" style="display:none"></div>
   <div class="scaler"><div class="stage">
     <div class="app-head">
       <div class="head-row">
@@ -958,7 +968,7 @@
       const ok=await savePushSub(sub);
       toast(ok?'Varsler er på ✓':'Varsler på enheten, men lagring feilet');
     }catch(e){toast('Kunne ikke slå på varsler: '+((e&&e.message)||''));}
-    renderProfileBody();
+    renderProfileBody();refreshPushGate();
   }
   async function disablePush(){
     const reg=await ensureSwReg();
@@ -981,11 +991,32 @@
     const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Varsler</b></div>';
     if(!pushSupported())return head+'<div class="cloud-row cloud-muted">Varsler støttes ikke her. På iPad: legg appen til på Hjem-skjerm og åpne den derfra (iOS 16.4+).</div>';
     const perm=pushPermission();
-    if(perm==='granted')return head+'<div class="cloud-row cloud-muted">På ✓ — du får påminnelse 5 min før en avtale.</div>'
-      +'<div class="cloud-row cloud-btns"><button class="btn" id="pushOff">Slå av varsler</button></div>';
+    if(perm==='granted')return head+'<div class="cloud-row cloud-muted">På ✓ — du får påminnelse 5 min før en avtale.</div>';
     if(perm==='denied')return head+'<div class="cloud-row cloud-muted">Varsler er blokkert. Skru på «Varsler» for appen i iPad-innstillinger for å bruke dette.</div>';
     return head+'<div class="cloud-row cloud-muted">Få en påminnelse 5 min før hver avtale.</div>'
       +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pushOn">🔔 Slå på varsler</button></div>';
+  }
+  // ---- VARSEL-PORT: blokkerer hele appen til varsler er på (kun i installert app på Hjem-skjerm) ----
+  function isStandalonePWA(){try{return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}catch(e){return false;}}
+  // port vises kun der varsler faktisk KAN slås på (innlogget + støttet + Hjem-skjerm-app), ellers ville appen blitt ubrukelig
+  function pushGateNeeded(){return !!(sbUser&&pushSupported()&&isStandalonePWA()&&pushPermission()!=='granted');}
+  function renderPushGate(){
+    const g=$('pushGate');if(!g)return;
+    if(pushPermission()==='denied'){
+      g.innerHTML='<div class="pg-card"><div class="pg-ico">🔕</div><h2>Varsler er avslått</h2>'
+        +'<p>Appen krever at varsler er på, så du får påminnelse 5 minutter før hver avtale.</p>'
+        +'<div class="pg-steps">Slik skrur du på igjen:<br>1) Åpne <b>Innstillinger</b> på iPad<br>2) Bla ned til <b>Oppfølginger</b><br>3) Trykk <b>Varsler</b> → slå på <b>Tillat varsler</b><br>4) Kom tilbake og trykk knappen under.</div>'
+        +'<button class="pg-btn" id="pgRecheck">Jeg har skrudd på — sjekk på nytt</button></div>';
+    }else{
+      g.innerHTML='<div class="pg-card"><div class="pg-ico">🔔</div><h2>Slå på varsler</h2>'
+        +'<p>For å bruke appen må du slå på varsler. Da får du en påminnelse <b>5 minutter før</b> hver avtale, så du aldri glipper en oppfølging.</p>'
+        +'<button class="pg-btn" id="pgEnable">Slå på varsler</button></div>';
+    }
+  }
+  function refreshPushGate(){
+    const g=$('pushGate');if(!g)return;
+    if(pushGateNeeded()){renderPushGate();g.style.display='flex';}
+    else g.style.display='none';
   }
 
   // Magic link = «første gang»-bootstrap (åpne lenken i Safari på samme enhet).
@@ -1030,8 +1061,10 @@
       try{history.replaceState(null,'',location.origin+location.pathname+location.search);}catch(e){}}
     c.auth.onAuthStateChange(function(_evt,session){
       const was=!!sbUser;sbUser=session?session.user:null;renderCloudStatus();
-      if(!was&&sbUser){cloudReconcile();flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();}});
+      if(!was&&sbUser){cloudReconcile();flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();}
+      refreshPushGate();});
     if(sbUser){await cloudReconcile();flushPendingImgs();cloudFetchApiKey();pushRefresh();} else setCloudState('login');
+    refreshPushGate();
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
   }
   // hent felles Anthropic-nøkkel fra app_config (sentralt styrt) → selgeren slipper å lime inn noe
@@ -1123,6 +1156,13 @@
       if(sb){adminEnterView(sb.getAttribute('data-uid'),sb.getAttribute('data-em'));return;}
     });
     const ab=$('adminBack');if(ab)ab.addEventListener('click',adminExitView);
+    const pg=$('pushGate');if(pg)pg.addEventListener('click',function(e){
+      const id=e.target.id;
+      if(id==='pgEnable')enablePush();
+      else if(id==='pgRecheck')location.reload();
+    });
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshPushGate();}); // hver gang appen åpnes igjen
+    window.addEventListener('focus',refreshPushGate);
   }
   function showCloudConflict(localData,cloudData,serverAt){
     conflictData={cloud:cloudData,serverAt:serverAt};
