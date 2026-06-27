@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-95">
+<meta name="app-build" content="2026-06-27-96">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -929,7 +929,7 @@
 
   /* ---- PUSH-VARSLER (påminnelse 5 min før avtale) ---- */
   const VAPID_PUBLIC='BNqXFxMvX7bEAp6Pj0OwVrT-U_uTpaCTUO2gKwG9QX0RddehoWmreLDnvx46pI6pFUJulkPVqvyE11sbBSoJ97Y';
-  let swReg=null;
+  let swReg=null,pushTriedFailed=false;
   function pushSupported(){return ('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);}
   function pushPermission(){try{return Notification.permission;}catch(e){return 'default';}}
   function urlB64ToU8(b64){
@@ -960,14 +960,15 @@
     if(!sbUser){toast('Logg inn først');return;}
     let perm=pushPermission();
     if(perm!=='granted'){try{perm=await Notification.requestPermission();}catch(e){}}
-    if(perm!=='granted'){toast('Varsler ble ikke tillatt');renderProfileBody();return;}
-    const reg=await ensureSwReg();if(!reg){toast('Kunne ikke starte varsler');return;}
+    if(perm!=='granted'){pushTriedFailed=true;toast('Varsler ble ikke tillatt');renderProfileBody();refreshPushGate();return;}
+    const reg=await ensureSwReg();if(!reg){pushTriedFailed=true;toast('Kunne ikke starte varsler');refreshPushGate();return;}
     try{
       let sub=await reg.pushManager.getSubscription();
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
       const ok=await savePushSub(sub);
+      pushTriedFailed=false;
       toast(ok?'Varsler er på ✓':'Varsler på enheten, men lagring feilet');
-    }catch(e){toast('Kunne ikke slå på varsler: '+((e&&e.message)||''));}
+    }catch(e){pushTriedFailed=true;toast('Kunne ikke slå på varsler: '+((e&&e.message)||''));}
     renderProfileBody();refreshPushGate();
   }
   async function disablePush(){
@@ -1002,10 +1003,10 @@
   function pushGateNeeded(){return !!(sbUser&&pushSupported()&&isStandalonePWA()&&pushPermission()!=='granted');}
   function renderPushGate(){
     const g=$('pushGate');if(!g)return;
-    if(pushPermission()==='denied'){
+    if(pushPermission()==='denied'||pushTriedFailed){
       g.innerHTML='<div class="pg-card"><div class="pg-ico">🔕</div><h2>Varsler er avslått</h2>'
         +'<p>Appen krever at varsler er på, så du får påminnelse 5 minutter før hver avtale.</p>'
-        +'<div class="pg-steps">Slik skrur du på igjen:<br>1) Åpne <b>Innstillinger</b> på iPad<br>2) Bla ned til <b>Oppfølginger</b><br>3) Trykk <b>Varsler</b> → slå på <b>Tillat varsler</b><br>4) Kom tilbake og trykk knappen under.</div>'
+        +'<div class="pg-steps">Slik skrur du på igjen:<br>1) Åpne <b>Innstillinger</b><br>2) Bla helt ned til <b>Apper</b><br>3) Velg <b>Oppfølginger</b> → <b>Varslinger</b><br>4) Slå på <b>Tillat varslinger</b><br>5) Kom tilbake hit og trykk knappen under.</div>'
         +'<button class="pg-btn" id="pgRecheck">Jeg har skrudd på — sjekk på nytt</button></div>';
     }else{
       g.innerHTML='<div class="pg-card"><div class="pg-ico">🔔</div><h2>Slå på varsler</h2>'
