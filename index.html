@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-27-100">
+<meta name="app-build" content="2026-06-28-101">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1507,14 +1507,16 @@
           .forEach(function(p){const a=fb.get(p[0]);if(!a.length)return;
             const lab=p[0]==='eldre'?'Forfalt eldre<button class="grp-action" data-act="purge-eldre">Fjern alle eldre</button>':p[1];
             G(lab,a,'forfalt');});
-      } else { // alle (avtaler-subfane): kun kommende — I dag / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (forfalte vises kun under Forfalte)
+      } else { // alle (avtaler-subfane): I dag (inkl. forfalt i dag) / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (eldre forfalte vises kun under Forfalte)
         const wk1=new Date(+startOfWeek(n)+7*864e5),wk2=new Date(+startOfWeek(n)+14*864e5);
         const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
         const m=new Map();
-        fut.forEach(function(i){ // fut er sortert stigende → innsettings-/visningsrekkefølge blir riktig
-          const t=p(i.dato),td=+startOfDay(t);let key,lab;
-          if(td<+tm0){key='today';lab='I dag';}
-          else if(td<+tm1){key='tomorrow';lab='I morgen';}
+        // «I dag» = alt datert i dag, også forfalt i dag (tid passert), sortert på tid
+        const idag=dated.filter(function(i){return +startOfDay(p(i.dato))===+td0;}).sort(function(a,b){return (+p(a.dato))-(+p(b.dato));});
+        if(idag.length)m.set('today',{lab:'I dag',arr:idag});
+        fut.forEach(function(i){ // fut = kommende (ikke forfalt); kun dager ETTER i dag her (i dag er håndtert over)
+          const t=p(i.dato),td=+startOfDay(t);if(td<=+td0)return;let key,lab;
+          if(td<+tm1){key='tomorrow';lab='I morgen';}
           else if(td<+wk1){key='restweek';lab='Resten av uken';}
           else if(td<+wk2){key='nextweek';lab='Neste uke';}
           else if(t.getFullYear()===n.getFullYear()&&t.getMonth()===n.getMonth()){key='restmonth';lab='Resten av måneden';}
@@ -1522,7 +1524,7 @@
           if(!m.has(key))m.set(key,{lab:lab,arr:[]});
           m.get(key).arr.push(i);
         });
-        m.forEach(g=>G(L(g.lab),g.arr));
+        m.forEach(function(g,key){G(L(g.lab),g.arr,'',false,key==='today'?'idag':undefined);});
       }
     }
 
