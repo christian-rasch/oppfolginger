@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-28-102">
+<meta name="app-build" content="2026-06-28-103">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1646,6 +1646,38 @@
     el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
     setTimeout(function(){el.classList.remove('justadded');},3100);
   }
+  // ---- glow fra varsel: lys opp kort som varselet gjelder for ----
+  function glowCards(ids){
+    if(!ids||!ids.length)return;
+    const listEl=$('list');if(!listEl)return;
+    let first=null;
+    ids.forEach(function(id){
+      const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
+      if(!first)first=el;
+      el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
+      setTimeout(function(){el.classList.remove('justadded');},3100);
+    });
+    if(first)first.scrollIntoView({block:'center',behavior:'smooth'});
+  }
+  function applyNotifGlow(glow){ // naviger til riktig fane + glow kortene
+    if(!glow||!glow.ids)return;
+    if(glow.view){view=glow.view;
+      if(glow.view==='gjore'&&glow.gsub)gjoreSub=glow.gsub;
+      if(glow.view==='avtaler'&&glow.sub)sub=glow.sub;
+      searchQuery='';const sbx=$('searchBox');if(sbx)sbx.value='';}
+    render();
+    setTimeout(function(){glowCards(glow.ids);},80); // vent til kortene er i DOM
+  }
+  function checkNotifGlowURL(){ // kaldstart via openWindow: glow ligger i URL-en
+    try{const m=/[?&]glow=([^&]+)/.exec(location.search);if(!m)return;
+      const glow=JSON.parse(decodeURIComponent(m[1]));
+      history.replaceState(null,'',location.origin+location.pathname+location.hash);
+      setTimeout(function(){applyNotifGlow(glow);},150);
+    }catch(e){}
+  }
+  // varsel-klikk mens appen alt er åpen → melding fra service worker
+  if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='notif-glow')applyNotifGlow(e.data.glow);});}
   $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
   $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
   $('subbarGjore').addEventListener('click',e=>{const b=e.target.closest('button');if(b){gjoreSub=b.dataset.sg;render();}});
@@ -2612,7 +2644,7 @@
     if(raw){try{const arr=JSON.parse(raw);items=(Array.isArray(arr)?arr:[]).map(migrate);}catch(err){items=[];}}
     if(!items.length)items=seed();
     migrateCardImgs(); // flytt gamle lokale kartbilder til buffer + køes for opplasting
-    render();save();
+    render();save();checkNotifGlowURL();
     try{const k=await store.get(KEYK);if(k)aiKey=String(k);}catch(err){}
     warmupAI(); // varm opp AI-kanalen ved appstart (kaldstart gir SyntaxError)
     wireCloudUI();wireProfileUI();cloudInit(); // sky-synk: kobler UI + starter (no-op hvis ikke konfigurert)

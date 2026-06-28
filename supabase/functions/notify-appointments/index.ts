@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         it && it.state !== 'fulgt' && it.nextAction === 'send_offer' &&
         it.offerSince && osloDate(it.offerSince) === today)
       if (!due.length) continue
-      await sendTo(row.user_id, { title: due.length === 1 ? '1 nytt tilbud å sende ut fra i dag' : due.length + ' nye tilbud å sende ut fra i dag', tag: 'daily-offer-test', url: './' })
+      await sendTo(row.user_id, { title: due.length === 1 ? '1 nytt tilbud å sende ut fra i dag' : due.length + ' nye tilbud å sende ut fra i dag', tag: 'daily-offer-test', url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'gjore', gsub: 'send_offer' } })
       n++
     }
     return Response.json({ ok: true, test: 'offers', sent: n })
@@ -118,7 +118,8 @@ Deno.serve(async (req) => {
       await sendTo(row.user_id, {
         title: 'Avtale om 5 min' + (navn ? ' — ' + navn : ''),
         body: (navn ? navn + ' • ' : '') + 'kl. ' + tid + (it.adresse ? ' • ' + it.adresse : ''),
-        tag: 'appt-' + it.id, url: './'
+        tag: 'appt-' + it.id, url: './',
+        glow: { ids: [String(it.id)], view: 'avtaler', sub: 'alle' }
       })
       sent++
     }
@@ -140,7 +141,8 @@ Deno.serve(async (req) => {
       const n = due.length
       await sendTo(row.user_id, {
         title: n === 1 ? '1 nytt tilbud å sende ut fra i dag' : n + ' nye tilbud å sende ut fra i dag',
-        tag: 'daily-offer-' + today, url: './'
+        tag: 'daily-offer-' + today, url: './',
+        glow: { ids: due.map((d: any) => String(d.id)), view: 'gjore', gsub: 'send_offer' }
       })
       offers++
     }
