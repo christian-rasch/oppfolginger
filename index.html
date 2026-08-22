@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-06-28-103">
+<meta name="app-build" content="2026-08-22-105">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -60,6 +60,7 @@
   .vfilter{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:11px;padding:4px;gap:2px}
   .vfilter button{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--ink-dim);background:none;border:0;padding:8px 14px;border-radius:8px;cursor:pointer;text-transform:uppercase}
   .vfilter button.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a)}
+  .vfilter .vf-div{width:1px;align-self:stretch;background:var(--hair-2);margin:3px 6px} /* skiller «Må gjøres» (snarvei/duplikat) fra de ekte listene */
   /* aktiv Avtaler-subfane: grå/dempet, ikke neon-grønn (hovedfanene øverst beholder grønt) */
   #subbar button.on{color:var(--ink);background:rgba(255,255,255,.13)}
   #subbar button.on .cnt{background:rgba(255,255,255,.16);color:var(--ink)}
@@ -491,8 +492,9 @@
 
       <div class="vfilter filterrow" id="mainbar">
         <button data-v="avtaler" class="on">Avtaler</button>
-        <button data-v="gjore">Må gjøres <span class="cnt" id="cntGjore">0</span></button>
         <button data-v="uten">Uten tidspunkt <span class="cnt" id="cntUten">0</span></button>
+        <span class="vf-div"></span>
+        <button data-v="gjore">Må gjøres <span class="cnt" id="cntGjore">0</span></button>
       </div>
       <div class="vfilter filterrow" id="subbar">
         <button data-s="alle" class="on">Alle</button>
@@ -874,14 +876,14 @@
   /* ---- ADMIN: se/endre andre selgeres oppfølginger ---- */
   // nøkkeltall pr. selger til admin-oversikten
   function adminStats(data){
-    const arr=Array.isArray(data)?data:[],n=now(),d0=+startOfDay(n),d1=d0+864e5;
-    let idag=0,forf=0,tilbud=0;
+    const arr=Array.isArray(data)?data:[],n=now(),d0=+startOfDay(n),d1=d0+864e5,d2=d1+864e5,wkEnd=+startOfWeek(n)+7*864e5;
+    let idag=0,imorgen=0,restuke=0,forf=0,tilbud=0;
     arr.forEach(function(it){
       if(!it||it.state==='fulgt')return;
       if(it.nextAction==='send_offer')tilbud++;
-      if(it.dato){const t=+p(it.dato);if(t<+n)forf++;else if(t>=d0&&t<d1)idag++;}
+      if(it.dato){const t=+p(it.dato);if(t<+n)forf++;else if(t>=d0&&t<d1)idag++;else if(t>=d1&&t<d2)imorgen++;else if(t>=d2&&t<wkEnd)restuke++;}
     });
-    return {idag:idag,forf:forf,tilbud:tilbud};
+    return {idag:idag,imorgen:imorgen,restuke:restuke,forf:forf,tilbud:tilbud};
   }
   // hent lista over selgere (RLS slipper bare admin til alle rader; ellers kommer kun egen rad → tom liste)
   // To-fase: (1) rask, lett liste vises straks. (2) nøkkeltall (tyngre data) fylles inn etterpå.
@@ -1158,7 +1160,7 @@
         var sub=s.at?('Sist aktiv: '+fmtRel(s.at)):'Aldri synket';
         var stale=!s.build||s.build!==curB;
         var ver=stale?('⚠ Versjon '+(s.build||'ukjent (gammel)')+' — utdatert'):('✓ Versjon '+s.build);
-        var statLine=s.stats?('I dag: '+s.stats.idag+'  ·  Forfalte: '+s.stats.forf+'  ·  Tilbud: '+s.stats.tilbud):'Laster nøkkeltall…';
+        var statLine=s.stats?('I dag: '+s.stats.idag+'  ·  I morgen: '+s.stats.imorgen+'  ·  Resten av uken: '+s.stats.restuke+'  ·  Forfalte: '+s.stats.forf+'  ·  Tilbud: '+s.stats.tilbud):'Laster nøkkeltall…';
         return '<button class="btn admin-seller" data-uid="'+esc(s.userId)+'" data-em="'+esc(s.email)+'">'
           +'<span class="as-em">'+esc(s.email)+'</span>'
           +'<span class="as-sub'+(s.stats?' as-stat':'')+'">'+esc(statLine)+'</span>'
