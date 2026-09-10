@@ -112,3 +112,12 @@ Bytt ut de to `PASTE_...`-verdiene. (Send dem til Claude Code, så limer han dem
 ## Indikator-tilstander (oppe i appen)
 `Lokal` · `Sky av` · `Logg inn` · `Synker…` · `Synket` · `Ikke synket` · `Konflikt` · `Feil`.
 Klikk på indikatoren for innlogging / «Synk nå» / «Logg ut».
+
+## Tillegg 2026-09-10 — drift (hjerteslag, feillogg, varsel-logg)
+Kjør `supabase/sql/2026-09-10-drift.sql` i SQL Editor (hele fila samlet, trygt å kjøre flere ganger). Den:
+- legger til `last_seen_at` på `oppf_snapshots` (appen sender hjerteslag ved åpning / hver 30. min) og endrer
+  trigger-funksjonen `set_oppf_snapshots_updated_at` til å bumpe `updated_at` KUN når `data` endres;
+- lager `client_log` (feil fra alle enheter; appen skriver, kun admin leser),
+- lager `notif_log` + `notif_status` (Edge Function `notify-appointments` logger hver leveranse + hjerteslag pr. kjøring),
+- setter opp nattlig opprydding (pg_cron).
+Edge-funksjonen må deployes på nytt etter SQL-en (se `supabase/functions/notify-appointments/index.ts`).
