@@ -47,3 +47,8 @@ Se **`PROJECT_STATUS.md`** for full produkt-/UI-status (faner, `nextAction`, dat
 
 ## AI-import (📷 Lim inn) — uendret
 Skjermbilde → komprimeres (canvas, maks 1400px, jpeg 0.72, FileReader — aldri blob-URL) → `aiCall()`. Med API-nøkkel: XHR mot api.anthropic.com. Uten nøkkel: fetch via Claude-broen. Prompt returnerer ren JSON.
+
+## Læring av datotolkning
+Mappa `laering/` har README, regresjonstester (`node laering/tester.js` — kjør etter ALLE endringer i
+tidstolkningen), uthentingsskript for innlogget fane og funnlogg. Hjelpefunksjonene ligger mellom
+`[[LAER-START]]`/`[[LAER-END]]` i index.html. Appen lærer selv hver selgers vanlige klokkeslett (`learnedHour`).
