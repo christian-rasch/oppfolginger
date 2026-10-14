@@ -1,0 +1,68 @@
+# Automatisk sjekk ved hver push til main — stopper feil FØR de når selgernes iPader.
+# Feiler jobben, vises rødt kryss på commiten i GitHub (og e-post fra GitHub). Pages ruller likevel ut,
+# så rett feilen og push på nytt med det samme.
+name: Sjekk før utrulling
+on:
+  push:
+    branches: [main]
+jobs:
+  sjekk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntakssjekk av alle script-blokker i index.html
+        run: |
+          node -e '
+          const fs=require("fs");const s=fs.readFileSync("index.html","utf8");
+          const re=/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;let m,i=0,bad=0;
+          while((m=re.exec(s))){i++;try{new Function(m[1]);console.log("script-blokk",i,"OK");}catch(e){bad++;console.error("::error::script-blokk "+i+" har syntaksfeil: "+e.message);}}
+          if(!i){console.error("::error::fant ingen script-blokker i index.html");process.exit(1);}
+          if(bad)process.exit(1);'
+
+      - name: Syntakssjekk av sw.js
+        run: node --check sw.js
+
+      - name: Demo-data skal aldri tilbake
+        run: |
+          if grep -nE 'DEMO\s*=\s*true|DEMO_NOW' index.html; then
+            echo "::error::DEMO-data funnet i index.html"; exit 1; fi
+          echo "ingen demo-data ✓"
+
+      - name: Kun anon-nøkkel i appen (aldri service_role)
+        run: |
+          python3 - <<'PY'
+          import re, base64, json, sys
+          src = open('index.html', encoding='utf-8').read() + open('sw.js', encoding='utf-8').read()
+          toks = set(re.findall(r'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+', src))
+          bad = 0
+          for t in toks:
+              mid = t.split('.')[1]; mid += '=' * (-len(mid) % 4)
+              try: role = json.loads(base64.urlsafe_b64decode(mid)).get('role')
+              except Exception: role = '(kunne ikke lese)'
+              print('JWT-rolle:', role)
+              if role != 'anon': bad += 1
+          if bad: print('::error::Fant en nøkkel i appen som IKKE er anon-rolle'); sys.exit(1)
+          print('nøkler OK' if toks else '(ingen JWT funnet)')
+          PY
+
+      - name: Build-stempel må bumpes når index.html endres
+        run: |
+          BASE="${{ github.event.before }}"
+          if [ -z "$BASE" ] || echo "$BASE" | grep -qE '^0+$' || ! git cat-file -e "$BASE" 2>/dev/null; then
+            BASE="$(git rev-parse HEAD~1 2>/dev/null || true)"; fi
+          if [ -z "$BASE" ]; then echo "ingen basis å sammenligne med"; exit 0; fi
+          if git diff --name-only "$BASE" HEAD | grep -qx 'index.html'; then
+            if git diff "$BASE" HEAD -- index.html | grep -q 'app-build'; then
+              echo "app-build bumpet ✓"
+            else
+              echo "::error::index.html er endret uten nytt app-build-stempel (linje 10) — selgerne får ikke oppdateringen"; exit 1
+            fi
+          else
+            echo "index.html uendret"
+          fi
