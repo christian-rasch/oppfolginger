@@ -1,45 +1,68 @@
 Du kjører den automatiske læringsgjennomgangen for Oppfølginger-appen (index.html i denne mappa). Svar på norsk.
-Christian er ikke-teknisk og leser bare rapporten. Ikke still spørsmål — gjør jobben ferdig.
+Christian er ikke-teknisk og leser bare rapporten. Ikke still spørsmål underveis — gjør jobben ferdig. Vær grundig
+og nøktern: det du endrer treffer 14 selgere, og en dårlig regel er verre enn ingen regel.
+
+## 0. Prinsipper for å lære riktig (les før du starter)
+- **Nye kort er den ekte testen.** Regler laget før kortet fantes, målt på kortet = sann treffsikkerhet.
+  Alle gamle kort er «lukket bok». Rapporter alltid tallet for nye kort først.
+- **Blind merking.** Når du setter fasit for et nytt kort: les notat + «nå» og bestem datoen FØR du ser på
+  ai.dato, ai.grunn og kortets dato. Ellers forankrer du deg i AI-ens svar og lærer ingenting.
+- **Bevis før regel.** Endre instruks/kode bare for et mønster som (a) forekommer i ≥2 kort, eller (b) er
+  åpenbart generelt (en forkortelse, en skrivemåte). Ett enkeltstående rart notat → merknad i fasit, ingen regel.
+- **Selgerens rettelse er et hint, ikke fasit.** Flyttet han dagen uten at notatet sier det, er det et personlig
+  valg (merk «personlig valg»). Rettet han klokkeslettet fra 12:00, si fra om learnedHour ikke allerede dekker det.
+- **Minste endring. Rydd også.** Instruksen skal ikke bare vokse: finnes det to regler som sier det samme, eller
+  en regel ingen kort har trengt på 3 gjennomganger, slå sammen/forenkle – og mål at treffprosent er uendret.
+- **Usikkerhet er lov.** Er et notat tvetydig: usikker=true og legg det i rapportens «Spørsmål til Christian».
 
 ## 1. Les
-laering/README.md, laering/funn.md, laering/eval-historikk.md (hvis den finnes) og den NYESTE fila i laering/data/
-(anonymiserte kort: notat, AI-ens dato (ai.dato/ai.raw/ai.grunn) og datoen som står på kortet nå = selgerens fasit).
+laering/README.md, laering/funn.md (forrige gjennomganger – hva ble prøvd, hva ble bevisst ikke gjort),
+laering/eval-historikk.md, laering/fasit.json og den NYESTE fila i laering/data/.
 
-## 2. Mål nullpunktet
-Kjør `node laering/eval.mjs --json > laering/data/eval-for.json` (appens modell og instruks mot ekte notater).
-Noter «riktig dag»-prosent og «ga ingen dato (feil)». Les bommene (feltet bom) — det er der instruksen svikter.
+## 2. Signaler og stille feil (uten API)
+`node laering/eval.mjs --bare-data --json > laering/data/stille.json`. Les: signal (nye kort siden sist, rettet,
+uten dato m/tidsord, stille feil), laertTime (hvor ofte selgerne retter bort fra lært klokkeslett – >30 % betyr at
+regelen er for aggressiv), notatEndretEtterImport, promptTegn (instruksens størrelse – skal ikke vokse ukontrollert).
 
-## 3. Finn mønstre siden forrige gjennomgang (datoer i funn.md; bruk ai.ts / opprettet)
-a) aktive kort UTEN dato der notatet har dag-/tids-/månedsord → tolkningen bommet.
-b) kort der selgeren endret AI-datoen → hva mente selgeren? Skill tolkningsFEIL («imorgen 1430» ble 12:00)
-   fra personlige valg (selger flyttet ringing til en annen dag).
-c) bommene fra eval-kjøringen i steg 2.
-d) sjekk om de lærte klokkeslettene (learnedHour) blir rettet bort fra — da er regelen for aggressiv.
+## 3. Merk nye kort i fasiten (blind, se 0)
+For HVERT AI-kort uten fasit (umerket): gull «ÅÅÅÅ-MM-DDTHH:MM» eller null; tidFri; usikker; merknad.
+Legg inn i laering/fasit.json (id = who|opprettet|md5(kommentar)[0:10], se eval.mjs), kilde «Claude-gjennomgang
+<dato>», oppdater «oppdatert».
 
-## 4. Forbedre instruksen og sikkerhetsnettet
-Minste mulige endring i index.html: AI-instruksen (strengene 'Datoregler — FOERSTE PRIORITET' / 'DAG:' / 'TID:')
-og/eller hjelperne mellom [[LAER-START]] og [[LAER-END]] + sikkerhetsnettet etter dem. Behold stilen.
-Legg nye ekte eksempler i laering/tester.js. `node laering/tester.js` — ALT må være OK.
-Syntakssjekk: trekk ut script-blokk nr. 2 fra index.html og kjør `new Function(src)` i node.
+## 4. Mål nullpunktet
+`node laering/eval.mjs --json > laering/data/eval-for.json`. Noter NYE kort: dag, og totalt: kjede dag/eksakt,
+ingen-dato-feil, falsk dato. Les bom (modell/kode som svikter) og stilleFeil (til rapporten).
 
-## 5. Mål på nytt og behold bare forbedringer
-Kjør `node laering/eval.mjs --json > laering/data/eval-etter.json`. Sammenlign med steg 2:
-- «riktig dag» må være minst like høy OG «ga ingen dato (feil)» ikke høyere → behold.
-- ellers: `git checkout -- index.html`, gjør en mindre/annen endring, mål igjen (maks 3 forsøk).
-  Får du det ikke bedre: behold originalen og skriv i funn.md hva du prøvde.
+## 5. Finn mønstre – med bevis
+a) bommer på nye kort (viktigst), b) bommer totalt, c) selgerrettelser som er tolkningsfeil (ikke personlige valg),
+d) nye forkortelser/dialekt/skrivemåter, e) lært klokkeslett som rettes bort fra.
+Tell forekomster. Bare mønstre med bevis (se 0) går videre.
 
-## 6. Modellsjekk (bare når det er minst 40 kort i testsettet)
-Kjør `node laering/eval.mjs --modeller --json > laering/data/eval-modeller.json`. Bytt modell/innsats i
-index.html (AI_MODEL_KEY / AI_EFFORT) KUN hvis en kandidat er minst 3 prosentpoeng bedre på «riktig dag»,
-eller like god (±1 poeng) og minst 30 % raskere på median. Skriv begrunnelsen i kommentaren bak konstanten
-og i funn.md. Ved tvil: behold dagens modell.
+## 6. Forbedre – minste mulige endring
+AI-instruksen (aiPromptStatic: 'Datoregler — FOERSTE PRIORITET' / 'DAG:' / 'TID:') og/eller koden mellom
+[[LAER-START]] og [[LAER-END]]. Behold stilen. Ikke rør noe utenfor uten svært god grunn. Vurder rydding (se 0).
+Legg ekte eksempler i laering/tester.js (enkelttester + pipeline-tester med normaliserDato).
+`node laering/tester.js` — ALT må være OK. Syntakssjekk: script-blokk nr. 2 → `new Function(src)` i node.
 
-## 7. Dokumenter
-- Øk app-build i <meta name="app-build"> (format ÅÅÅÅ-MM-DD-NNN, NNN = forrige + 1) hvis index.html er endret.
-- Ny seksjon ØVERST i laering/funn.md med dagens dato: tall (kort, med AI, rettet, uten dato med tidsord,
-  eval før/etter, modellsammenligning), funn, hva som ble endret, hva som bevisst ikke ble endret.
-- laering/rapport-siste.md: maks 15 linjer, enkelt språk. Første linje er enten
-  «ENDRINGER KLARE – si «push» til Claude for å publisere» eller «INGEN ENDRINGER NØDVENDIG».
+## 7. Mål på nytt – behold bare forbedringer
+`node laering/eval.mjs --json > laering/data/eval-etter.json`. Behold hvis: NYE kort: dag ikke lavere, kjede dag
+ikke lavere, ingen-dato-feil og falsk dato ikke høyere. Ellers `git checkout -- index.html`, mindre endring, mål
+igjen (maks 3 forsøk). Blir det ikke bedre: behold originalen, skriv i funn.md hva du prøvde og hvorfor det ikke hjalp.
+
+## 8. Modellsjekk (bare ved ≥40 nye kort siden forrige modellsjekk, se funn.md)
+`node laering/eval.mjs --modeller --json > laering/data/eval-modeller.json`. Bytt AI_MODEL_KEY/AI_EFFORT KUN ved
+≥3 prosentpoeng bedre «kjede: dag», eller like god (±1) og ≥30 % raskere. Begrunn i kommentaren og i funn.md.
+
+## 9. Dokumenter og lever
+- Øk app-build (<meta name="app-build">, ÅÅÅÅ-MM-DD-NNN) hvis index.html er endret.
+- Ny seksjon ØVERST i funn.md: utløser, tall (nye kort, merket, rettet, stille feil, lært time, eval før/etter på
+  nye og totalt, promptstørrelse), mønstre med forekomster, endringer, hva som bevisst ikke ble gjort, trend
+  (siste 3 målinger fra eval-historikk).
+- laering/rapport-siste.md (maks 25 linjer, enkelt språk):
+  linje 1: «ENDRINGER KLARE – si «push» til Claude for å publisere» eller «INGEN ENDRINGER NØDVENDIG»
+  deretter: treff på nye kort (før → etter), totalt, hva som er endret (én linje per endring, `git diff --stat`),
+  «Kort som bør rettes manuelt» (selger, notat, riktig dato), «Spørsmål til Christian» (usikre notater, maks 5 –
+  han svarer i neste økt), og en sjekkliste over steg 2–8 med [x]/[ ].
 - `git add -A && git commit` med kort norsk melding som slutter med «(build …)» og linja
   «Co-Authored-By: Claude <noreply@anthropic.com>». IKKE push — Christian publiserer selv.
 

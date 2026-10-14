@@ -13,22 +13,40 @@ Det er læringsdataene.
 pleier å rette 12:00 til (siste 40 rettelser, minst 3 treff) og bruker hans vanlige time i stedet.
 Haakon som alltid ringer kl 15 eller 21 får altså sine tider automatisk.
 
-## Automatisk gjennomgang hver 14. dag
-`kjor-gjennomgang.command` startes av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
-hver dag 09:30 og gjør bare noe når det er 14 dager siden sist:
-1. Åpner appen i Chrome (der Christian er innlogget) med `?laering=1`. Appen (admin) laster ned en anonymisert
-   fil `oppf-laering-DATO.json` (notat + datoer + AI-forslag, ingen navn/adresser/telefon, pluss appens
-   API-nøkkel så eval kan kjøre). Skriptet flytter fila til `laering/data/`.
-2. Kjører `claude -p` med `gjennomgang-prompt.md`: måler nullpunkt med `eval.mjs`, finner mønstre,
-   forbedrer instruks/sikkerhetsnett, måler igjen og beholder bare forbedringer, sammenligner modeller
-   (bytter bare ved tydelig gevinst), oppdaterer tester, funn.md og rapport-siste.md, committer lokalt.
-3. Varsel på Macen med første linje i rapporten. Christian sier «push» til Claude for å publisere.
+## Automatikken: lærer når det finnes noe å lære av
+`kjor-gjennomgang.command` startes av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`) hver dag
+09:30 (krever at Macen er på og at Christian er innlogget i appen i Chrome):
+1. **Daglig, uten Claude:** åpner appen i Chrome med `?laering=1` → appen (admin) laster ned en anonymisert fil
+   (notat, datoer, AI-forslag, teksten AI leste, lært-time-flagg, API-nøkkel). Skriptet flytter fila til
+   `laering/data/` (10 siste beholdes) og teller læringssignaler med `eval.mjs --bare-data`: nye AI-kort siden
+   forrige gjennomgang, selgerrettelser, stille feil, kort uten dato med tidsord.
+2. **Full gjennomgang (Claude, effort high) bare når det er noe å lære av:** ≥12 nye kort, eller ≥3 rettelser,
+   eller ≥1 stille feil, eller ≥2 nye uten dato – men aldri oftere enn hver 3. dag, og minst hver 28. dag uansett.
+   Claude følger `gjennomgang-prompt.md`: blind merking av nye kort i fasiten, måling på NYE kort først (den
+   ekte testen), bevis før regel, minste endring + rydding, mål igjen og behold bare forbedringer, modellsjekk
+   ved nok nye kort, rapport med «kort som bør rettes» og «spørsmål til Christian», commit lokalt.
+3. Robusthet: lås mot dobbeltkjøring, vakthund (maks 90 min), stempel settes bare ved vellykket kjøring (ellers
+   nytt forsøk neste dag, maks 3), varsel på Macen med rapportens første linje. Christian sier «push».
 
-## eval.mjs – måling mot ekte notater
-Sender hvert notat (tekst) med samme instruks og samme «Naa» som da kortet ble laget, og sammenligner
-modellens dato med datoen som står på kortet (selgerens fasit). `--modeller` tester Sonnet/Haiku/Opus 5.5
-og lav innsats. Alle kjøringer logges i `eval-historikk.md`. Nøkkel: `ANTHROPIC_API_KEY`, `laering/.apikey`
-eller feltet `apikey` i datafila.
+## fasit.json – «Claudes øyne»
+Datoen som står på et kort er ikke nødvendigvis riktig: selgeren kan ha godtatt en feil uten å se den, eller
+flyttet dagen av personlige grunner. Derfor har hvert AI-kort en egen fasit: hva selgeren MENTE da notatet ble
+skrevet, lest bokstavelig (gull), om klokkeslettet er fritt (tidFri) og om notatet er tvetydig (usikker).
+Første 160 kort ble vurdert av Claude 15.10.2026; gjennomgangen merker nye kort hver gang.
+«Stille feil» = kort som står på feil dag uten at noen har rettet – de havner i rapporten til Christian.
+
+## eval.mjs – måling mot fasiten
+Sender hvert notat (tekst) med samme instruks, samme meldingsstruktur (fast del hurtigbufret) og samme «Naa»
+som da kortet ble laget. Måler både modellen alene (rå) og hele kjeden (modell + normaliserDato = det selgeren
+får). Tall: riktig dag, eksakt tid (bare der notatet sier tid), ingen-dato-feil, falsk dato.
+`--modeller` tester Sonnet/Haiku/Opus 5.5 og lav innsats. `--bare-data` gir stille feil uten API-kall.
+Alle kjøringer logges i `eval-historikk.md`. Nøkkel: `ANTHROPIC_API_KEY`, `laering/.apikey` eller feltet
+`apikey` i datafila.
+
+## Koden som kan testes utenfor appen
+Alt mellom `[[LAER-START]]` og `[[LAER-END]]` i index.html er ren logikk uten DOM: regex-konstanter,
+timeFromText/timeWordFromText/daysAheadFromText og normaliserDato (hele etterbehandlingen av AI-ens dato).
+tester.js laster blokken direkte, så en endring i appen testes 1:1.
 
 ## Manuell gjennomgang med Claude (utenom automatikken)
 1. Åpne appen i Chrome, innlogget som Christian. Be Claude kjøre `laering/analyse-i-nettleser.js`
@@ -39,6 +57,10 @@ eller feltet `apikey` i datafila.
 4. Funn og endringer noteres i `laering/funn.md` med dato.
 
 ## Filer
-- `tester.js` – regresjonstester for klokkeslett, «i morgen», ukedager, måneder, «om N dager».
+- `tester.js` – regresjonstester: klokkeslett, «i morgen», ukedager, måneder, «om N dager» + hele kjeden (normaliserDato).
+- `fasit.json` – hva selgeren mente, per AI-kort (gull/tidFri/usikker/merknad).
+- `eval.mjs` – måling mot fasiten, modellsammenligning, stille feil.
+- `gjennomgang-prompt.md` – instruksen den automatiske gjennomgangen følger.
+- `kjor-gjennomgang.command` – jobben launchd starter.
 - `analyse-i-nettleser.js` – uthenting + anonymisering i den innloggede fanen.
 - `funn.md` – logg over hva som ble funnet og endret, per gjennomgang.
