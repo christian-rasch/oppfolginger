@@ -13,7 +13,24 @@ Det er læringsdataene.
 pleier å rette 12:00 til (siste 40 rettelser, minst 3 treff) og bruker hans vanlige time i stedet.
 Haakon som alltid ringer kl 15 eller 21 får altså sine tider automatisk.
 
-## Gjennomgang med Claude (anbefalt hver 2.–4. uke)
+## Automatisk gjennomgang hver 14. dag
+`kjor-gjennomgang.command` startes av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
+hver dag 09:30 og gjør bare noe når det er 14 dager siden sist:
+1. Åpner appen i Chrome (der Christian er innlogget) med `?laering=1`. Appen (admin) laster ned en anonymisert
+   fil `oppf-laering-DATO.json` (notat + datoer + AI-forslag, ingen navn/adresser/telefon, pluss appens
+   API-nøkkel så eval kan kjøre). Skriptet flytter fila til `laering/data/`.
+2. Kjører `claude -p` med `gjennomgang-prompt.md`: måler nullpunkt med `eval.mjs`, finner mønstre,
+   forbedrer instruks/sikkerhetsnett, måler igjen og beholder bare forbedringer, sammenligner modeller
+   (bytter bare ved tydelig gevinst), oppdaterer tester, funn.md og rapport-siste.md, committer lokalt.
+3. Varsel på Macen med første linje i rapporten. Christian sier «push» til Claude for å publisere.
+
+## eval.mjs – måling mot ekte notater
+Sender hvert notat (tekst) med samme instruks og samme «Naa» som da kortet ble laget, og sammenligner
+modellens dato med datoen som står på kortet (selgerens fasit). `--modeller` tester Sonnet/Haiku/Opus 5.5
+og lav innsats. Alle kjøringer logges i `eval-historikk.md`. Nøkkel: `ANTHROPIC_API_KEY`, `laering/.apikey`
+eller feltet `apikey` i datafila.
+
+## Manuell gjennomgang med Claude (utenom automatikken)
 1. Åpne appen i Chrome, innlogget som Christian. Be Claude kjøre `laering/analyse-i-nettleser.js`
    i fanen (koden fjerner navn, adresser og telefonnumre før noe leses ut).
 2. Claude går gjennom `__L1` (kort uten dato som burde hatt dato) og `__L2` (datoer selgerne rettet),

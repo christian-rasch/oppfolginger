@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-14-119">
+<meta name="app-build" content="2026-10-15-120">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1224,6 +1224,26 @@
     if(sbUser){await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();cloudFetchApiKey();pushRefresh();} else setCloudState('login');
     refreshPushGate();
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
+    if(/[?&]laering=1/.test(location.search))laeringEksport(); // læringsgjennomgang: appen åpnes slik av laering/kjor-gjennomgang.command
+  }
+  // ADMIN: anonymisert eksport (notattekst + datoer, UTEN navn/adresser/telefon) til læringsgjennomgangen — lastes ned som fil
+  async function laeringEksport(){
+    const c=getSupabaseClient();if(!c||!sbUser||!isAdmin()){toast('Læringseksport krever admin-innlogging');return;}
+    try{
+      if(!aiKey)await cloudFetchApiKey(); // eval-skriptet trenger appens felles nøkkel
+      const d=await c.from(CLOUD_SYNC_CONFIG.table).select('email,data');if(d.error)throw d.error;
+      const scrub=t=>String(t||'').replace(/\d{8,}|(\d{2,3}\s?){3,4}/g,'[tlf]').replace(/\s+/g,' ').trim();
+      const out=[];
+      (d.data||[]).forEach(function(x){const who=String(x.email||'').split('@')[0];(Array.isArray(x.data)?x.data:[]).forEach(function(i){
+        out.push({who:who,opprettet:i.opprettet?new Date(i.opprettet).toISOString().slice(0,16):null,state:i.state,status:i.status,nextAction:i.nextAction||null,
+          dato:i.dato||null,kommentar:scrub(i.kommentar),
+          ai:i.ai?{dato:i.ai.dato||null,raw:i.ai.raw||null,fallback:!!i.ai.fallback,eksakt:!!i.ai.eksakt,grunn:scrub(i.ai.grunn),build:i.ai.build||null,ts:i.ai.ts?new Date(i.ai.ts).toISOString().slice(0,16):null}:null});});});
+      const medAi=out.filter(function(i){return i.ai;}).length,rettet=out.filter(function(i){return i.ai&&i.ai.dato!==i.dato;}).length;
+      const blob=new Blob([JSON.stringify({hentet:new Date().toISOString(),antall:out.length,medAi:medAi,rettet:rettet,apikey:aiKey||'',kort:out},null,1)],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oppf-laering-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},5000);
+      toast('Læringsdata eksportert ('+out.length+' kort)');
+    }catch(e){toast('Læringseksport feilet');}
   }
   // hent felles Anthropic-nøkkel fra app_config (sentralt styrt) → selgeren slipper å lime inn noe
   async function cloudFetchApiKey(){
