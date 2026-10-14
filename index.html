@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-14-115">
+<meta name="app-build" content="2026-10-14-116">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -83,8 +83,8 @@
   .grp.forfalt{color:#ff7b80} /* forfalt-overskrift: tydelig (litt sterkere) rød tekst; skillelinje arves nøytral fra .grp (som «Alle») */
   .grp.forfalt .gcnt{color:var(--red)}
   /* liten handlingsknapp ved gruppeoverskrift (f.eks. «Fjern alle eldre») */
-  .grp .grp-action{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);background:rgba(255,255,255,.04);border:1px solid var(--hair-2);border-radius:7px;padding:3px 9px;cursor:pointer;transition:.15s}
-  .grp .grp-action:hover{color:var(--red);border-color:rgba(255,90,95,.4);background:rgba(255,90,95,.08)}
+  .grp .grp-action{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--red);background:rgba(255,90,95,.06);border:1px solid rgba(255,90,95,.35);border-radius:7px;padding:3px 9px;cursor:pointer;transition:.15s}
+  .grp .grp-action:hover{border-color:rgba(255,90,95,.6);background:rgba(255,90,95,.14)}
   /* underseksjon (f.eks. i «Uten tidspunkt» under hver salgsrunde) — mindre, dempet */
   .grp.sub{font-size:11px;letter-spacing:.12em;color:var(--ink-faint);margin:10px 0 7px;border-bottom-color:rgba(255,255,255,.035)}
   /* salgsrunde-boks i «Uten tidspunkt»: subtil kant, kompakt, alt på samme venstremarg */
@@ -1602,7 +1602,7 @@
         fb.get('idag').sort(function(a,b){return (+P(a))-(+P(b));}); // «Forfalt i dag»: tidligst på dagen øverst (resten uendret)
         [['idag','Forfalt i dag'],['igar','Forfalt i går'],['denne','Forfalt denne uken'],['forrige','Forfalt forrige uke'],['ukenfor','Forfalt uken før'],['eldre','Forfalt eldre']]
           .forEach(function(p){const a=fb.get(p[0]);if(!a.length)return;
-            const lab=p[0]==='eldre'?'Forfalt eldre<button class="grp-action" data-act="purge-eldre">Fjern alle eldre</button>':p[1];
+            const lab=p[0]==='eldre'?'Forfalt eldre<button class="grp-action" data-act="purge-eldre">Fjern eldre enn 2 uker</button>':p[1];
             G(lab,a,'forfalt');});
       } else { // alle (avtaler-subfane): I dag (inkl. forfalt i dag) / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (eldre forfalte vises kun under Forfalte)
         const wk1=new Date(+startOfWeek(n)+7*864e5),wk2=new Date(+startOfWeek(n)+14*864e5);
@@ -1864,12 +1864,11 @@
     it.waitingSince=Date.now();save();render();
     toastUndo('Tilbud sendt → i dag — '+(it.navn||''),function(){it.waitingSince=prev;save();render();});
   }
-  // fjern KUN kortene i «Eldre»-gruppen under Avtaler → Forfalte (dato eldre enn 2 kalenderuker)
+  // fjern forfalte kort som forfalt for 14 dager eller mer siden (uavhengig av kalenderuke)
   function purgeEldre(){
-    const n=now(),ww=+startOfWeek(n)-14*864e5;
-    const eldre=items.filter(i=>i.state!=='fulgt'&&i.dato&&+startOfDay(p(i.dato))<ww);
-    if(!eldre.length)return;
-    if(!confirm('Fjerne alle eldre forfalte oppfølginger?'))return;
+    const eldre=items.filter(i=>i.state!=='fulgt'&&i.dato&&daysSince(p(i.dato))>=14);
+    if(!eldre.length){toast('Ingen oppfølginger forfalt for 2 uker eller mer siden');return;}
+    if(!confirm('Fjerne '+eldre.length+' oppfølginger som forfalt for 2 uker eller mer siden?'))return;
     const ids=eldre.map(i=>i.id);
     ids.forEach(id=>{const it=byId(id);if(it){it.state='fulgt';it.avgjort=Date.now();}});
     save();render();
