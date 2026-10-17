@@ -4,12 +4,16 @@
 #  Full gjennomgang (Claude, effort high) BARE når det finnes noe å lære av – men aldri oftere enn hver 3. dag
 #  og aldri sjeldnere enn hver 28. dag. Terskler: ≥12 nye AI-kort, eller ≥3 selgerrettelser, eller ≥1 stille feil,
 #  eller ≥2 nye kort uten dato med tidsord.
+#  launchd starter IKKE dette skriptet direkte: macOS nekter zsh fra launchd å lese Skrivebord/Nedlastinger (TCC,
+#  «Operation not permitted», feilkode 127). Derfor starter launchd appen ~/Applications/Oppfolginger-laering.app
+#  (laget med osacompile), som kjører skriptet. Appen må få tilgang til Skrivebord, Nedlastinger og Chrome én gang.
 cd "$HOME/Desktop/Claude Prosjekt 1/oppfolginger-github-pakke" || exit 1
 setopt null_glob   # tomme jokertegn gir tom liste, ikke feil
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 LOGG="laering/gjennomgang.log"; STEMPEL="laering/.sist-kjort"; LAAS="laering/.laas"; FORSOK="laering/.forsok"
 NAA=$(date +%s); DAG=$(date +%Y-%m-%d)
 mkdir -p laering/data
+[[ -f laering/.bare-signal ]] && BARE_SIGNAL=1   # testflagg: stopp før Claude (slett fila etterpå)
 varsle(){ osascript -e "display notification \"${1//\"/}\" with title \"Oppfølginger: læring\"" >/dev/null 2>&1; }
 # lås: ikke to kjøringer samtidig (Macen kan våkne og starte dobbelt)
 if [[ -f "$LAAS" ]] && (( NAA - $(cat "$LAAS") < 3*3600 )); then exit 0; fi
@@ -55,8 +59,8 @@ Utløst av: $GRUNN. Forrige gjennomgang: $( [[ $SIST -gt 0 ]] && date -r "$SIST"
   --allowedTools "Read,Write,Edit,Glob,Grep,Bash(node:*),Bash(git add:*),Bash(git commit:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git checkout -- index.html),Bash(cat:*),Bash(date:*),Bash(sed:*),Bash(python3:*)" \
   >> "$LOGG" 2>&1 &
 CPID=$!
-( sleep 5400; kill "$CPID" 2>/dev/null ) & VAKT=$!          # vakthund: maks 90 minutter
-wait "$CPID"; EXIT=$?; kill "$VAKT" 2>/dev/null
+( sleep 5400; kill "$CPID" 2>/dev/null ) >/dev/null 2>&1 & VAKT=$!   # vakthund: maks 90 min (lukket stdout, ellers henger appen)
+wait "$CPID"; EXIT=$?; pkill -P "$VAKT" 2>/dev/null; kill "$VAKT" 2>/dev/null
 echo "===== $(date '+%Y-%m-%d %H:%M') ferdig (exit $EXIT)" >> "$LOGG"
 # vellykket = exit 0 OG rapporten er skrevet i dag
 if (( EXIT == 0 )) && [[ -f laering/rapport-siste.md ]] && [[ "$(date -r laering/rapport-siste.md +%Y-%m-%d)" == "$DAG" ]]; then
