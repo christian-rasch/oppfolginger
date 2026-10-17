@@ -1,5 +1,17 @@
 # Funn fra gjennomganger
 
+## 17.10.2026 – test: holder pin-STØRRELSE alene for å finne valgt kunde? (104 kort etter 24.09, alle med bilde)
+Tre varianter på samme bilder, Sonnet 5.5 medium, kjørt i app-fanen: A = kun «finn den største pinnen, gjengi etiketten»,
+B = produksjonsinstruksen (build 126), C = B med kortere pin-avsnitt (uten sentrum-søk og navne-advarsler, 14 877 tegn).
+- A fant riktig pin i **101 av 101** vurderbare kort (3 bortfall skyldtes testoppsettet: for lav max_tokens/dobbel JSON).
+  Inkludert Christians tre Sundliveien-importer 17.10 der kortet (gammel «nærmest midten»-regel) var FEIL (TOR 73) og A/C riktig (Raymond).
+- Modellen sa «én pin er tydelig størst» bare i 46/104 (panel 31/70, ny visning 15/31) – men traff likevel. Størrelsesforskjellen
+  er subtil etter komprimering til 1400 px.
+- Tid (median): A 1,8 s · B 2,77 s · C 2,71 s → kortere pin-avsnitt gir INGEN målbar tidsgevinst (instruksen er hurtigbufret;
+  tiden går til bilde + svar). B vs C like i 92/104; avvikene var datostøy (12:00/13:00, 16:30/17:00) og Sundliveien.
+- Sideobservasjon: navn inne i notatet («(NY) Telenor … Finn Eivind Frantzen …») gir tomt navn i ny visning (B og C).
+Konklusjon: behold build 127 (størrelse først i begge visninger). Ikke verdt å kutte mer for fartens skyld.
+
 ## 17.10.2026 (build 126) – første automatiske gjennomgang
 **Utløser:** 65 nye kort, 21 rettelser, 1 stille feil, 28 dager siden sist (aldri kjørt før). NB: «65 nye» er
 siden 03.10 (eval teller 14 dager tilbake når `.sist-kjort` mangler) – 56 av dem lå allerede i fasiten da reglene
