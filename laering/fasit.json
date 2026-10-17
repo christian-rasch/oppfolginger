@@ -1781,9 +1781,9 @@
    "notat": "Ring oå",
    "gull": null,
    "tidFri": true,
-   "usikker": true,
-   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
-   "merknad": "«oå» kan være «på» (ring på døra) eller «nå»; skrevet etter import (AI leste tomt notat). Spørsmål til Christian"
+   "usikker": false,
+   "kilde": "Christian 17.10.2026",
+   "merknad": "«oå» = skrivefeil for «opp»: «Ring opp» uten dag/tid = ring tilbake, ingen dato (Christian 17.10.2026). Selger satte selv man 19.10 kl 15 (personlig valg). Notatet skrevet etter import."
   },
   {
    "id": "nicolai.b|2026-10-15T14:14|dab9f1efb6",

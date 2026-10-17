@@ -1,4 +1,5 @@
 # Eval-historikk (datotolkning på ekte notater)
+Rader til og med 17.10.2026 har UTC-tid (2 timer bak norsk tid); fra nå norsk tid.
 
 | Når | Modell | Innsats | Kort | Riktig dag | Eksakt | Ga ingen dato (feil) | Median tid | Tokens inn/ut |
 |---|---|---|---|---|---|---|---|---|

@@ -23,13 +23,14 @@ curl -s --max-time 10 https://christian-rasch.github.io/oppfolginger/ >/dev/null
 # ---- 1) daglig datahenting via appen (innlogget Chrome) ----
 rm -f "$HOME"/Downloads/oppf-laering-*.json 2>/dev/null
 open -g -a "Google Chrome" "https://christian-rasch.github.io/oppfolginger/?laering=1&_v=$NAA"
-nyfil(){ ls -t "$HOME"/Downloads/oppf-laering-*.json 2>/dev/null | head -1; }
+nyfil(){ local f=("$HOME"/Downloads/oppf-laering-*.json(Nom)); print -r -- "${f[1]}"; }   # (Nom): ingen treff = tom streng, nyeste først. «ls -t» uten treff listet prosjektmappa og ga «laering» 17.10 → ventet ikke på nedlastingen
 VENTET=0; while [[ -z "$(nyfil)" && $VENTET -lt 90 ]]; do sleep 3; VENTET=$((VENTET+3)); done
 osascript -e 'tell application "Google Chrome" to close (every tab of every window whose URL contains "laering=1")' >/dev/null 2>&1
 if [[ -z "$(nyfil)" ]]; then
   echo "$DAG: fikk ingen datafil (ikke innlogget i Chrome?)" >> "$LOGG"; varsle "Fikk ikke hentet data – er du innlogget i appen i Chrome?"; exit 1
 fi
-mv "$(nyfil)" "laering/data/laering-$DAG.json"
+F=$(nyfil); [[ -f "$F" ]] || { echo "$DAG: datafila er borte ($F)" >> "$LOGG"; exit 1; }
+mv "$F" "laering/data/laering-$DAG.json"
 ls -t laering/data/laering-*.json 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null   # behold de 10 siste
 
 # ---- 2) tell læringssignaler (uten Claude) ----
