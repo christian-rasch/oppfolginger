@@ -8,7 +8,7 @@ function laerApi(){
   const block=html.slice(html.indexOf('// [[LAER-START]]'),html.indexOf('// [[LAER-END]]'));
   const helpers=['const pad=','const p=s=>','const dKey=','const sameDay=','const startOfDay=','const startOfWeek=','const toLocal=','const MO=']
     .map(pre=>{const i=html.indexOf('\n  '+pre);if(i<0)throw new Error('fant ikke '+pre);return html.slice(i+1,html.indexOf('\n',i+1));}).join('\n');
-  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,normaliserDato,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
+  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,nextWeekWeekday,normaliserDato,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
 }
 const api=laerApi();
 module.exports={laerApi};
@@ -22,6 +22,12 @@ T('KI 19',19,0);T('kl 8',20,0);T('kl 09',9,0);T('kl19',19,0);T('16.20',16,20);T(
 T('Ring 21 om ikke svart',21,0);T('Ringe 9, Anders',21,0);T('ring 13',13,0);T('Ringe 1830, Talkmore',18,30);
 T('Telenor 1000 og T-We',null);T('100 linje på ene 500 på andre',null);T('sendt 1197',null);T('Sendt 1497, bør svare ja',null);T('fiber 500',null);
 T('Ringe mannen',null);T('Send melding 25. mars 2026',null);T('Ring februar 2027',null);T('binding til 31.12.2027',null);T('Cancelled 2026-08-22. Within',null);T('Følge opp tirsdag, etter 2030',20,30);T('Kontakt i 17/18 tiden tirsdag',17,0);T('i 19-tiden',19,0);T('onsdag på ettermiddag. Rundt 13-15',13,0);T('I morgen etter 18',18,0);T('etter 3 dager',null);T('ring om 2 dager',null);T('Talkmore 2 ubegrensa voksen + 1 14 år 5gig',null);
+// --- 17.10.2026: semikolon = kolon; dd.mm (punktum + maaned) er dato, ikke klokkeslett ---
+T('[tlf] Ice Snakka med Anders (komme tilbake 19;00',19,0);T('M1 06.10 M1 08. Hilde 5 abbonomenter fra ice. Kontakt tirsdag neste uke',null);T('Binding frem til 05.12.2026 Kontaktes mandag',null);T('Kom tilbake lørdag 11.07.26 klokka 11:30.',11,30);T('19:00 08.09',19,0);T('Ring Onsdag 16 september kl 13.00',13,0);T('kl 10.10',10,10);
+// --- «<ukedag> neste uke» = ukedagen i NESTE kalenderuke ---
+const NW=(k,naa,want)=>{const d=api.nextWeekWeekday(k,new Date(naa));ok('neste uke: '+k+' @'+naa.slice(0,10),d?d.toISOString().slice(0,10):null,want);};
+NW('Ring tirsdag neste uke','2026-10-15T14:14','2026-10-20');NW('Ringe fredag neste uke. Er på sjøen','2026-09-14T16:21','2026-09-25');NW('Ringe tirsdag neste uke','2026-10-12T10:00','2026-10-20');NW('ring mandag til uka','2026-10-18T12:00','2026-10-19');NW('neste uke onsdag','2026-10-13T10:00','2026-10-21');
+NW('neste fredag','2026-08-26T16:18',null);NW('Ringe neste uke','2026-09-17T14:35',null);NW('ring tirsdag. neste uke er han borte','2026-10-15T14:14',null);
 // --- tidsord ---
 ok('kveld',api.timeWordFromText('Ring Imrg kveld').hh,21);ok('etter jobb',api.timeWordFromText('kom etter jobb').hh,17);ok('ingen tidsord',api.timeWordFromText('ringe mannen'),null);
 // --- om N dager/uker ---
@@ -67,4 +73,14 @@ N('ila uka (fredag) → mandag',{dato:null},'Ring i løpet av uka','2026-10-02T1
 N('senere i uka (tirsdag) → torsdag',{dato:null},'Komme tilbake senere i uka','2026-10-13T16:08','2026-10-15T12:00');
 N('hastighet er ikke tid',{dato:null},'Telenor 1000 og T-We. Nettet hakker','2026-09-12T15:38',null);
 N('rent info-notat → ingen dato',{dato:null},'Kun 75 binding','2026-10-14T21:09',null);
+// 17.10.2026 (ekte kort): «<ukedag> neste uke» og dd.mm-datoer
+N('ukedag neste uke (torsdag), AI tok +7',{dato:'2026-10-27T12:00',eksaktDato:false},'[tlf] Ring tirsdag neste uke','2026-10-15T14:14','2026-10-20T12:00');
+N('ukedag neste uke (torsdag), AI riktig → urørt',{dato:'2026-10-13T12:00',eksaktDato:false},'Kontakt tirsdag neste uke','2026-10-08T18:15','2026-10-13T12:00');
+N('ukedag neste uke (mandag) = neste kalenderuke',{dato:'2026-09-25T12:00',eksaktDato:false},'Ringe fredag neste uke. Er på sjøen','2026-09-14T16:21','2026-09-25T12:00');
+N('ukedag neste uke, AI tom (mandag) → ikke i morgen',{dato:null},'Ringe tirsdag neste uke','2026-10-12T10:00','2026-10-20T12:00');
+N('ukedag neste uke med klokkeslett beholdes',{dato:'2026-10-21T16:00',eksaktDato:false},'Må tenke følges opp onsdag neste uke etter 16:00','2026-10-14T12:19','2026-10-21T16:00');
+N('ukedag neste uke, AI tok +7 med tid → dag rettes, tid beholdes',{dato:'2026-10-28T16:00',eksaktDato:false},'følges opp onsdag neste uke etter 16:00','2026-10-14T12:19','2026-10-21T16:00');
+N('neste fredag (onsdag) = uka etter, uendret',{dato:null},'Spørre dama om hun fikk snakka med mannen om tilbudet neste fredag','2026-08-26T16:18','2026-09-04T12:00');
+N('dd.mm i notatet er dato, ikke 06:10',{dato:'2026-10-13T12:00',eksaktDato:false},'M1 06.10 M1 08.[tlf]Hilde 5 abbonomenter fra ice. Kontakt tirsdag neste uke','2026-10-08T18:15','2026-10-13T12:00');
+N('semikolon-klokkeslett, AI tom → i dag 19:00',{dato:null},'[tlf] Ice Snakka med Anders (komme tilbake 19;00','2026-10-15T14:56','2026-10-15T19:00');
 console.log(fail?('\n'+fail+' FEIL'):'\nAlle tester OK');process.exit(fail?1:0);

@@ -14,8 +14,15 @@ pleier å rette 12:00 til (siste 40 rettelser, minst 3 treff) og bruker hans van
 Haakon som alltid ringer kl 15 eller 21 får altså sine tider automatisk.
 
 ## Automatikken: lærer når det finnes noe å lære av
-`kjor-gjennomgang.command` startes av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`) hver dag
-09:30 (krever at Macen er på og at Christian er innlogget i appen i Chrome):
+`kjor-gjennomgang.command` startes hver dag 09:30 av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
+– ikke direkte, men via den lille appen `~/Applications/Oppfolginger-laering.app`. Grunn: macOS nekter zsh startet av
+launchd å lese Skrivebord og Nedlastinger (feilkode 127, ingenting i loggen), mens en app kan få den tillatelsen.
+Appen er laget slik (gjenskap ved behov, og signer på nytt etter endring i Info.plist):
+`osacompile -o ~/Applications/Oppfolginger-laering.app fil.applescript` med én linje
+`do shell script "/bin/zsh '<sti til kjor-gjennomgang.command>' >/dev/null 2>&1 || true"`, deretter
+`plutil -replace LSUIElement -bool true .../Contents/Info.plist` og `codesign --force --sign - <app>`.
+Krever at Macen er på og at Christian er innlogget i appen i Chrome. Test uten Claude: `touch laering/.bare-signal`
+og `launchctl kickstart gui/$(id -u)/no.snodriv.oppf-laering` (slett flagget etterpå).
 1. **Daglig, uten Claude:** åpner appen i Chrome med `?laering=1` → appen (admin) laster ned en anonymisert fil
    (notat, datoer, AI-forslag, teksten AI leste, lært-time-flagg, API-nøkkel). Skriptet flytter fila til
    `laering/data/` (10 siste beholdes) og teller læringssignaler med `eval.mjs --bare-data`: nye AI-kort siden

@@ -14,3 +14,10 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 2026-10-14 22:53 | claude-sonnet-5-5 | medium | 157 | 94% | 93% | 97% (65) | 8 | 1 | 2266 ms | 38095/45803 | 97% |
 | 2026-10-14 22:56 | claude-sonnet-5-5 | medium | 157 | 100% | 100% | 97% (65) | 0 | 0 | 2297 ms | 38095/45404 | 97% |
+
+## Mot fasit (laering/fasit.json), fra 15.10.2026
+
+| Når | Modell | Innsats | Kort | Rå: dag | Kjede: dag | Kjede: eksakt | Ingen-dato-feil | Falsk dato | Nye kort: dag | Median | Tokens inn/ut | Cache-treff |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-10-17 07:38 | claude-sonnet-5-5 | medium | 142 | 99% | 99% | 98% (58) | 0 | 0 | 9/9 | 2192 ms | 33874/37647 | 97% |
+| 2026-10-17 07:43 | claude-sonnet-5-5 | medium | 142 | 100% | 100% | 100% (58) | 0 | 0 | 9/9 | 2263 ms | 33874/37340 | 97% |

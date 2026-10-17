@@ -1,5 +1,63 @@
 # Funn fra gjennomganger
 
+## 17.10.2026 (build 126) – første automatiske gjennomgang
+**Utløser:** 65 nye kort, 21 rettelser, 1 stille feil, 28 dager siden sist (aldri kjørt før). NB: «65 nye» er
+siden 03.10 (eval teller 14 dager tilbake når `.sist-kjort` mangler) – 56 av dem lå allerede i fasiten da reglene
+ble laget 15.10, altså lukket bok. **Ekte nye kort (etter fasiten 15.10 01:17): 12**, 9 brukbare i eval (3 fikk
+notatet skrevet etter import), alle merket blindt, 1 usikker («Ring oå»).
+
+**Tall:** 314 kort, 172 med AI, 142 i eval (30 holdt utenfor: notat endret etter import), 42 rettet av selger.
+Stille feil: 9 (1 ny: Haakon «Ringe februar» 09.10, laget på gammel build 109) – alle 9 sto også på lista 15.10
+og er fortsatt ikke rettet av selgerne. Lært klokkeslett: 3 kort (Haakon, 21:00), 0 rettet bort (regelen holder).
+Promptstørrelse 15 277 → 15 543 tegn (+266).
+
+Eval mot fasit (Sonnet 5.5 medium, 142 kort):
+
+| | NYE kort (9, blind) | Kjede: dag | Kjede: eksakt (58 med tid) | Ga ingen dato (feil) | Falsk dato |
+|---|---|---|---|---|---|
+| Før (build 125) | 9/9 | 141/142 (99 %) | 57/58 | 0 | 0 |
+| Etter (build 126) | **9/9** | **142/142 (100 %)** | **58/58** | 0 | 0 |
+
+Ekte treff i appen på de 9 nye: 8/9 – Nicolai «[tlf] Ring tirsdag neste uke» (skrevet torsdag) ble 27.10, selger
+rettet til 20.10. I eval svarte AI riktig på det kortet, men bommet i stedet på Jacobs likelydende «Kontakt tirsdag
+neste uke» fra 08.10 (også torsdag): mønsteret er ekte, modellen er ustabil på akkurat dette.
+
+**Mønstre med bevis → endret:**
+1. **«<ukedag> neste uke»** (7 kort, 6 selgere; 2 bommer: Nicolai 15.10 i appen, Jacob 08.10 i eval). AI leser det
+   av og til som «neste <ukedag>» (= førstkommende + 7). Instruks (DAG): «<ukedag> neste uke»/«til uka»/«neste uke
+   <ukedag>» = ukedagen i NESTE kalenderuke, med eksempler. Kode: `NEXTWEEK_WD_RE` + `nextWeekWeekday()`; vakt etter
+   AI-dato (retter dagen, beholder klokkeslettet) og i sikkerhetsnettet (så «tirsdag neste uke» skrevet mandag ikke
+   blir i morgen).
+2. **dd.mm-datoer lest som klokkeslett** («06.10», «08.09», «05.12.2026», «11.07.26», «31.12.2027»; 6 kort). Kolon-
+   regexen i `timeFromText` gjorde «M1 06.10» til 06:10 (Jacobs kort landet på 20.10 kl 06:10). Nå: punktum + 01–12
+   bak = dato; noe etter neste punktum = dd.mm.åå. Alle ekte punktum-klokkeslett i dataene har 00/20/30 bak, så ingen
+   rammes («kl 10.10» fanges uansett av kl-regelen).
+3. **«19;00»** (Joshua, 1 kort) – semikolon for kolon, åpenbart generell skrivefeil → godtas i samme regex. AI klarte
+   det selv denne gangen; sikkerhetsnettet gjør nå det samme.
+Tester: 7 klokkeslett-tester, 8 nextWeekWeekday-tester, 9 pipeline-tester lagt til – alle OK. Syntaks OK.
+
+**Selgerrettelser (42 med uendret notat):** 17 tolkningsfeil – ALLE fra build 106–109 (før rettingene 117–123) og
+alle treffer nå i eval (imorgen 1200, I morgen etter 18, om to dager, Ringe 1300, Ring 21, 17.00 Imorgen, 25. mars,
+17/18 tiden tirsdag, senere i uka, Ring i februar). 10 rene tidsrettelser (Haakon → 21/15; dekket av lært time fra
+build 125, 3/3 beholdt siden). 8 personlige valg (dag flyttet uten støtte i notatet). 7 der både AI og kort avviker
+(Haakon flytter gjerne «imorgen» én dag ekstra – personlig; «Ringe 9» satt dagen etter – personlig/glipp).
+
+**Bevisst ikke gjort:**
+- Rydding av instruksen: ingen regel har vært ubrukt i 3 gjennomganger ennå (dette er den første). To setninger
+  sier omtrent det samme om «dag/tid trumfer handling» – kandidat for sammenslåing etter 3 gjennomganger.
+- Modellsjekk: ~12 nye kort siden forrige (14.10) < 40.
+- 30 kort holdes utenfor eval fordi notatet er endret etter import; 3–4 av dem skiller seg bare i «!!!» eller
+  telefon-anonymisering. Kan hentes inn med bedre normalisering i eval.mjs (målestøy, ikke appen) – neste gang.
+- «slutten av februar» = 25. (konvensjon i instruksen) – ikke endret, 1 kort.
+- «Ring oå» (Joshua) – usikker, spørsmål til Christian.
+
+**Observasjon utenfor læringen:** 2 kort laget ETTER publiseringen av 125 (15.10 01:37) kom fra app-versjon 109:
+jorgen.f 15.10 07:14 og christian.rasch 16.10 14:26. En telefon med gammel fane får ikke nye regler før appen laster
+på nytt (auto-oppdatereren sjekker bare når fanen er aktiv). Ikke rørt her – bør sjekkes.
+
+**Trend (kjede: dag):** 15.10 før 93 % → 15.10 etter 100 % (lukket bok) → 17.10 før 99 % / etter 100 %. Nye kort
+(blind): 9/9 (appen selv: 8/9). Neste gjennomgang: minst 12 nye kort, eller signal.
+
 ## 15.10.2026 (build 123) – grunnmuren: fasit, kjede-måling, hurtigbuffer, nye regler
 **Tall:** 302 kort, 160 med AI, 54 rettet av selger. Fasit laget for alle 160 (157 brukbare, 3 usikre).
 Eval mot fasit (hele kjeden, Sonnet 5.5 medium, 157 kort):

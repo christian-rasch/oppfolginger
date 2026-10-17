@@ -1,6 +1,6 @@
 {
  "versjon": 1,
- "oppdatert": "2026-10-15",
+ "oppdatert": "2026-10-17",
  "beskrivelse": "Fasit for datotolkning: hva selgeren mente da notatet ble skrevet (bokstavelig lesing). tidFri=true: notatet sier ingen tid, bare dagen teller. usikker=true: telles ikke.",
  "kort": [
   {
@@ -1762,6 +1762,138 @@
    "usikker": false,
    "kilde": "kortets dato (Claude-gjennomgang 15.10.2026: vurdert riktig)",
    "merknad": ""
+  },
+  {
+   "id": "jorgen.f|2026-10-15T07:14|5ea9b346ae",
+   "who": "jorgen.f",
+   "naa": "2026-10-15T07:14",
+   "notat": "Ring fikk ikke tak i kunden",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "ingen dag/tid, handling ring → ingen dato. Notatet er skrevet ETTER import (AI leste bare «(100 mbits)»); holdes utenfor eval"
+  },
+  {
+   "id": "joshua.i|2026-10-15T14:10|5f1cae0e02",
+   "who": "joshua.i",
+   "naa": "2026-10-15T14:10",
+   "notat": "Ring oå",
+   "gull": null,
+   "tidFri": true,
+   "usikker": true,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«oå» kan være «på» (ring på døra) eller «nå»; skrevet etter import (AI leste tomt notat). Spørsmål til Christian"
+  },
+  {
+   "id": "nicolai.b|2026-10-15T14:14|dab9f1efb6",
+   "who": "nicolai.b",
+   "naa": "2026-10-15T14:14",
+   "notat": "[tlf] Ring tirsdag neste uke",
+   "gull": "2026-10-20T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "torsdag 15. okt: «tirsdag neste uke» = tirsdag i neste kalenderuke = 20. okt (AI ga 27. okt som om det sto «neste tirsdag»; selger rettet til 20.)"
+  },
+  {
+   "id": "haakon.f|2026-10-15T14:49|1dbc1744c0",
+   "who": "haakon.f",
+   "naa": "2026-10-15T14:49",
+   "notat": "Syk så måtte legge seg, interessert. Sendt 1497. Ring opp lørdag.",
+   "gull": "2026-10-17T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«Ring opp lørdag»; 1497 er pris. Lært time 21 brukt, selger beholdt"
+  },
+  {
+   "id": "joshua.i|2026-10-15T14:56|9ffb2b84f6",
+   "who": "joshua.i",
+   "naa": "2026-10-15T14:56",
+   "notat": "[tlf] Ice Snakka med Anders (komme tilbake 19;00",
+   "gull": "2026-10-15T19:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«19;00» = 19:00 (semikolon for kolon); klokkeslett uten dag = i dag"
+  },
+  {
+   "id": "haakon.f|2026-10-15T15:39|c23f145d03",
+   "who": "haakon.f",
+   "naa": "2026-10-15T15:39",
+   "notat": "Ring 21 om ikke svart. Alle st og 1000 linje talkmore",
+   "gull": "2026-10-15T21:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«Ring 21» = kl 21 i dag; 1000 er hastighet"
+  },
+  {
+   "id": "nicolai.b|2026-10-16T14:26|e48b25e320",
+   "who": "nicolai.b",
+   "naa": "2026-10-16T14:26",
+   "notat": "Ring tirsdag",
+   "gull": "2026-10-20T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "fredag 16. okt → første tirsdag = 20. okt"
+  },
+  {
+   "id": "christian.rasch|2026-10-16T14:26|01bca28a7a",
+   "who": "christian.rasch",
+   "naa": "2026-10-16T14:26",
+   "notat": "500 only + mobil ubg",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "rent info-notat → ingen dato. Skrevet etter import (AI leste tomt notat); holdes utenfor eval"
+  },
+  {
+   "id": "haakon.f|2026-10-16T15:33|3066a929e5",
+   "who": "haakon.f",
+   "naa": "2026-10-16T15:33",
+   "notat": "Han det står på sov, de skulle be han vare ja. Ring opp om ikke imorgen.",
+   "gull": "2026-10-17T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«Ring opp om ikke imorgen» = i morgen (lørdag 17.). Lært time 21 brukt, selger beholdt"
+  },
+  {
+   "id": "haakon.f|2026-10-16T17:06|b007ec4d39",
+   "who": "haakon.f",
+   "naa": "2026-10-16T17:06",
+   "notat": "Hadde mobilen oppe, skulle svare ja følg opp om ikke, mandag 1297",
+   "gull": "2026-10-19T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«følg opp om ikke, mandag» = mandag 19.; 1297 er pris (ikke 12:97). Lært time 21 brukt, selger beholdt"
+  },
+  {
+   "id": "nicolai.b|2026-10-16T18:01|cf5f3a1e42",
+   "who": "nicolai.b",
+   "naa": "2026-10-16T18:01",
+   "notat": "[tlf] Ring i april To hus, datter og mor Lena Jensen",
+   "gull": "2027-04-01T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«Ring i april» i oktober = 1. april neste år"
+  },
+  {
+   "id": "nicolai.b|2026-10-16T18:17|d99faa52cc",
+   "who": "nicolai.b",
+   "naa": "2026-10-16T18:17",
+   "notat": "Telenor Ring slutten av februar",
+   "gull": "2027-02-25T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 17.10.2026 (blind)",
+   "merknad": "«slutten av februar» = 25. feb (instruksens konvensjon), februar 2027"
   }
  ]
 }
