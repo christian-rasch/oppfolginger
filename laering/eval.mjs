@@ -118,7 +118,7 @@ const kandidater=flag('modeller')?[[APP_MODEL,APP_EFFORT],['claude-haiku-5-5',AP
 const resultater=[];
 for(const [m,e] of kandidater){process.stderr.write('Tester '+m+' ('+e+') på '+sett.length+' kort… ');const r=await kjor(m,e);resultater.push(r);
   process.stderr.write('rå: '+r.raa.dagPct+'% dag · kjede: '+r.pipe.dagPct+'% dag, '+r.pipe.eksaktPct+'% eksakt ('+r.pipe.eksaktAv+'), ingen-dato-feil '+r.pipe.ingenDatoFeil+' · NYE kort: '+(r.nye.dagPct==null?'ingen':r.nye.dag+'/'+r.nye.n+' = '+r.nye.dagPct+'%')+', median '+r.medianMs+' ms, cache '+Math.round(100*r.cacheLest/Math.max(1,r.tokInn+r.cacheLest))+'%\n');}
-const stamp=new Date().toISOString().slice(0,16).replace('T',' ');
+const stamp=new Date().toLocaleString('sv-SE',{timeZone:'Europe/Oslo'}).slice(0,16); // norsk tid (var UTC før 17.10)
 const hist=join(HERE,'eval-historikk.md');
 if(!existsSync(hist)||!readFileSync(hist,'utf8').includes('| Nye kort: dag |'))writeFileSync(hist,(existsSync(hist)?readFileSync(hist,'utf8')+'\n':'# Eval-historikk (datotolkning på ekte notater)\n\n')+'## Mot fasit (laering/fasit.json), fra 15.10.2026\n\n| Når | Modell | Innsats | Kort | Rå: dag | Kjede: dag | Kjede: eksakt | Ingen-dato-feil | Falsk dato | Nye kort: dag | Median | Tokens inn/ut | Cache-treff |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n');
 appendFileSync(hist,resultater.map(r=>'| '+stamp+' | '+r.model+' | '+r.effort+' | '+r.n+' | '+r.raa.dagPct+'% | '+r.pipe.dagPct+'% | '+r.pipe.eksaktPct+'% ('+r.pipe.eksaktAv+') | '+r.pipe.ingenDatoFeil+' | '+r.pipe.falskDato+' | '+(r.nye.dagPct==null?'–':r.nye.dag+'/'+r.nye.n)+' | '+r.medianMs+' ms | '+r.tokInn+'/'+r.tokUt+' | '+Math.round(100*r.cacheLest/Math.max(1,r.tokInn+r.cacheLest))+'% |').join('\n')+'\n');

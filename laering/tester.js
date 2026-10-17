@@ -83,4 +83,6 @@ N('ukedag neste uke, AI tok +7 med tid → dag rettes, tid beholdes',{dato:'2026
 N('neste fredag (onsdag) = uka etter, uendret',{dato:null},'Spørre dama om hun fikk snakka med mannen om tilbudet neste fredag','2026-08-26T16:18','2026-09-04T12:00');
 N('dd.mm i notatet er dato, ikke 06:10',{dato:'2026-10-13T12:00',eksaktDato:false},'M1 06.10 M1 08.[tlf]Hilde 5 abbonomenter fra ice. Kontakt tirsdag neste uke','2026-10-08T18:15','2026-10-13T12:00');
 N('semikolon-klokkeslett, AI tom → i dag 19:00',{dato:null},'[tlf] Ice Snakka med Anders (komme tilbake 19;00','2026-10-15T14:56','2026-10-15T19:00');
+// --- 17.10.2026 (Christian): «Ring oå» = «Ring opp» uten dag/tid = ring tilbake, ingen dato ---
+N('Ring oå (=opp) uten dag → ingen dato',{dato:null},'Ring oå','2026-10-15T14:10',null);N('Ring opp uten dag → ingen dato',{dato:null},'Ring opp','2026-10-15T14:10',null);N('Ring opp lørdag → lørdag',{dato:null},'Sendt 1497. Ring opp lørdag.','2026-10-15T14:49','2026-10-17T12:00');
 console.log(fail?('\n'+fail+' FEIL'):'\nAlle tester OK');process.exit(fail?1:0);
