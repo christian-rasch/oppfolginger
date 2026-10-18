@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-18-128">
+<meta name="app-build" content="2026-10-18-129">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1345,7 +1345,7 @@
     }catch(e){}
   }
 
-  // ---- snarvei «Skjermbilde» (Kontrollsenter på iPad) → innboks i skyen → samme flyt som LIM INN ----
+  // ---- snarvei «Lag oppfølging» (Kontrollsenter på iPad) → innboks i skyen → samme flyt som LIM INN ----
   // Snarveien POSTer skjermbildet til Edge Function «skjermbilde» med selgerens nøkkel og åpner så appen. Her henter appen
   // bildet (tabell oppf_innboks + fil i cardimg), kjører analysen og rydder opp. SQL: supabase/sql/2026-10-18-snarvei.sql.
   const INNBOKS_TABLE='oppf_innboks',NOKKEL_TABLE='oppf_snarvei_nokkel',SNARVEI_K='oppf:snarvei:nokkel';
@@ -1398,11 +1398,11 @@
     catch(e){toast('Kopiering feilet — marker og kopier manuelt');}
   }
   function snarveiSectionHtml(){
-    const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Snarvei «Skjermbilde»</b></div>';
+    const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Snarvei «Lag oppfølging»</b></div>';
     const key=snarveiNokkel();
     if(!key)return head+'<div class="cloud-row cloud-muted">Knappen i Kontrollsenter kan sende skjermbildet rett hit, uten LIM INN. Lag en nøkkel og lim den inn i snarveien én gang.</div>'
       +'<div class="cloud-row cloud-btns"><button class="btn primary" id="snLag">Lag nøkkel</button></div>';
-    return head+'<div class="cloud-row cloud-muted">Nøkkelen din: <code>'+esc(key.slice(0,9))+'…'+esc(key.slice(-4))+'</code>. Lim den inn i snarveien som hode «x-oppf-nokkel».</div>'
+    return head+'<div class="cloud-row cloud-muted">Nøkkelen din: <code>'+esc(key.slice(0,9))+'…'+esc(key.slice(-4))+'</code>. Lim den inn i snarveien «Lag oppfølging» der det står OPPFØLGING.</div>'
       +'<div class="cloud-row cloud-btns"><button class="btn primary" id="snKopier">Kopier nøkkel</button><button class="btn" id="snAdresse">Kopier adresse</button><button class="btn" id="snLag">Lag ny nøkkel</button></div>';
   }
 
