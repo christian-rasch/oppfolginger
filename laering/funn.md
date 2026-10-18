@@ -1,5 +1,22 @@
 # Funn fra gjennomganger
 
+## 17.10.2026 – fartstest: hvor går tiden i «Lim inn»-kallet? (12 nyeste kort med bilde, Sonnet 5.5 medium, Mac/wifi)
+Målt med strømming (tid til første tegn vs. skrivetid). Typisk kort: 2,3–3,3 s totalt, hvorav ca. 1,2–1,8 s er opplasting + bilde
+(566 KB forespørsel) og resten er modellens skriving (ca. 190–300 tokens JSON, ~180 tokens/s).
+- **Hovedfunn:** på 3 av 12 kort (alle «nyere kartvisning»/vanskelige) skriver modellen 500–900 tegn **resonnement i prosa før
+  JSON-en** (appen kaster den). Disse tar 4,4–6,9 s – nesten dobbelt. Prosaen er ekte tankearbeid: tvinges JSON først
+  («foerste tegn SKAL vaere {») faller de til 2,6–3,3 s, men Sundliveien-kortet mistet navn+alder og ett kort flyttet datoen
+  én uke. Reordnet JSON (datoGrunn før dato/nextAction) ga «call» i stedet for «waiting_reply» på «Snakke på fredag…»-kortet.
+  «Maks to setninger» gjorde at modellen ALLTID skrev to setninger → lette kort +0,7 s, sum verre (37,3 → 39,2 s).
+  **Konklusjon: la prompten stå.** Prefill («{» som assistent-start) støttes ikke av modellen (400).
+- Hurtigbuffer: treff vs. bom på den faste instruksen (8 179 tokens) ga INGEN målbar tidsforskjell → 1-times TTL hjelper ikke.
+- Bilde: 1 280 px/0,65 (228 KB) leste likt som 1 400 px/0,72 (566 KB); 1 000 px leste navnet feil («Wakleby»). Ingen tidsgevinst
+  på wifi, men 340 KB mindre å laste opp på mobilnett. Eneste trygge justering, hvis ønsket.
+- Innsats low: likt som medium (4,6 vs 4,9 s på samme kort). Strukturert utdata (output_config.format json_schema) virker og
+  fjerner prosaen, men første kall tok 4,5 s før første tegn (grammatikk-kompilering) – ikke verdt det.
+- Kode: `cloudFetchApiKey` setter `aiWarm=false` selv når nøkkelen er uendret → ping kjøres på nytt ved første «Lim inn»
+  per app-start, og analysen venter på den. Liten gevinst (0–0,5 s), kun første kort.
+
 ## 17.10.2026 – test: holder pin-STØRRELSE alene for å finne valgt kunde? (104 kort etter 24.09, alle med bilde)
 Tre varianter på samme bilder, Sonnet 5.5 medium, kjørt i app-fanen: A = kun «finn den største pinnen, gjengi etiketten»,
 B = produksjonsinstruksen (build 126), C = B med kortere pin-avsnitt (uten sentrum-søk og navne-advarsler, 14 877 tegn).
