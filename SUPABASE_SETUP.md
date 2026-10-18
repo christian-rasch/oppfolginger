@@ -121,3 +121,13 @@ Kjør `supabase/sql/2026-09-10-drift.sql` i SQL Editor (hele fila samlet, trygt 
 - lager `notif_log` + `notif_status` (Edge Function `notify-appointments` logger hver leveranse + hjerteslag pr. kjøring),
 - setter opp nattlig opprydding (pg_cron).
 Edge-funksjonen må deployes på nytt etter SQL-en (se `supabase/functions/notify-appointments/index.ts`).
+
+## Tillegg 2026-10-18 — snarvei «Skjermbilde» (Kontrollsenter på iPad → innboks → appen)
+Kjørt 18.10.2026 via Management API: `supabase/sql/2026-10-18-snarvei.sql` (tabellene `oppf_snarvei_nokkel` og `oppf_innboks`,
+RLS: egen bruker) og Edge Function `skjermbilde` (`supabase/functions/skjermbilde/index.ts`, deployet med `verify_jwt=false` —
+identiteten er selgerens egen nøkkel i hodet `x-oppf-nokkel`, bare sha256-hashen lagres). Bildene legges i bucket `cardimg`
+under selgerens mappe (`<uid>/innboks-<id>.jpg`), så eksisterende storage-policyer gjelder. Appen (build 128+) henter innboksen
+ved åpning/fokus, kjører samme analyse som LIM INN og sletter fil + rad. Nøkkel lages i appen: Min profil → Snarvei «Skjermbilde».
+Snarveien på iPad: Åpne URL `webapp://driv.app.snodriv.no/` → Vent 1 s → Ta skjermbilde → Endre størrelse (1400) → Konverter (JPEG)
+→ Hent innhold på URL (POST til `/functions/v1/skjermbilde`, hode `x-oppf-nokkel`, kropp = fil) → Kopier til utklipp (reserve)
+→ Åpne URL `webapp://christian-rasch.github.io/oppfolginger/`.
