@@ -131,3 +131,14 @@ ved åpning/fokus, kjører samme analyse som LIM INN og sletter fil + rad. Nøkk
 Snarveien på iPad: Åpne URL `webapp://driv.app.snodriv.no/` → Vent 1 s → Ta skjermbilde → Endre størrelse (1400) → Konverter (JPEG)
 → Hent innhold på URL (POST til `/functions/v1/skjermbilde`, hode `x-oppf-nokkel`, kropp = fil) → Kopier til utklipp (reserve)
 → Åpne URL `webapp://christian-rasch.github.io/oppfolginger/`.
+
+## Tillegg 2026-10-20 — snarveien v2: appen åpnes før bildet er lastet opp
+
+- Snarveien «Lag oppfølging» åpner nå Oppfølginger rett etter skjermbildet, og laster opp i bakgrunnen (1400 px, JPEG 0,6).
+  Appen (build -130) ser etter bildet i innboksen flere ganger i ~18 s etter åpning/fokus (`innboksPoll`), så selgeren ser
+  «Henter skjermbildet …» i appen i stedet for en iPad som «fryser» på opplastingen.
+- `supabase/sql/2026-10-20-snarvei-varm.sql`: pg_net + pg_cron-jobb `skjermbilde-varm` som pinger funksjonen hvert 3. minutt
+  (hodet `x-oppf-varm`) så den ikke starter kaldt etter pauser. Fjernes med `select cron.unschedule('skjermbilde-varm');`.
+- `supabase/functions/skjermbilde/index.ts` v2: svarer straks på `x-oppf-varm`; nøkkeloppslag ∥ lesing av kropp, bremse-telling ∥
+  opplasting, `last_used_at` oppdateres etter svaret. Deployes på nytt (Management API, se deploy-skript i økt-notatene, eller
+  Dashboard → Edge Functions → skjermbilde → lim inn koden → Deploy).

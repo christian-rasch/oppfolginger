@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-18-129">
+<meta name="app-build" content="2026-10-20-130">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1027,7 +1027,7 @@
       if(!cloudInitBusy){cloudInitBusy=true;cloudInit().catch(function(){}).then(function(){cloudInitBusy=false;});}
       return;}
     if(!sbUser)return;
-    flushPendingImgs();flushLog();cloudHeartbeat(false);innboksSjekk(); // snarveien kan ha lagt et skjermbilde i innboksen
+    flushPendingImgs();flushLog();cloudHeartbeat(false);innboksSjekk();innboksPoll(); // snarveien kan ha lagt (eller være i ferd med å legge) et skjermbilde i innboksen
     if(cloudState==='syncing'||cloudState==='conflict'||uiBusy())return;
     const t=Date.now();if(t-cloudWakeAt<30000)return; // maks én vekking pr. 30 s
     const stalePull=(t-(+new Date(cmeta(CKEY.pull)||0)))>5*60000;
@@ -1310,7 +1310,7 @@
       renderCloudStatus();
       if(!was&&sbUser){cloudReconcile().then(function(){cloudHeartbeat(true);flushLog();});flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();innboksSjekk();}
       refreshPushGate();});
-    if(sbUser){cloudFetchApiKey();innboksSjekk();await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();pushRefresh();} else setCloudState('login');
+    if(sbUser){cloudFetchApiKey();innboksSjekk();innboksPoll();await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();pushRefresh();} else setCloudState('login');
     refreshPushGate();
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
     if(/[?&]laering=1/.test(location.search))laeringEksport(); // læringsgjennomgang: appen åpnes slik av laering/kjor-gjennomgang.command
@@ -1370,11 +1370,23 @@
       const {data:blob,error:e3}=await c.storage.from(IMG_BUCKET).download(nyeste.path);
       if(e3||!blob)throw new Error((e3&&e3.message)||'tom fil');
       handleImageFile(blob); // → komprimering → AI → kontrollmenyen, nøyaktig som LIM INN (appen lagrer sitt eget kartbilde)
-      rydd();
+      rydd();return true;
     }catch(e){
       logEvent('innboks','hent: '+((e&&e.message)||e));
       if($('pasteModal').classList.contains('open')){setAiStatus('Fikk ikke hentet skjermbildet ('+((e&&e.message)||'feil')+'). Bruk LIM INN.','err');showUpload(true);}
     }finally{innboksBusy=false;}
+  }
+  // Snarveien åpner appen før opplastingen er ferdig (så selgeren slipper å se iPaden «fryse»). Derfor: etter hver åpning/fokus
+  // ser vi etter bildet noen ganger til over ~18 s (hvert oppslag >2 s fra forrige, så sperren i innboksSjekk ikke slår inn).
+  let innboksPollTimer=null;
+  function innboksPoll(){
+    clearTimeout(innboksPollTimer);
+    const t0=Date.now(),steg=[2500,4500,7000,10000,14000,18000];let i=0;
+    const neste=function(){
+      if(i>=steg.length||document.hidden||!sbUser)return;
+      innboksPollTimer=setTimeout(function(){i++;innboksSjekk().then(function(fant){if(!fant)neste();});},Math.max(0,t0+steg[i]-Date.now()));
+    };
+    neste();
   }
   // nøkkel pr. selger: lages her, bare hashen lagres i skyen; selve nøkkelen ligger lokalt så den kan kopieres inn i snarveien
   async function sha256Hex(s){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(d)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
