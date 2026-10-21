@@ -44,7 +44,8 @@ Første 160 kort ble vurdert av Claude 15.10.2026; gjennomgangen merker nye kort
 
 ## eval.mjs – måling mot fasiten
 Sender hvert notat (tekst) med samme instruks, samme meldingsstruktur (fast del hurtigbufret) og samme «Naa»
-som da kortet ble laget. Måler både modellen alene (rå) og hele kjeden (modell + normaliserDato = det selgeren
+som da kortet ble laget. NB: `opprettet`/`ai.ts` i eksporten (og `naa` i fasit.json) er UTC – norsk tid er 1–2 timer
+senere. eval.mjs legger på «Z» før det regner (rettet 21.10.2026; før det var «Naa» 2 timer for tidlig). Måler både modellen alene (rå) og hele kjeden (modell + normaliserDato = det selgeren
 får). Tall: riktig dag, eksakt tid (bare der notatet sier tid), ingen-dato-feil, falsk dato.
 `--modeller` tester Sonnet/Haiku/Opus 5.5 og lav innsats. `--bare-data` gir stille feil uten API-kall.
 Alle kjøringer logges i `eval-historikk.md`. Nøkkel: `ANTHROPIC_API_KEY`, `laering/.apikey` eller feltet

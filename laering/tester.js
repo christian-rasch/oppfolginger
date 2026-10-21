@@ -8,7 +8,7 @@ function laerApi(){
   const block=html.slice(html.indexOf('// [[LAER-START]]'),html.indexOf('// [[LAER-END]]'));
   const helpers=['const pad=','const p=s=>','const dKey=','const sameDay=','const startOfDay=','const startOfWeek=','const toLocal=','const MO=']
     .map(pre=>{const i=html.indexOf('\n  '+pre);if(i<0)throw new Error('fant ikke '+pre);return html.slice(i+1,html.indexOf('\n',i+1));}).join('\n');
-  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,nextWeekWeekday,normaliserDato,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
+  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,nextWeekWeekday,normaliserDato,sisteJsonObjekt,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
 }
 const api=laerApi();
 module.exports={laerApi};
@@ -85,4 +85,27 @@ N('dd.mm i notatet er dato, ikke 06:10',{dato:'2026-10-13T12:00',eksaktDato:fals
 N('semikolon-klokkeslett, AI tom → i dag 19:00',{dato:null},'[tlf] Ice Snakka med Anders (komme tilbake 19;00','2026-10-15T14:56','2026-10-15T19:00');
 // --- 17.10.2026 (Christian): «Ring oå» = «Ring opp» uten dag/tid = ring tilbake, ingen dato ---
 N('Ring oå (=opp) uten dag → ingen dato',{dato:null},'Ring oå','2026-10-15T14:10',null);N('Ring opp uten dag → ingen dato',{dato:null},'Ring opp','2026-10-15T14:10',null);N('Ring opp lørdag → lørdag',{dato:null},'Sendt 1497. Ring opp lørdag.','2026-10-15T14:49','2026-10-17T12:00');
+// --- 21.10.2026 (ekte kort): dagens ukedag + klokkeslett som ikke er passert, men AI satte +7 → i dag ---
+N('samme ukedag + tid ikke passert, AI tok +7 → i dag (Jacob)',{dato:'2026-10-20T17:00',eksaktDato:false},'Kontakt i 17/18 tiden tirsdag','2026-10-13T14:12','2026-10-13T17:00');
+N('samme ukedag + kl 17 rett etter midnatt, AI tok +7 → i dag (Christian)',{dato:'2026-10-27T17:00',eksaktDato:false},'Hjemme tirsdag kl 17','2026-10-20T00:58','2026-10-20T17:00');
+N('samme ukedag + tid PASSERT, AI tok +7 → urørt',{dato:'2026-10-27T17:00',eksaktDato:false},'Hjemme tirsdag kl 17','2026-10-20T18:00','2026-10-27T17:00');
+N('samme ukedag uten klokkeslett, AI tok +7 → urørt',{dato:'2026-10-27T12:00',eksaktDato:false},'Ring opp tirsdag','2026-10-20T10:00','2026-10-27T12:00');
+N('«tirsdag neste uke kl 17» skrevet tirsdag → neste uke, ikke i dag',{dato:'2026-10-27T17:00',eksaktDato:false},'Ring tirsdag neste uke kl 17','2026-10-20T10:00','2026-10-27T17:00');
+N('«neste tirsdag kl 17» skrevet tirsdag → urørt',{dato:'2026-10-27T17:00',eksaktDato:false},'Ring neste tirsdag kl 17','2026-10-20T10:00','2026-10-27T17:00');
+N('fortids-ukedag + klokkeslett → urørt',{dato:'2026-10-27T17:00',eksaktDato:false},'Snakket med kona tirsdag, ring kl 17','2026-10-20T10:00','2026-10-27T17:00');
+N('AI satte i dag + tid ikke passert → i dag (uendret oppførsel)',{dato:'2026-10-20T17:00',eksaktDato:false},'Hjemme tirsdag kl 17','2026-10-20T00:58','2026-10-20T17:00');
+// --- 21.10.2026 (ekte kort): bindings-maaned er ikke oppfoelging naar AI ga null ---
+N('«Binding 20. februar … sende tilbud», AI null → ingen dato (ikke 1. feb)',{dato:null},'Binding 20. februar, kun internett i dag, sende tilbud. Mobil happybytes 10mbit ubegrenset','2026-10-20T00:54',null);
+N('«Ute av binding februar, ringe desember», AI null → desember',{dato:null},'Ute av binding februar, ringe desember når hun holder på å gå ut av binding. Riks og nexgt','2026-09-29T17:47','2026-12-01T12:00');
+N('«Ringe i februar binding til mars», AI null → februar',{dato:null},'Ringe [tlf] Ringe i februar binding til mars. Banhof 500.','2026-10-06T17:46','2027-02-01T12:00');
+N('«Ferdig i binding i juli» alene, AI null → ingen dato',{dato:null},'Har veldig mye streaming. Ferdig i binding i juli.','2026-09-26T22:53',null);
+N('«Binding går ut april», AI null → ingen dato',{dato:null},'Måtte tenke. Binding går ut april','2026-09-17T16:08',null);
+N('«Ringe februar … Binding til mai», AI null → februar (som før)',{dato:null},'Ringe februar. Eier begge husene her 100 linje på ene 500 på andre nexgt. Binding til mai ca.','2026-10-09T18:20','2027-02-01T12:00');
+// --- 21.10.2026: modellen skrev to JSON-objekter («Korrigering: …») på «Komme tilbke» i 3 av 5 kjøringer → bruk det siste ---
+const J=(name,t,want)=>ok('json: '+name,api.sisteJsonObjekt(t),want);
+J('to objekter → det siste',' {"dato":"2026-10-19T21:05","datoGrunn":"a"}\n\nKorrigering: Naa er 19:05 {ikke json}.\n\n{"dato":"2026-10-19T21:15","datoGrunn":"b"}',{dato:'2026-10-19T21:15',datoGrunn:'b'});
+J('ett objekt',' {"a":1,"b":{"c":"}"}}',{a:1,b:{c:'}'}});
+J('avkuttet svar → null','{"a":1,"b":',null);
+J('streng med escapet anførselstegn','{"k":"si \\"hei\\" {"}',{k:'si "hei" {'});
+J('ingen json','bare tekst',null);
 console.log(fail?('\n'+fail+' FEIL'):'\nAlle tester OK');process.exit(fail?1:0);

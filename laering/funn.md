@@ -1,5 +1,89 @@
 # Funn fra gjennomganger
 
+## 21.10.2026 (build 131) – andre automatiske gjennomgang
+**Utløser:** 29 nye kort (med tidsord), 2 uten dato. Forrige gjennomgang 17.10. **Ekte nye AI-kort uten fasit: 58** –
+men 39 av dem er Christians egne snarvei-tester 17.–20.10 (19 tomme notater, 5 kopier av «Mannen roper nei…», 5 kopier
+av Haakons «ring opp imorgen 15», osv.). **Kort fra andre selgere: 14** (Nicolai 2, Jørgen 4, Joshua 3, Haakon 5) –
+alle blindt merket. 6 usikre (se under).
+
+**Tall:** 363 kort, 221 med AI, 183 i eval (31 holdt utenfor: notat endret etter import), 42 rettet av selger (1 ny:
+Joshua «Komme tilbke» 21:05 → 20:00, tidFri). Stille feil: 10 (3 nye – alle Christians tester, se under; de 7 gamle er
+uendret siden 15.10). Lært klokkeslett: 5 kort, 0 rettet bort (regelen holder). Promptstørrelse 15 543 → 15 837 tegn
+(+294 kom med bruksenhetsnummer-regelen i build 127, ikke datoregler; uendret i denne gjennomgangen).
+
+**Målefeil funnet og rettet (eval.mjs, ikke appen):** `opprettet`/`ai.ts` i eksporten er UTC, men eval leste dem som
+norsk tid → «Naa» var 2 timer for tidlig. Det ga feil ukedag for alt skrevet etter kl 22 norsk tid (Christians kort
+«22:35–22:58» 19.10 var i virkeligheten tirsdag 00:35–00:58) og feil «passert»-vurdering («Hjemme 1600» kl 16:08 ble
+lest som 14:08). Eval og fasit var konsekvent feil sammen, så tidligere 100 % sto seg; 12 gamle kort ble sjekket, 2 måtte
+rettes: Haakon «Ringe 9» 08.09 kl 21:17 (= passert → 09.09 kl 21, akkurat det selgeren satte – IKKE personlig valg som
+fasiten sa) og Fredrik «I morgen etter 18» skrevet 00:12 (nå usikker). Appen selv har alltid brukt riktig lokal tid.
+Første eval-rad 21.10 09:35 i eval-historikk (187 kort) er med den gamle feilen; nullpunktet er raden 09:39.
+
+Eval mot fasit (Sonnet 5.5 medium, 183 kort, korrigert tid):
+
+| | NYE kort (51, blind) | Kjede: dag | Kjede: eksakt (64 med tid) | Ga ingen dato (feil) | Falsk dato |
+|---|---|---|---|---|---|
+| Før (build 130) | 49/51 (96 %) | 180/183 (98 %) | 64/64 | 0 | 2 |
+| Etter, vakter (09:41/09:43/09:54) | 50/51 | 181 / 180 / 181 | 64 / 63 / 64 | 1 / 1 / 1* | **0** |
+| Etter, + JSON-fiks (09:58, build 131) | **51/51 (100 %)** | **182/183 (99 %)** | **64/64** | **0** | **0** |
+
+\* «ingen dato» i de tre mellomkjøringene var alltid Joshua «Komme tilbke»: modellen skrev TO JSON-objekter (se funn 3).
+Appen selv traff på de nye: **14/14 hos de andre selgerne**, 49/52 totalt – de 3 bommene er Christians tester («Binding
+20. februar … sende tilbud» ×2 og «Hjemme tirsdag kl 17»), begge mønstrene rettet. Eneste gjenværende bom: Nicolai «Ring
+ila neste uke» (modellen velger torsdag i stedet for mandag neste uke; ustabil, gammelt kort).
+
+**Mønstre med bevis → endret (kode mellom LAER-START/END + én linje i parseAiJson; instruksen urørt):**
+1. **Dagens ukedag + klokkeslett som ikke er passert, AI satte +7.** 2 kort: Jacob «Kontakt i 17/18 tiden tirsdag»
+   (13.10 14:12, bommet i appen og i eval 09:39) og Christian «Hjemme tirsdag kl 17» (tirsdag 00:58, bommet i appen).
+   Instruksen sier allerede «= I DAG»; vakten i koden dekket bare retningen «AI satte i dag → behold». Ny vakt: samme
+   ukedag + tid i notatet som ikke er passert + AI-dato = i dag+7 → i dag med notatets klokkeslett. Unntak: «neste
+   tirsdag», «tirsdag neste uke», fortidsord («snakket med kona tirsdag»), tid passert.
+2. **Bindings-måned i sikkerhetsnettet.** Christian «Binding 20. februar, kun internett i dag, sende tilbud» ×2: AI
+   svarte riktig null, men månedsfallbacken i koden tok «februar» → 1. feb 2027 (falsk dato). Instruksen sier at
+   «binding til <måned>»/«til <måned>»/«ut <måned>» ikke er oppfølging – nå gjør koden det samme (`oppfMonth`: første
+   måned som IKKE står etter binding/bundet/ferdig/til/ut/frem). «Ute av binding februar, ringe desember» → desember;
+   «Ringe i februar binding til mars» → februar (som før). 1 unikt notat, men mønsteret er åpenbart generelt (Haakon
+   skriver «binding til mai/mars/april» i 8 kort).
+3. **To JSON-objekter i AI-svaret.** Joshua «Komme tilbke» ga «ugyldig JSON» i 3 av 5 eval-kjøringer. Direkte test (3
+   kall): modellen skriver først ett JSON-objekt, så «Korrigering: Naa er 19:05 …» og et nytt, rettet objekt. Både appen
+   (`parseAiJson`) og eval tok fra første «{» til siste «}» → JSON.parse feilet → appen gjorde et NYTT API-kall (inntil 4
+   forsøk, nytt bilde opp hver gang = sekunder ekstra for selgeren), eval ga «ingen dato». Fartstesten 17.10 så det samme
+   («dobbel JSON») men trodde det var testoppsettet. Ny `sisteJsonObjekt()` (LAER-blokken, testet): ved parse-feil brukes
+   det siste komplette objektet (det rettede). Eval gjør nå det samme som appen. Eneste endring utenfor LAER-blokken: én
+   linje i `parseAiJson`.
+4. Rydding: fortids-regexen som sto inne i sikkerhetsnettet er nå `FORTID_RE` og brukes av begge vaktene.
+Tester: 14 pipeline-tester + 5 JSON-tester lagt til (alle OK, 1 sjekker at gammel oppførsel «AI satte i dag» er uendret). Syntaks OK.
+
+**Modellsjekk (≥40 nye kort siden 14.10; 183 kort, korrigert tid, vakter inne, før JSON-fiksen):**
+
+| Modell | Innsats | Kjede: dag | Nye kort | Eksakt | Ingen dato | Falsk | Median |
+|---|---|---|---|---|---|---|---|
+| Sonnet 5.5 (i dag) | medium | 181/183 (99 %) | 50/51 | 64/64 | 1 (JSON) | 0 | 2 272 ms |
+| Sonnet 5.5 | low | 181/183 (99 %) | 50/51 | 64/64 | 1 (JSON) | 0 | 2 254 ms |
+| Opus 5.5 | medium | 183/183 (100 %) | 51/51 | 64/64 | 0 | 0 | 4 626 ms |
+| Haiku 5.5 | medium | 177/183 (97 %) | 48/51 | 63/64 | 1 | 2 | 4 204 ms |
+
+Opus er +1 prosentpoeng (terskel for bytte: ≥3) og dobbelt så treg; low er like god men ikke 30 % raskere. Haiku er
+dårligere rått (90 %) og tregere (skriver 3,5× så mange tokens). **Beholder Sonnet 5.5 medium.** Neste modellsjekk ved
+≥40 nye kort etter 21.10.
+
+**Bevisst ikke gjort:**
+- «i morgen» rett etter midnatt (Christian ×3 kl 00:35, Fredrik 00:12 – selgeren satte «dagen som kommer», bokstavelig er
+  det dagen etter): tvetydig, 2 selgere men bare 4 kort og ett ekte → usikker i fasit + spørsmål til Christian.
+- «Ring om en måned» (Jørgen, 1 kort): AI tok den selv (20.11). `daysAheadFromText` kan ikke «måned» – kandidat hvis det
+  kommer flere.
+- «Ring ila neste uke» (Nicolai 28.09, gammelt kort): modellen svarer vekselvis mandag/torsdag neste uke (bommet i begge
+  21.10-kjøringene, traff 17.10). 1 kort, ustabil modell, ingen regel.
+- «Kunden er bunnet opp … til juni 2027 ring 2 måneder før» (Jørgen): AI regnet selv ut 1. april 2027. Fasit = det.
+- «03.11.2025» alene (Christian-test ×2): instruksen sier full dato m/årstall er systemdato → null; usikker i fasit.
+- Rydding av instruksen: 2. automatiske gjennomgang, ingen regel ubrukt i 3 runder ennå. Kandidat fortsatt: to setninger
+  om «dag/tid trumfer handling».
+- Bildekomprimering 1 280 px/0,65 (fartstest 17.10): fortsatt ikke gjort – ikke en datoregel.
+
+**Trend (kjede: dag):** 17.10 før 99 % / etter 100 % → 21.10 (korrigert tid) før 98 % / etter 99 % (182/183). Nye kort
+(blind): 9/9 (17.10) → 49/51 før, 51/51 etter (21.10). Eneste bom er «ila neste uke» (modellstøy, gammelt kort).
+Neste gjennomgang: minst 12 nye kort, eller signal. Svar fra Christian på midnatt-spørsmålet avgjør 4 usikre kort.
+
 ## 17.10.2026 – fartstest: hvor går tiden i «Lim inn»-kallet? (12 nyeste kort med bilde, Sonnet 5.5 medium, Mac/wifi)
 Målt med strømming (tid til første tegn vs. skrivetid). Typisk kort: 2,3–3,3 s totalt, hvorav ca. 1,2–1,8 s er opplasting + bilde
 (566 KB forespørsel) og resten er modellens skriving (ca. 190–300 tokens JSON, ~180 tokens/s).
