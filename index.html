@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-20-130">
+<meta name="app-build" content="2026-10-21-131">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -758,6 +758,13 @@
     if(!m||N[m[1]]==null)return null;return N[m[1]]*(/^uke/.test(m[2])?7:1);
   }
   const TODAY_RE=/(^|[^a-zæøå])(i\s?dg|idag|i\s?kvld|ikveld|i\s?kveld)(?![a-zæøå])/i;
+  // fortidsord rett foer en ukedag («møtte kona torsdag», «snakket med han tirsdag») → ukedagen er ikke en avtale
+  const FORTID_RE=/(?:møtte|motte|var|snakket|snakka|prøvde|proevde|besøkte|ringte|sendte|traff|kom|hadde)\s+(?:\w+\s+){0,3}$/;
+  // foerste maanedsnavn i notatet som er en OPPFOELGING – ikke en binding/et maal («binding til mai», «ute av binding februar», «ferdig i binding i juli», «til februar»). Returnerer MONTH_RE-treffet eller null
+  function oppfMonth(k){k=String(k||'');const re=new RegExp(MONTH_RE.source,'gi');let m;
+    while((m=re.exec(k))){const foran=k.slice(Math.max(0,m.index-24),m.index+m[1].length);
+      if(!/(?:bind\w*|bundet|bunnet|ferdig|\btil|\but|\bfrem|\bfram)\s+(?:(?:i|til|av)\s+)?(?:\d{1,2}\.?\s+)?$/i.test(foran))return m;}
+    return null;}
   // «tirsdag neste uke» / «fredag til uka» / «neste uke onsdag» = den ukedagen i NESTE kalenderuke (man–søn) kl 12:00, ellers null.
   // Ikke det samme som «neste tirsdag» (= foerstkommende + 7). AI blander dem av og til (torsdag: «tirsdag neste uke» ble 27. okt, ikke 20.)
   const NEXTWEEK_WD_RE=/(?:^|[^a-zæøå])(mandag|tirs(?:dag)?|ons(?:dag)?|tors(?:dag)?|fre(?:dag)?|lør(?:dag)?|søn(?:dag)?)\s+(?:neste|til)\s+uk[ae]n?(?![a-zæøå])|(?:^|[^a-zæøå])(?:neste|til)\s+uk[ae]n?\s+(?:paa\s+|på\s+)?(mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag)(?![a-zæøå])/i;
@@ -780,6 +787,11 @@
         if(wm0&&!wm0[1]&&sameDay(d0,now())&&WNUM[wm0[2]]===d0.getDay()){const harTid=timeFromText(o.kommentar)||!(d0.getHours()===12&&d0.getMinutes()===0);
           if(harTid&&(d0.getHours()*60+d0.getMinutes())>(now().getHours()*60+now().getMinutes())){/* «tirsdag 17/18-tiden» skrevet tirsdag kl 12 = i dag */}
           else{d0.setDate(d0.getDate()+7);o.dato=toLocal(d0);}}}
+      // omvendt: notatet har DAGENS ukedag + et klokkeslett som ikke er passert, men AI satte +7 («Kontakt i 17/18 tiden tirsdag» skrevet tirsdag 14:12 → 20.10; «Hjemme tirsdag kl 17» tirsdag 00:58 → 27.10) → i dag
+      if(!o.eksaktDato){const kl1=' '+o.kommentar.toLowerCase(),wm1=WDRE.exec(kl1),tt1=timeFromText(o.kommentar);
+        if(wm1&&!wm1[1]&&tt1&&WNUM[wm1[2]]===now().getDay()&&!nextWeekWeekday(o.kommentar,now())&&!FORTID_RE.test(kl1.slice(Math.max(0,wm1.index-30),wm1.index+1))){
+          const i7=startOfDay(now());i7.setDate(i7.getDate()+7);
+          if(sameDay(p(o.dato),i7)&&(tt1.hh*60+tt1.mm)>(now().getHours()*60+now().getMinutes())){const d6=startOfDay(now());d6.setHours(tt1.hh,tt1.mm,0,0);o.dato=toLocal(d6);}}}
       // «tirsdag neste uke» = tirsdagen i NESTE kalenderuke; AI bruker av og til «neste tirsdag»-regelen (+7) → rett dagen, behold klokkeslettet
       if(!o.eksaktDato){const nw=nextWeekWeekday(o.kommentar,now());if(nw&&!sameDay(nw,p(o.dato))){const d4=p(o.dato);nw.setHours(d4.getHours(),d4.getMinutes(),0,0);o.dato=toLocal(nw);}}
       // «ringe 21» som AI tolket som den 21. i maaneden (eksakt dato) → det er et klokkeslett: i dag kl 21 (passert → i morgen). Krever at notatet ikke har maaned/«den»/dato
@@ -797,7 +809,7 @@
     // sikkerhetsnett: notatet nevner en ukedag men dato mangler/ble nullet → neste forekomst kl 12:00 (dagens ukedag = +7)
     if(!o.dato){
       const kl=' '+o.kommentar.toLowerCase();let wm=WDRE.exec(kl);
-      if(wm&&/(?:møtte|motte|var|snakket|snakka|prøvde|proevde|besøkte|ringte|sendte|traff|kom|hadde)\s+(?:\w+\s+){0,3}$/.test(kl.slice(Math.max(0,wm.index-30),wm.index+1)))wm=null; // fortid → ikke en avtale
+      if(wm&&FORTID_RE.test(kl.slice(Math.max(0,wm.index-30),wm.index+1)))wm=null; // fortid → ikke en avtale
       const UKA_RE=/\b(?:ila|i\s?l[øo]pet\s+av|senere\s+i|innen|denne|i)\s+uk[ae]n?\b/i; // «ila uka», «senere i uka», «denne uka» = torsdag denne uka (fre/helg → mandag)
       if(wm){
         const want=WNUM[wm[2]],nw=nextWeekWeekday(o.kommentar,now()),d=nw||startOfDay(now());
@@ -813,8 +825,8 @@
         const setT=d=>{if(tt)d.setHours(tt.hh,tt.mm,0,0);else if(tw)d.setHours(tw.hh,tw.mm,0,0);else d.setHours(12,0,0,0);return d;};
         if(ahead){ // «ringe om en uke», «om to dager»
           const d=setT(startOfDay(now()));d.setDate(d.getDate()+ahead);o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
-        else if(MONTH_RE.test(o.kommentar)){ // «ringe februar» uten dato fra AI → 1. i maaneden, neste gang den kommer
-          const mo=MONTH_NUM[MONTH_RE.exec(o.kommentar)[2].slice(0,3).toLowerCase()],d=new Date(now().getFullYear(),mo,1,12,0,0,0);
+        else if(oppfMonth(o.kommentar)){ // «ringe februar» uten dato fra AI → 1. i maaneden, neste gang den kommer. Bindings-/maal-maaneder («binding 20. februar») teller ikke
+          const mo=MONTH_NUM[oppfMonth(o.kommentar)[2].slice(0,3).toLowerCase()],d=new Date(now().getFullYear(),mo,1,12,0,0,0);
           if(d<now())d.setFullYear(d.getFullYear()+1);o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
         else if(UKA_RE.test(o.kommentar)&&!/neste\s+uke/i.test(o.kommentar)){ // «ring ila uka» → torsdag denne uka; torsdag→fredag; fredag/helg→mandag
           const d=setT(startOfDay(now())),wd=d.getDay();let want=4;if(wd===4)want=5;else if(wd===5||wd===6||wd===0)want=1;
@@ -838,6 +850,19 @@
       else{const lh=learnedHour();if(lh!=null&&lh!==12&&(+d-+now())<15*864e5){d.setHours(lh,0,0,0);if(d>now()){o.dato=toLocal(d);o.datoTidLaert=lh;}}}
     }
     return o;
+  }
+  // Modellen skriver av og til TO JSON-objekter («…} Korrigering: … {…}»). Fra foerste «{» til siste «}» er da ugyldig → bruk det SISTE komplette objektet som lar seg lese (det rettede). null hvis ingen.
+  function sisteJsonObjekt(t){
+    t=String(t||'');let last=null;
+    for(let i=t.indexOf('{');i>=0;i=t.indexOf('{',i+1)){
+      let d=0,inS=false,j=i;
+      for(;j<t.length;j++){const c=t[j];
+        if(inS){if(c==='\\')j++;else if(c==='"')inS=false;}
+        else if(c==='"')inS=true;else if(c==='{')d++;else if(c==='}'){d--;if(d===0)break;}}
+      if(d!==0)break; // ubalansert → avkuttet svar
+      try{last=JSON.parse(t.slice(i,j+1));i=j;}catch(e){}
+    }
+    return last;
   }
   // [[LAER-END]]
   // «Sist aktiv»-etikett i admin-lista: I dag/I går + kl., ellers antall dager siden
@@ -2809,7 +2834,7 @@
     t=t.replace(/```json/gi,'').replace(/```/g,'').trim();
     const a=t.indexOf('{'),b=t.lastIndexOf('}');
     if(a<0||b<a)throw new Error('fant ikke JSON i svaret');
-    const o=JSON.parse(t.slice(a,b+1));
+    let o;try{o=JSON.parse(t.slice(a,b+1));}catch(e){o=sisteJsonObjekt(t);if(!o)throw e;} // to objekter i svaret («Korrigering: …») → det siste; ellers samme feil som foer (→ nytt forsoek)
     o.navn=String(o.navn||'').trim();o.adresse=String(o.adresse||'').replace(/\s+[HULK]\d{4}\b/gi,'').replace(/\s{2,}/g,' ').trim(); // bruksenhetsnummer (H0101 o.l.) skal ikke med i adressen (Christian 17.10.2026)
     o.telefon=String(o.telefon||'').trim();o.salgsrunde=shortRunde(o.salgsrunde);
     o.sfNr=String(o.sfNr||'').replace(/\D/g,''); // besøksnummer = kun sifrene

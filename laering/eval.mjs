@@ -42,6 +42,9 @@ const fasit=existsSync(fasitFil)?JSON.parse(readFileSync(fasitFil,'utf8')):{kort
 const F=new Map(fasit.kort.map(e=>[e.id,e]));
 const idOf=k=>k.who+'|'+k.opprettet+'|'+createHash('md5').update(k.kommentar||'').digest('hex').slice(0,10);
 const dag=s=>(s||'').slice(0,10);
+// «opprettet»/«ai.ts» i eksporten er UTC (toISOString), mens kortets datoer er norsk tid. Uten «Z» leser Node strengen som lokal tid
+// → «Naa» ble 2 timer for tidlig (feil ukedag etter kl 22 norsk tid, feil «passert»-vurdering). Rettet 21.10.2026.
+const naaAv=k=>new Date((k.ai&&k.ai.ts||k.opprettet)+(/Z$|[+-]\d\d:\d\d$/.test(k.ai&&k.ai.ts||k.opprettet)?'':':00Z'));
 // alle AI-kort med fasit (ikke usikre) + umerkede AI-kort med tidsord (provisorisk fasit = kortets dato)
 const TW=/(i ?dag|i ?morgen|imrg|i ?mrg|imorra|i ?kveld|mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag|\b(man|tirs|ons|tors|fre|lør|søn)\b|neste uke|til uka|uke|\bkl\b|\bk[iI1]\s?\d|\d{1,2}[:.]\d{2}|\b\d{4}\b|\b(jan|feb|mars|april|mai|juni|juli|aug|sep|okt|nov|des)\w*|\d{1,2}[./]\d{1,2}|etter jobb|ettermiddag|formiddag|senere|tilbake|nyttår|jul\b|om \w+ (dag|uke)|ring\w* \d)/i;
 const normN=s=>String(s||'').replace(/\s*\(\d+\s*mbits?\)/gi,'').replace(/\s+/g,' ').trim();
@@ -57,7 +60,7 @@ const umerket=alle.filter(x=>x.prov).length;
 // «nye» kort = AI-tolket etter forrige gjennomgang (--siden ISO, ellers laering/.sist-kjort, ellers 14 dager tilbake). Det er den ekte testen: regler laget FØR disse kortene fantes.
 const sidenArg=arg('siden',null);
 const SIDEN=sidenArg?new Date(sidenArg):(existsSync(join(HERE,'.sist-kjort'))?new Date(+readFileSync(join(HERE,'.sist-kjort'),'utf8').trim()*1000):new Date(Date.now()-14*864e5));
-const erNy=x=>new Date(x.k.ai.ts||x.k.opprettet)>SIDEN;
+const erNy=x=>naaAv(x.k)>SIDEN;
 const nye=alle.filter(erNy);
 // laert klokkeslett: hvor ofte retter selgeren bort fra timen appen laerte? (krever ai.tidLaert i eksporten, build ≥125)
 const laert=data.kort.filter(k=>k.ai&&k.ai.tidLaert!=null),laertRettet=laert.filter(k=>k.ai.dato&&k.dato&&k.ai.dato!==k.dato&&k.ai.dato.slice(0,10)===k.dato.slice(0,10)).length;
@@ -68,7 +71,7 @@ const stille=alle.filter(x=>!x.prov&&x.k.state!=='fulgt'&&(x.k.ai.dato||null)===
 const rettet=alle.filter(x=>!x.prov&&(x.k.ai.dato||null)!==(x.k.dato||null)).length;
 const nyeSignal={nye:nye.length,nyeUmerket:nye.filter(x=>x.prov).length,nyeRettet:nye.filter(x=>(x.k.ai.dato||null)!==(x.k.dato||null)).length,
   nyeUtenDatoMedTidsord:nye.filter(x=>x.k.state!=='fulgt'&&!x.k.dato&&TW.test(x.k.kommentar||'')).length,
-  nyeStilleFeil:stille.filter(s=>new Date(s.naa)>SIDEN).length,siden:SIDEN.toISOString().slice(0,16)};
+  nyeStilleFeil:stille.filter(s=>new Date(s.naa+':00Z')>SIDEN).length,siden:SIDEN.toISOString().slice(0,16)};
 
 if(flag('bare-data')){
   const r={data:dataFile.split('/').pop(),kortMedFasit:alle.length-umerket,umerket,notatEndretEtterImport:endret,rettetAvSelger:rettet,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},signal:nyeSignal,stilleFeil:stille,promptTegn:STATIC.length};
@@ -84,7 +87,7 @@ if(flag('bare-data')){
 const apiKey=process.env.ANTHROPIC_API_KEY||(existsSync(join(HERE,'.apikey'))?readFileSync(join(HERE,'.apikey'),'utf8').trim():'')||data.apikey||'';
 if(!apiKey){console.error('Mangler API-nøkkel (ANTHROPIC_API_KEY, laering/.apikey eller "apikey" i datafila).');process.exit(2);}
 async function spor(model,effort,x){
-  const naa=new Date(x.k.ai.ts||x.k.opprettet);
+  const naa=naaAv(x.k); // norsk tid (UTC-streng + Z)
   const dyn=promptApi(naa).dynamisk+'\n\nDENNE GANGEN ER DET IKKE NOE BILDE. Her er teksten i det blaa notatet ved den valgte pinen, ordrett: «'+x.k.kommentar+'». Panelet viser ingen andre opplysninger. Svar med JSON-objektet som beskrevet (navn/adresse/telefon/sfNr kan vaere tomme).';
   const t0=Date.now();
   const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
@@ -93,7 +96,8 @@ async function spor(model,effort,x){
   if(d.type==='error')throw new Error(model+': '+(d.error&&d.error.message||'api-feil'));
   const txt=(d.content||[]).map(c=>c.type==='text'?c.text:'').join('\n').replace(/```json/gi,'').replace(/```/g,'');
   let o={dato:null,eksaktDato:false,datoGrunn:'(ugyldig JSON)',kommentar:x.k.kommentar};
-  try{const a=txt.indexOf('{'),b=txt.lastIndexOf('}');const j=JSON.parse(txt.slice(a,b+1));o={dato:typeof j.dato==='string'?j.dato.slice(0,16):null,eksaktDato:!!j.eksaktDato,datoGrunn:String(j.datoGrunn||'').slice(0,90),kommentar:x.k.kommentar};}catch(e){}
+  try{const a=txt.indexOf('{'),b=txt.lastIndexOf('}');let j;try{j=JSON.parse(txt.slice(a,b+1));}catch(e){j=api.sisteJsonObjekt(txt);if(!j)throw e;} // to objekter → det siste (som appen)
+    o={dato:typeof j.dato==='string'?j.dato.slice(0,16):null,eksaktDato:!!j.eksaktDato,datoGrunn:String(j.datoGrunn||'').slice(0,90),kommentar:x.k.kommentar};}catch(e){}
   const raa=o.dato;
   api.normaliserDato(o,{now:naa,learnedHour:null});
   const u=d.usage||{};
