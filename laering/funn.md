@@ -1,5 +1,46 @@
 # Funn fra gjennomganger
 
+## 23.10.2026 (build 134) – Christian snur regelen for samme ukedag med klokkeslett
+Utløser: Christian leste endringene fra 21.10 og sa at «Hjemme tirsdag kl 17» skrevet en tirsdag skal bety NESTE tirsdag.
+
+### Svar fra Christian (gjelder som regel)
+- **Et ukedagsnavn er alltid kommende forekomst, aldri i dag – også med klokkeslett.** Mener selgeren i dag, skal han skrive
+  «kommer hjem kl 17» (uten ukedag). «Noen ting må selgeren lære seg.» Kode: unntaket fra 17.10 (samme ukedag + tid ikke passert
+  = i dag) og vakten fra 21.10 (AI tok +7 → i dag) er fjernet; samme ukedag → alltid +7. Instruksen er uendret – modellen satte
+  alt +7 på begge kortene, det var koden som overstyrte. 4 tester snudd, alle OK.
+- Konsekvens: Jacobs «Kontakt i 17/18 tiden tirsdag» (13.10 kl 14:12) får fasit 20.10 kl 17, selv om Jacob selv flyttet kortet
+  til 13.10 kl 17:15. Christian vet det og vil ha den enkle regelen. Christians testkort «Hjemme tirsdag kl 17» → 27.10 (står riktig).
+- Bevisst ikke gjort: ingen ny instrukstekst (modellen gjør alt dette riktig selv); ingen eval kjørt (API).
+
+## 22.10.2026 (build 133) – svar fra Christian + regel for «i morgen» rett etter midnatt
+Utløser: Christian svarte på spørsmålene fra 17.10 og 21.10 i en vanlig økt (ingen automatisk kjøring; signal 22.10: 8 nye, 2 rettet, 0 stille).
+
+### Svar fra Christian (gjelder som regler fremover – still ikke spørsmålene igjen)
+- **«I morgen» rett etter midnatt (00:00–04:59) = dagen som kommer**, altså kalenderdagen som nettopp har begynt, ikke dagen etter.
+  Bevis: Fredrik «I morgen etter 18» kl 00:12 → satte samme dag; Christian «ring opp imorgen 15» kl 00:35. Kode (normaliserDato):
+  når AI har satt kalenderdagen etter og klokka er før 05, trekkes én dag (klokkeslettet beholdes); fallback-stien («imrg» uten dato
+  fra AI) bruker +0 dager før kl 05. 6 nye tester i tester.js. Instruksen er uendret (15 837 tegn). Fasit: Fredriks kort ikke
+  usikkert lenger (gull 15.09 kl 18); Christians 3 kopier → 20.10 kl 15 (merket test).
+- **Et notat som bare er en full dato («03.11.2025») skal gi ingen dato**, slik instruksen alt sier. Fasit: 2 kort → ingen, ikke usikre.
+- **Joshuas «Ring oå» = «Ring opp», uten tidspunkt** → ingen dato. Fasit bekreftet.
+- **Christians egne kort teller som ekte selgerkort – unntatt når han tester.** Nytt fasit-felt `test: true`: 43 kort merket
+  (alle med «test» i merknaden + snarvei-testene 18.–20.10). eval.mjs holder dem utenfor alle tall, og oppdager umerkede
+  testkort fra ham selv (tomt notat, kopi av eget notat innen 24 t, ≥3 andre kort fra ham innen ±10 min → `testkort` i utdata).
+  Dermed er «nye kort» ekte selgerkort igjen (21.10 var 39 av 58 nye kort tester).
+- **De 10 stille feilene: la stå** (7 forfalte hos Haakon/Eskil fra september, 3 av Christians testkort). Nytt fasit-felt
+  `laStaa: true` → holdes utenfor «stille feil» og rapportens «bør rettes».
+
+### Bevisst ikke gjort
+- Ukedag rett etter midnatt («Ring tirsdag» skrevet tirsdag 00:30 → koden gir +7 dager). Christians svar gjaldt «i morgen»;
+  eneste kort er hans eget «Hjemme tirsdag kl 17» (test, og det har klokkeslett → alt dekket av vakten fra 21.10). Ingen regel
+  før mønsteret dukker opp hos en selger.
+- Ingen eval-måling kjørt (API). Regelen er smal (krever «i morgen»-ord + klokke før 05 + AI på dagen etter) og kodetestet.
+  Neste automatiske gjennomgang måler mot build 133 som nullpunkt.
+
+### Ellers
+- Spørsmål 4 fra 21.10 (ucommitet innboks-polling fra 20.10): ligger fortsatt ucommitet i index.html sammen med dette (build 133).
+  Christian vurderer å gå over til ren LIM INN-snarvei uten opplasting; da trengs ikke pollingen.
+
 ## 21.10.2026 (build 131) – andre automatiske gjennomgang
 **Utløser:** 29 nye kort (med tidsord), 2 uten dato. Forrige gjennomgang 17.10. **Ekte nye AI-kort uten fasit: 58** –
 men 39 av dem er Christians egne snarvei-tester 17.–20.10 (19 tomme notater, 5 kopier av «Mannen roper nei…», 5 kopier

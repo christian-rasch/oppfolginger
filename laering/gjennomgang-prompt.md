@@ -14,6 +14,12 @@ og nøktern: det du endrer treffer 14 selgere, og en dårlig regel er verre enn 
 - **Minste endring. Rydd også.** Instruksen skal ikke bare vokse: finnes det to regler som sier det samme, eller
   en regel ingen kort har trengt på 3 gjennomganger, slå sammen/forenkle – og mål at treffprosent er uendret.
 - **Usikkerhet er lov.** Er et notat tvetydig: usikker=true og legg det i rapportens «Spørsmål til Christian».
+- **Christians egne kort teller – unntatt tester.** Kort fra christian.rasch er ekte selgerkort, UNNTATT når han tester
+  appen (tomme notater, kopier av samme notat, mange kort på få minutter, konstruerte notater). Sett `test: true` i fasit
+  på slike – da er de utenfor alle tall. eval.mjs holder umerkede Christian-kort som ser ut som tester utenfor av seg selv
+  (`testkort`). Lag aldri regler av testkort alene; de kan bare bekrefte et mønster som finnes hos selgerne.
+- **Svar Christian alt har gitt** står i funn.md under «Svar fra Christian». De gjelder som regler. Still ikke samme
+  spørsmål igjen. Kort med `laStaa: true` i fasit har han sagt skal stå – de skal ikke listes som «bør rettes».
 
 ## 1. Les
 laering/README.md, laering/funn.md (forrige gjennomganger – hva ble prøvd, hva ble bevisst ikke gjort),
@@ -61,7 +67,7 @@ igjen (maks 3 forsøk). Blir det ikke bedre: behold originalen, skriv i funn.md 
 - laering/rapport-siste.md (maks 25 linjer, enkelt språk):
   linje 1: «ENDRINGER KLARE – si «push» til Claude for å publisere» eller «INGEN ENDRINGER NØDVENDIG»
   deretter: treff på nye kort (før → etter), totalt, hva som er endret (én linje per endring, `git diff --stat`),
-  «Kort som bør rettes manuelt» (selger, notat, riktig dato), «Spørsmål til Christian» (usikre notater, maks 5 –
+  «Kort som bør rettes manuelt» (selger, notat, riktig dato; ikke kort med `laStaa: true`), «Spørsmål til Christian» (usikre notater, maks 5 –
   han svarer i neste økt), og en sjekkliste over steg 2–8 med [x]/[ ].
 - `git add -A && git commit` med kort norsk melding som slutter med «(build …)» og linja
   «Co-Authored-By: Claude <noreply@anthropic.com>». IKKE push — Christian publiserer selv.

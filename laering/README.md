@@ -41,6 +41,9 @@ flyttet dagen av personlige grunner. Derfor har hvert AI-kort en egen fasit: hva
 skrevet, lest bokstavelig (gull), om klokkeslettet er fritt (tidFri) og om notatet er tvetydig (usikker).
 Første 160 kort ble vurdert av Claude 15.10.2026; gjennomgangen merker nye kort hver gang.
 «Stille feil» = kort som står på feil dag uten at noen har rettet – de havner i rapporten til Christian.
+Fra 22.10.2026: `test: true` = Christians egne testkort (telles ikke; umerkede testkort fra ham oppdages av eval.mjs selv:
+tomt notat, kopi innen 24 t, ≥3 andre kort innen ±10 min). `laStaa: true` = feil kort Christian har sagt skal stå (ikke i rapporten).
+Christians svar på gjennomgangenes spørsmål samles i funn.md under «Svar fra Christian» og gjelder som regler.
 
 ## eval.mjs – måling mot fasiten
 Sender hvert notat (tekst) med samme instruks, samme meldingsstruktur (fast del hurtigbufret) og samme «Naa»

@@ -1,7 +1,7 @@
 {
  "versjon": 1,
- "oppdatert": "2026-10-21",
- "beskrivelse": "Fasit for datotolkning: hva selgeren mente da notatet ble skrevet (bokstavelig lesing). tidFri=true: notatet sier ingen tid, bare dagen teller. usikker=true: telles ikke. naa=UTC (norsk tid = +1/+2 t), slik eksporten skriver det.",
+ "oppdatert": "2026-10-23",
+ "beskrivelse": "Fasit for datotolkning: hva selgeren mente da notatet ble skrevet (bokstavelig lesing). tidFri=true: notatet sier ingen tid, bare dagen teller. usikker=true: telles ikke. naa=UTC (norsk tid = +1/+2 t), slik eksporten skriver det. test=true: Christians testkort – telles ikke. laStaa=true: kort på feil dag som Christian har sagt skal stå – ikke i rapporten.",
  "kort": [
   {
    "id": "nicolai.b|2026-09-26T12:07|9fdb520fb1",
@@ -408,7 +408,8 @@
    "tidFri": false,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "«ringe 21» = kl 21, ikke 21. september (AI valgte dato, selger lot det stå)"
+   "merknad": "«ringe 21» = kl 21, ikke 21. september (AI valgte dato, selger lot det stå) Christian 22.10.2026: la stå.",
+   "laStaa": true
   },
   {
    "id": "haakon.f|2026-09-15T15:57|246889e33f",
@@ -507,7 +508,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "skrevet sep 2026 → februar NESTE år; kortet står på 2026 (forfalt)"
+   "merknad": "skrevet sep 2026 → februar NESTE år; kortet står på 2026 (forfalt) Christian 22.10.2026: la stå.",
+   "laStaa": true
   },
   {
    "id": "haakon.f|2026-09-16T18:50|4e19b3146c",
@@ -529,7 +531,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "«gi tilbud 1. februar» = 2027; kortet står på 2026 (forfalt)"
+   "merknad": "«gi tilbud 1. februar» = 2027; kortet står på 2026 (forfalt) Christian 22.10.2026: la stå.",
+   "laStaa": true
   },
   {
    "id": "haakon.f|2026-09-17T13:42|26e7f16158",
@@ -551,7 +554,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "mars 2027; kortet står uten dato"
+   "merknad": "mars 2027; kortet står uten dato Christian 22.10.2026: la stå.",
+   "laStaa": true
   },
   {
    "id": "haakon.f|2026-09-21T12:40|99af4c2c13",
@@ -870,7 +874,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "kortet står uten dato"
+   "merknad": "kortet står uten dato Christian 22.10.2026: la stå.",
+   "laStaa": true
   },
   {
    "id": "haakon.f|2026-10-09T18:05|4b47b9c6a2",
@@ -1198,9 +1203,9 @@
    "notat": "I morgen etter 18",
    "gull": "2026-09-15T18:00",
    "tidFri": false,
-   "usikker": true,
+   "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "skrevet tirsdag 00:12 norsk tid; selger satte tirsdag 15.09 (= «dagen som kommer»), bokstavelig = onsdag 16.09. Tvetydig – spørsmål til Christian 21.10"
+   "merknad": "skrevet tirsdag 00:12 norsk tid; selger satte tirsdag 15.09 (= «dagen som kommer»), bokstavelig = onsdag 16.09. Tvetydig – spørsmål til Christian 21.10 Christian 22.10.2026: «i morgen» rett etter midnatt = dagen som kommer → 15.09 kl 18 (regel i koden, build 133)."
   },
   {
    "id": "fredrik.l|2026-09-15T19:04|a02aa1bc4e",
@@ -1288,7 +1293,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "mandag uken etter 17. sep (to like kort; ett uten dato, ett flyttet av selger)"
+   "merknad": "mandag uken etter 17. sep (to like kort; ett uten dato, ett flyttet av selger) Christian 22.10.2026: la stå.",
+   "laStaa": true
   },
   {
    "id": "eskil.a|2026-09-17T14:53|e9ac1b9a7d",
@@ -1332,7 +1338,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "kortet står uten dato (årstallsfeil 2020)"
+   "merknad": "kortet står uten dato (årstallsfeil 2020) Christian 22.10.2026: la stå.",
+   "laStaa": true
   },
   {
    "id": "eskil.a|2026-09-29T14:03|7fe3e0a3f6",
@@ -1713,11 +1720,11 @@
    "who": "jacob.l",
    "naa": "2026-10-13T12:12",
    "notat": "Kontakt i 17/18 tiden tirsdag",
-   "gull": "2026-10-13T17:00",
+   "gull": "2026-10-20T17:00",
    "tidFri": false,
    "usikker": false,
    "kilde": "Claude-gjennomgang 15.10.2026",
-   "merknad": "skrevet tirsdag 12:12 – samme dag, ikke neste uke"
+   "merknad": "skrevet tirsdag 12:12 – samme dag, ikke neste uke Christian 23.10.2026: ukedagsnavn = kommende forekomst, aldri i dag → 20.10 kl 17. Jacob satte selv 13.10 (personlig valg etter den nye regelen; selgerne skal lære å skrive «kommer hjem kl 17»)."
   },
   {
    "id": "jacob.l|2026-10-13T14:12|4cabe16dd6",
@@ -1783,7 +1790,7 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Christian 17.10.2026",
-   "merknad": "«oå» = skrivefeil for «opp»: «Ring opp» uten dag/tid = ring tilbake, ingen dato (Christian 17.10.2026). Selger satte selv man 19.10 kl 15 (personlig valg). Notatet skrevet etter import."
+   "merknad": "«oå» = skrivefeil for «opp»: «Ring opp» uten dag/tid = ring tilbake, ingen dato (Christian 17.10.2026). Selger satte selv man 19.10 kl 15 (personlig valg). Notatet skrevet etter import. Bekreftet av Christian 22.10.2026: «Ring opp», uten tidspunkt."
   },
   {
    "id": "nicolai.b|2026-10-15T14:14|dab9f1efb6",
@@ -1937,7 +1944,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«Ringe mandag» skrevet lørdag"
+   "merknad": "«Ringe mandag» skrevet lørdag",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T00:18|636bf09218",
@@ -1946,9 +1954,10 @@
    "notat": "03.11.2025",
    "gull": null,
    "tidFri": true,
-   "usikker": true,
+   "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "test (Christian): bare «03.11.2025» – full dato m/årstall er systemdato ifølge instruksen, men er ett år tilbake; tvetydig"
+   "merknad": "test (Christian): bare «03.11.2025» – full dato m/årstall er systemdato ifølge instruksen, men er ett år tilbake; tvetydig Christian 22.10.2026: bare en dato med årstall = ingen dato.",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T00:19|636bf09218",
@@ -1957,9 +1966,10 @@
    "notat": "03.11.2025",
    "gull": null,
    "tidFri": true,
-   "usikker": true,
+   "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "test (Christian): som over"
+   "merknad": "test (Christian): som over Christian 22.10.2026: bare en dato med årstall = ingen dato.",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T12:22|d41d8cd98f",
@@ -1970,7 +1980,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T14:07|1814196641",
@@ -1981,7 +1992,8 @@
    "tidFri": true,
    "usikker": true,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "test (Christian): «ikveld» og «22 sep» (passert) strider – tvetydig"
+   "merknad": "test (Christian): «ikveld» og «22 sep» (passert) strider – tvetydig",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T14:08|d41d8cd98f",
@@ -1992,7 +2004,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T14:08|9ef5552438",
@@ -2003,7 +2016,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«Mandag» skrevet søndag"
+   "merknad": "«Mandag» skrevet søndag",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T15:24|d41d8cd98f",
@@ -2014,7 +2028,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T16:25|9846656d57",
@@ -2025,7 +2040,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "rent info-notat (test, 5 kopier)"
+   "merknad": "rent info-notat (test, 5 kopier)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T16:26|9846656d57",
@@ -2036,7 +2052,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "rent info-notat (test, kopi)"
+   "merknad": "rent info-notat (test, kopi)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T16:26|9846656d57",
@@ -2047,7 +2064,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "rent info-notat (test, kopi)"
+   "merknad": "rent info-notat (test, kopi)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T16:26|9846656d57",
@@ -2058,7 +2076,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "rent info-notat (test, kopi)"
+   "merknad": "rent info-notat (test, kopi)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T16:26|9846656d57",
@@ -2069,7 +2088,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "rent info-notat (test, kopi)"
+   "merknad": "rent info-notat (test, kopi)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T21:20|d41d8cd98f",
@@ -2080,7 +2100,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T21:20|d41d8cd98f",
@@ -2091,7 +2112,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T21:20|d41d8cd98f",
@@ -2102,7 +2124,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T21:23|d41d8cd98f",
@@ -2113,7 +2136,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-18T21:34|d41d8cd98f",
@@ -2124,7 +2148,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T09:21|d41d8cd98f",
@@ -2135,7 +2160,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "jorgen.f|2026-10-19T12:57|a3ea311ea0",
@@ -2234,7 +2260,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T21:18|d41d8cd98f",
@@ -2245,7 +2272,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T21:28|2252710d21",
@@ -2256,7 +2284,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«Ringer torsdag» skrevet mandag (kunden ringer – dagen gjelder)"
+   "merknad": "«Ringer torsdag» skrevet mandag (kunden ringer – dagen gjelder)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T21:29|5405bce4c2",
@@ -2267,7 +2296,8 @@
    "tidFri": false,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "test (Christian): kopi av Haakons «ring opp imorgen 15»"
+   "merknad": "test (Christian): kopi av Haakons «ring opp imorgen 15»",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T21:33|d41d8cd98f",
@@ -2278,7 +2308,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T21:35|d41d8cd98f",
@@ -2289,7 +2320,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:34|d41d8cd98f",
@@ -2300,7 +2332,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:35|d41d8cd98f",
@@ -2311,40 +2344,44 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:35|5405bce4c2",
    "who": "christian.rasch",
    "naa": "2026-10-19T22:35",
    "notat": "Skal svare ja ring opp imorgen 15",
-   "gull": "2026-10-21T15:00",
+   "gull": "2026-10-20T15:00",
    "tidFri": false,
-   "usikker": true,
+   "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "test (kopi); skrevet tirsdag 00:35 norsk tid – «imorgen» rett etter midnatt er tvetydig (spørsmål til Christian 21.10)"
+   "merknad": "test (kopi); skrevet tirsdag 00:35 norsk tid – «imorgen» rett etter midnatt er tvetydig (spørsmål til Christian 21.10) Christian 22.10.2026: dagen som kommer → 20.10 kl 15.",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:36|5405bce4c2",
    "who": "christian.rasch",
    "naa": "2026-10-19T22:36",
    "notat": "Skal svare ja ring opp imorgen 15",
-   "gull": "2026-10-21T15:00",
+   "gull": "2026-10-20T15:00",
    "tidFri": false,
-   "usikker": true,
+   "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "test (kopi); skrevet tirsdag 00:35 norsk tid – «imorgen» rett etter midnatt er tvetydig (spørsmål til Christian 21.10)"
+   "merknad": "test (kopi); skrevet tirsdag 00:35 norsk tid – «imorgen» rett etter midnatt er tvetydig (spørsmål til Christian 21.10) Christian 22.10.2026: dagen som kommer → 20.10 kl 15.",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:36|5405bce4c2",
    "who": "christian.rasch",
    "naa": "2026-10-19T22:36",
    "notat": "Skal svare ja ring opp imorgen 15",
-   "gull": "2026-10-21T15:00",
+   "gull": "2026-10-20T15:00",
    "tidFri": false,
-   "usikker": true,
+   "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "test (kopi); skrevet tirsdag 00:35 norsk tid – «imorgen» rett etter midnatt er tvetydig (spørsmål til Christian 21.10)"
+   "merknad": "test (kopi); skrevet tirsdag 00:35 norsk tid – «imorgen» rett etter midnatt er tvetydig (spørsmål til Christian 21.10) Christian 22.10.2026: dagen som kommer → 20.10 kl 15.",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:42|bee6fd1684",
@@ -2355,7 +2392,8 @@
    "tidFri": false,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«Komme 1830» kl 22:42 = passert → i morgen 18:30"
+   "merknad": "«Komme 1830» kl 22:42 = passert → i morgen 18:30",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:43|bee6fd1684",
@@ -2366,7 +2404,8 @@
    "tidFri": false,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "som over (kopi)"
+   "merknad": "som over (kopi)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:43|50ded1fa9e",
@@ -2377,7 +2416,8 @@
    "tidFri": false,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«Komme innom torsdag kveld» skrevet mandag"
+   "merknad": "«Komme innom torsdag kveld» skrevet mandag",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:44|3e34cd0633",
@@ -2388,7 +2428,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«Tlf fredag» skrevet mandag"
+   "merknad": "«Tlf fredag» skrevet mandag",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:53|91450d6b0b",
@@ -2399,7 +2440,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "ingen dag/tid («nr til mann»)"
+   "merknad": "ingen dag/tid («nr til mann»)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:54|4d2beee286",
@@ -2410,7 +2452,9 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«sende tilbud» uten dag; «Binding 20. februar» er binding, «i dag» beskriver nåsituasjon"
+   "merknad": "«sende tilbud» uten dag; «Binding 20. februar» er binding, «i dag» beskriver nåsituasjon Christian 22.10.2026: la stå.",
+   "test": true,
+   "laStaa": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:54|91450d6b0b",
@@ -2421,7 +2465,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "ingen dag/tid (kopi)"
+   "merknad": "ingen dag/tid (kopi)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:55|d41d8cd98f",
@@ -2432,7 +2477,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:55|d41d8cd98f",
@@ -2443,7 +2489,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:56|d41d8cd98f",
@@ -2454,7 +2501,8 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:56|4d2beee286",
@@ -2465,7 +2513,9 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "som 47 (kopi)"
+   "merknad": "som 47 (kopi) Christian 22.10.2026: la stå.",
+   "test": true,
+   "laStaa": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:57|d41d8cd98f",
@@ -2476,18 +2526,21 @@
    "tidFri": true,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "tomt notat (snarvei-test)"
+   "merknad": "tomt notat (snarvei-test)",
+   "test": true
   },
   {
    "id": "christian.rasch|2026-10-19T22:58|8be83b3172",
    "who": "christian.rasch",
    "naa": "2026-10-19T22:58",
    "notat": "Hjemme tirsdag kl 17",
-   "gull": "2026-10-20T17:00",
+   "gull": "2026-10-27T17:00",
    "tidFri": false,
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
-   "merknad": "«Hjemme tirsdag kl 17» skrevet mandag"
+   "merknad": "«Hjemme tirsdag kl 17» skrevet mandag Christian 22.10.2026: la stå. Christian 23.10.2026: samme ukedag = neste uke → 27.10 kl 17 (kortet står riktig).",
+   "test": true,
+   "laStaa": true
   },
   {
    "id": "jorgen.f|2026-10-20T12:59|18f2b00ec4",
