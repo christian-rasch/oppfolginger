@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-21-131">
+<meta name="app-build" content="2026-10-23-134">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -782,16 +782,14 @@
       o.dato=o.dato.slice(0,16);
       {const yy=+o.dato.slice(0,4),cy=now().getFullYear(); // årstallsvakt: 2020-xx-xx for et relativt uttrykk er en modellglipp, ikke en dato i fortid
         if(yy<cy-1||(!o.eksaktDato&&yy<cy)){let d1=p(String(cy)+o.dato.slice(4));if(!o.eksaktDato&&d1<now()){d1=p(String(cy+1)+o.dato.slice(4));}o.dato=toLocal(d1);o.datoAarFikset=true;}}
-      // relativ ukedag som er SAMME ukedag som i dag (f.eks. «ring tirsdag» skrevet en tirsdag) → alltid +7 dager
+      // relativ ukedag som er SAMME ukedag som i dag («ring tirsdag» / «hjemme tirsdag kl 17» skrevet en tirsdag) → ALLTID +7 dager, ogsaa med klokkeslett.
+      // Christian 23.10.2026: et ukedagsnavn er kommende forekomst, aldri i dag – mener selgeren i dag, skriver han «kommer hjem kl 17». Opphever unntaket fra 17.10 (tid ikke passert = i dag) og vakten fra 21.10 (AI +7 → i dag)
       if(!o.eksaktDato){const wm0=WDRE.exec(' '+o.kommentar.toLowerCase()),d0=p(o.dato);
-        if(wm0&&!wm0[1]&&sameDay(d0,now())&&WNUM[wm0[2]]===d0.getDay()){const harTid=timeFromText(o.kommentar)||!(d0.getHours()===12&&d0.getMinutes()===0);
-          if(harTid&&(d0.getHours()*60+d0.getMinutes())>(now().getHours()*60+now().getMinutes())){/* «tirsdag 17/18-tiden» skrevet tirsdag kl 12 = i dag */}
-          else{d0.setDate(d0.getDate()+7);o.dato=toLocal(d0);}}}
-      // omvendt: notatet har DAGENS ukedag + et klokkeslett som ikke er passert, men AI satte +7 («Kontakt i 17/18 tiden tirsdag» skrevet tirsdag 14:12 → 20.10; «Hjemme tirsdag kl 17» tirsdag 00:58 → 27.10) → i dag
-      if(!o.eksaktDato){const kl1=' '+o.kommentar.toLowerCase(),wm1=WDRE.exec(kl1),tt1=timeFromText(o.kommentar);
-        if(wm1&&!wm1[1]&&tt1&&WNUM[wm1[2]]===now().getDay()&&!nextWeekWeekday(o.kommentar,now())&&!FORTID_RE.test(kl1.slice(Math.max(0,wm1.index-30),wm1.index+1))){
-          const i7=startOfDay(now());i7.setDate(i7.getDate()+7);
-          if(sameDay(p(o.dato),i7)&&(tt1.hh*60+tt1.mm)>(now().getHours()*60+now().getMinutes())){const d6=startOfDay(now());d6.setHours(tt1.hh,tt1.mm,0,0);o.dato=toLocal(d6);}}}
+        if(wm0&&!wm0[1]&&sameDay(d0,now())&&WNUM[wm0[2]]===d0.getDay()){d0.setDate(d0.getDate()+7);o.dato=toLocal(d0);}}
+      // «i morgen» skrevet rett etter midnatt (00:00–04:59) = dagen som nettopp har begynt, ikke kalenderdagen etter (Christian 22.10.2026; Fredrik «I morgen etter 18» kl 00:12 → samme dag kl 18).
+      // AI regner kalendermessig (+1 dag) → én dag tilbake, behold klokkeslettet
+      if(!o.eksaktDato&&now().getHours()<5&&TOMORROW_RE.test(o.kommentar)){const i1=startOfDay(now());i1.setDate(i1.getDate()+1);
+        if(sameDay(p(o.dato),i1)){const d7=p(o.dato);d7.setDate(d7.getDate()-1);o.dato=toLocal(d7);}}
       // «tirsdag neste uke» = tirsdagen i NESTE kalenderuke; AI bruker av og til «neste tirsdag»-regelen (+7) → rett dagen, behold klokkeslettet
       if(!o.eksaktDato){const nw=nextWeekWeekday(o.kommentar,now());if(nw&&!sameDay(nw,p(o.dato))){const d4=p(o.dato);nw.setHours(d4.getHours(),d4.getMinutes(),0,0);o.dato=toLocal(nw);}}
       // «ringe 21» som AI tolket som den 21. i maaneden (eksakt dato) → det er et klokkeslett: i dag kl 21 (passert → i morgen). Krever at notatet ikke har maaned/«den»/dato
@@ -831,8 +829,8 @@
         else if(UKA_RE.test(o.kommentar)&&!/neste\s+uke/i.test(o.kommentar)){ // «ring ila uka» → torsdag denne uka; torsdag→fredag; fredag/helg→mandag
           const d=setT(startOfDay(now())),wd=d.getDay();let want=4;if(wd===4)want=5;else if(wd===5||wd===6||wd===0)want=1;
           do{d.setDate(d.getDate()+1);}while(d.getDay()!==want);o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
-        else if(TOMORROW_RE.test(o.kommentar)){ // «imrg»/«i mrg»/«imorra»/«i morgen 1430»/«imrg kveld» → i morgen
-          const d=setT(startOfDay(now()));d.setDate(d.getDate()+1);o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
+        else if(TOMORROW_RE.test(o.kommentar)){ // «imrg»/«i mrg»/«imorra»/«i morgen 1430»/«imrg kveld» → i morgen (rett etter midnatt, foer kl 05: dagen som har begynt)
+          const d=setT(startOfDay(now()));d.setDate(d.getDate()+(now().getHours()<5?0:1));o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
         else if(tt){ // bare et klokkeslett («Ring 21 om ikke svart», «KI 19», «1430») → i dag; passert → i morgen
           const d=setT(startOfDay(now()));if(d<now())d.setDate(d.getDate()+1);o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
         else if(TODAY_RE.test(o.kommentar)||tw){ // «idg»/«ikvld»/«etter jobb» uten dato → i dag (ordet gir tid; ellers naa+2t, maks 21:15)
@@ -1376,9 +1374,9 @@
   const INNBOKS_TABLE='oppf_innboks',NOKKEL_TABLE='oppf_snarvei_nokkel',SNARVEI_K='oppf:snarvei:nokkel';
   const SNARVEI_URL=CLOUD_SYNC_CONFIG.supabaseUrl+'/functions/v1/skjermbilde';
   let innboksBusy=false,innboksAt=0;
-  async function innboksSjekk(){
+  async function innboksSjekk(tett){ // tett=true: kall fra innboksPoll → ingen 2 s-sperre (oppslaget er bittelite)
     const c=getSupabaseClient();if(!c||!sbUser||adminView||navigator.onLine===false)return;
-    if(innboksBusy||Date.now()-innboksAt<2000)return;
+    if(innboksBusy||(!tett&&Date.now()-innboksAt<2000))return;
     if(analysing||pendingImg||$('pasteModal').classList.contains('open'))return; // et bilde er alt under behandling
     innboksBusy=true;innboksAt=Date.now();
     try{
@@ -1402,14 +1400,14 @@
     }finally{innboksBusy=false;}
   }
   // Snarveien åpner appen før opplastingen er ferdig (så selgeren slipper å se iPaden «fryse»). Derfor: etter hver åpning/fokus
-  // ser vi etter bildet noen ganger til over ~18 s (hvert oppslag >2 s fra forrige, så sperren i innboksSjekk ikke slår inn).
+  // ser vi etter bildet tett de første sekundene (opplastingen tar normalt 1–3 s) og sjeldnere opp til ~18 s.
   let innboksPollTimer=null;
   function innboksPoll(){
     clearTimeout(innboksPollTimer);
-    const t0=Date.now(),steg=[2500,4500,7000,10000,14000,18000];let i=0;
+    const t0=Date.now(),steg=[700,1400,2200,3000,4000,5000,6500,8000,10000,12500,15000,18000];let i=0;
     const neste=function(){
       if(i>=steg.length||document.hidden||!sbUser)return;
-      innboksPollTimer=setTimeout(function(){i++;innboksSjekk().then(function(fant){if(!fant)neste();});},Math.max(0,t0+steg[i]-Date.now()));
+      innboksPollTimer=setTimeout(function(){i++;innboksSjekk(true).then(function(fant){if(!fant)neste();});},Math.max(0,t0+steg[i]-Date.now()));
     };
     neste();
   }

@@ -50,8 +50,18 @@ const TW=/(i ?dag|i ?morgen|imrg|i ?mrg|imorra|i ?kveld|mandag|tirsdag|onsdag|to
 const normN=s=>String(s||'').replace(/\s*\(\d+\s*mbits?\)/gi,'').replace(/\s+/g,' ').trim();
 const notatEndret=k=>k.ai&&typeof k.ai.kommentar==='string'&&normN(k.ai.kommentar)!==normN(k.kommentar); // selger skrev/endret notatet ETTER import → AI så annen tekst
 const endret=data.kort.filter(k=>k.ai&&k.opprettet&&notatEndret(k)).length;
+// Christians egne kort teller som ekte selgerkort – UNNTATT når han tester (Christian 22.10.2026): fasit `test: true`, eller (uten fasit) tomt notat,
+// samme notat som et annet av hans kort innen 24 t, eller ≥3 andre kort fra ham innen ±10 min. Holdes utenfor alle tall. `laStaa: true` i fasit = feil kort
+// Christian har sagt skal stå → ikke i «stille feil»/rapporten.
+const CHR=data.kort.filter(k=>k.ai&&k.who==='christian.rasch');
+const erTestkort=k=>{if(k.who!=='christian.rasch')return false;const t=+naaAv(k),n=normN(k.kommentar);
+  if(!n)return true;
+  if(CHR.some(x=>x!==k&&normN(x.kommentar)===n&&Math.abs(+naaAv(x)-t)<864e5))return true;
+  return CHR.filter(x=>x!==k&&Math.abs(+naaAv(x)-t)<=600e3).length>=3;};
+let testkort=0;
 const alle=data.kort.filter(k=>k.ai&&k.opprettet&&!notatEndret(k)).map(k=>{const e=F.get(idOf(k));
-  if(e)return e.usikker?null:{k,gull:e.gull,tidFri:!!e.tidFri,prov:false,merknad:e.merknad||''};
+  if(e){if(e.test===true){testkort++;return null;}return e.usikker?null:{k,gull:e.gull,tidFri:!!e.tidFri,laStaa:!!e.laStaa,prov:false,merknad:e.merknad||''};}
+  if(erTestkort(k)){testkort++;return null;}
   if(!TW.test(k.kommentar||''))return null;
   return {k,gull:k.dato,tidFri:true,prov:true,merknad:'(uten fasit – kortets dato brukt)'};}).filter(Boolean)
   .sort((a,b)=>(b.k.ai.ts||b.k.opprettet).localeCompare(a.k.ai.ts||a.k.opprettet));
@@ -66,7 +76,7 @@ const nye=alle.filter(erNy);
 const laert=data.kort.filter(k=>k.ai&&k.ai.tidLaert!=null),laertRettet=laert.filter(k=>k.ai.dato&&k.dato&&k.ai.dato!==k.dato&&k.ai.dato.slice(0,10)===k.dato.slice(0,10)).length;
 
 // ---- stille feil (uten API): kortet står på en annen DAG enn fasiten, og ingen har rettet (ai.dato == kortets dato) ----
-const stille=alle.filter(x=>!x.prov&&x.k.state!=='fulgt'&&(x.k.ai.dato||null)===(x.k.dato||null)&&dag(x.k.dato)!==dag(x.gull))
+const stille=alle.filter(x=>!x.prov&&!x.laStaa&&x.k.state!=='fulgt'&&(x.k.ai.dato||null)===(x.k.dato||null)&&dag(x.k.dato)!==dag(x.gull))
   .map(x=>({who:x.k.who,naa:x.k.ai.ts||x.k.opprettet,notat:(x.k.kommentar||'').slice(0,100),kort:x.k.dato,fasit:x.gull,merknad:x.merknad}));
 const rettet=alle.filter(x=>!x.prov&&(x.k.ai.dato||null)!==(x.k.dato||null)).length;
 const nyeSignal={nye:nye.length,nyeUmerket:nye.filter(x=>x.prov).length,nyeRettet:nye.filter(x=>(x.k.ai.dato||null)!==(x.k.dato||null)).length,
@@ -74,9 +84,9 @@ const nyeSignal={nye:nye.length,nyeUmerket:nye.filter(x=>x.prov).length,nyeRette
   nyeStilleFeil:stille.filter(s=>new Date(s.naa+':00Z')>SIDEN).length,siden:SIDEN.toISOString().slice(0,16)};
 
 if(flag('bare-data')){
-  const r={data:dataFile.split('/').pop(),kortMedFasit:alle.length-umerket,umerket,notatEndretEtterImport:endret,rettetAvSelger:rettet,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},signal:nyeSignal,stilleFeil:stille,promptTegn:STATIC.length};
+  const r={data:dataFile.split('/').pop(),kortMedFasit:alle.length-umerket,umerket,notatEndretEtterImport:endret,rettetAvSelger:rettet,testkort,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},signal:nyeSignal,stilleFeil:stille,promptTegn:STATIC.length};
   if(flag('json'))console.log(JSON.stringify(r,null,1));
-  else{console.log('Kort med fasit: '+r.kortMedFasit+', uten fasit (nye): '+umerket+', notat endret etter import (holdes utenfor): '+endret+', rettet av selger: '+rettet+'\nStille feil (står på feil dag, ingen har rettet): '+stille.length);
+  else{console.log('Kort med fasit: '+r.kortMedFasit+', uten fasit (nye): '+umerket+', notat endret etter import (holdes utenfor): '+endret+', rettet av selger: '+rettet+', Christians testkort (holdes utenfor): '+testkort+'\nStille feil (står på feil dag, ingen har rettet): '+stille.length);
     stille.forEach(x=>console.log('  ['+x.who+' '+x.naa+'] «'+x.notat+'» kort='+(x.kort||'ingen')+' fasit='+(x.fasit||'ingen')+(x.merknad?' – '+x.merknad:'')));
     console.log('Nye kort siden '+nyeSignal.siden+': '+nyeSignal.nye+' (uten fasit '+nyeSignal.nyeUmerket+', rettet '+nyeSignal.nyeRettet+', uten dato m/tidsord '+nyeSignal.nyeUtenDatoMedTidsord+', stille feil '+nyeSignal.nyeStilleFeil+')');
     console.log('Lært klokkeslett brukt på '+laert.length+' kort, selger endret tiden på '+laertRettet+'. Fast instruks: '+STATIC.length+' tegn.');}
@@ -126,7 +136,7 @@ const stamp=new Date().toLocaleString('sv-SE',{timeZone:'Europe/Oslo'}).slice(0,
 const hist=join(HERE,'eval-historikk.md');
 if(!existsSync(hist)||!readFileSync(hist,'utf8').includes('| Nye kort: dag |'))writeFileSync(hist,(existsSync(hist)?readFileSync(hist,'utf8')+'\n':'# Eval-historikk (datotolkning på ekte notater)\n\n')+'## Mot fasit (laering/fasit.json), fra 15.10.2026\n\n| Når | Modell | Innsats | Kort | Rå: dag | Kjede: dag | Kjede: eksakt | Ingen-dato-feil | Falsk dato | Nye kort: dag | Median | Tokens inn/ut | Cache-treff |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n');
 appendFileSync(hist,resultater.map(r=>'| '+stamp+' | '+r.model+' | '+r.effort+' | '+r.n+' | '+r.raa.dagPct+'% | '+r.pipe.dagPct+'% | '+r.pipe.eksaktPct+'% ('+r.pipe.eksaktAv+') | '+r.pipe.ingenDatoFeil+' | '+r.pipe.falskDato+' | '+(r.nye.dagPct==null?'–':r.nye.dag+'/'+r.nye.n)+' | '+r.medianMs+' ms | '+r.tokInn+'/'+r.tokUt+' | '+Math.round(100*r.cacheLest/Math.max(1,r.tokInn+r.cacheLest))+'% |').join('\n')+'\n');
-if(flag('json'))console.log(JSON.stringify({data:dataFile.split('/').pop(),kort:sett.length,umerket,notatEndretEtterImport:endret,signal:nyeSignal,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},promptTegn:STATIC.length,stilleFeil:stille,resultater},null,1));
+if(flag('json'))console.log(JSON.stringify({data:dataFile.split('/').pop(),kort:sett.length,umerket,notatEndretEtterImport:endret,testkort,signal:nyeSignal,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},promptTegn:STATIC.length,stilleFeil:stille,resultater},null,1));
 else{
   console.log('\nResultat ('+sett.length+' kort med fasit fra '+dataFile.split('/').pop()+(umerket?', '+umerket+' uten fasit':'')+'):');
   resultater.forEach(r=>console.log('  '+r.model+' ('+r.effort+'): rå dag '+r.raa.dagPct+'% · kjede dag '+r.pipe.dagPct+'%, eksakt '+r.pipe.eksaktPct+'% av '+r.pipe.eksaktAv+', ingen-dato-feil '+r.pipe.ingenDatoFeil+', falsk dato '+r.pipe.falskDato+', median '+r.medianMs+' ms, tokens '+r.tokInn+'/'+r.tokUt+', cache-treff '+Math.round(100*r.cacheLest/Math.max(1,r.tokInn+r.cacheLest))+'%'+(r.feil?', '+r.feil+' api-feil':'')));
