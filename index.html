@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-23-134">
+<meta name="app-build" content="2026-10-23-135">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -765,6 +765,18 @@
     while((m=re.exec(k))){const foran=k.slice(Math.max(0,m.index-24),m.index+m[1].length);
       if(!/(?:bind\w*|bundet|bunnet|ferdig|\btil|\but|\bfrem|\bfram)\s+(?:(?:i|til|av)\s+)?(?:\d{1,2}\.?\s+)?$/i.test(foran))return m;}
     return null;}
+  // Bare bindingstid i notatet og ingenting om naar man skal foelge opp («binding til mai», «Binding frem til 05.12.2026», «Binding 20. februar», «ute av binding i april»,
+  // «bunnet opp paa mobil til juni 2027») → oppfoelging UKEN FOER bindingen gaar ut (Christian 23.10.2026). Returnerer bindingens slutt (maaned alene = den 1. i maaneden;
+  // uten aarstall = neste gang den kommer; med aarstall i fortid = null) eller null. Brukes bare naar ingenting annet i notatet ga dato.
+  const MND_ALT='(jan(?:uar)?|feb(?:ruar)?|mars?|apr(?:il)?|mai|juni|juli|aug(?:ust)?|sep(?:t|tember)?|okt(?:ober)?|nov(?:ember)?|des(?:ember)?)';
+  function bindingSlutt(k,now){k=String(k||'');const bm=/(?:^|[^a-zæøå])(?:bind\w*|bundet|bunnet)(?![a-zæøå])/i.exec(k);if(!bm)return null;
+    const etter=k.slice(bm.index+bm[0].length,bm.index+bm[0].length+45);let d=null,m;
+    const lag=(y,mo,day)=>{const dd=new Date(y==null?now.getFullYear():y,mo,day,12,0,0,0);if(y==null&&dd<now)dd.setFullYear(dd.getFullYear()+1);return dd;};
+    if((m=/(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?(?![\d:])/.exec(etter))&&+m[1]>=1&&+m[1]<=31&&+m[2]>=1&&+m[2]<=12)d=lag(m[3]==null?null:(m[3].length===2?2000+ +m[3]:+m[3]),+m[2]-1,+m[1]); // 05.12.2026, 31.12.27, 20/2
+    else{const mm=new RegExp('(^|[^a-zæøå])'+MND_ALT+'(?![a-zæøå])(?:\\s+(20\\d\\d))?','i').exec(etter); // «til mai», «20. februar», «juni 2027»
+      if(mm){const foran=etter.slice(0,mm.index+mm[1].length),dm=/(\d{1,2})\.?\s*$/.exec(foran),mo=MONTH_NUM[mm[2].slice(0,3).toLowerCase()];
+        if(mo!=null)d=lag(mm[3]==null?null:+mm[3],mo,dm?+dm[1]:1);}}
+    return d&&d>now?d:null;}
   // «tirsdag neste uke» / «fredag til uka» / «neste uke onsdag» = den ukedagen i NESTE kalenderuke (man–søn) kl 12:00, ellers null.
   // Ikke det samme som «neste tirsdag» (= foerstkommende + 7). AI blander dem av og til (torsdag: «tirsdag neste uke» ble 27. okt, ikke 20.)
   const NEXTWEEK_WD_RE=/(?:^|[^a-zæøå])(mandag|tirs(?:dag)?|ons(?:dag)?|tors(?:dag)?|fre(?:dag)?|lør(?:dag)?|søn(?:dag)?)\s+(?:neste|til)\s+uk[ae]n?(?![a-zæøå])|(?:^|[^a-zæøå])(?:neste|til)\s+uk[ae]n?\s+(?:paa\s+|på\s+)?(mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag)(?![a-zæøå])/i;
@@ -833,6 +845,8 @@
           const d=setT(startOfDay(now()));d.setDate(d.getDate()+(now().getHours()<5?0:1));o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
         else if(tt){ // bare et klokkeslett («Ring 21 om ikke svart», «KI 19», «1430») → i dag; passert → i morgen
           const d=setT(startOfDay(now()));if(d<now())d.setDate(d.getDate()+1);o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
+        else if(bindingSlutt(o.kommentar,now())){ // bare bindingstid, ingen oppfoelging nevnt → uken FOER bindingen gaar ut kl 12 (alt passert → i morgen kl 12). Christian 23.10.2026
+          const d=bindingSlutt(o.kommentar,now());d.setDate(d.getDate()-7);if(d<=now()){d.setTime(startOfDay(now()).getTime());d.setDate(d.getDate()+1);d.setHours(12,0,0,0);}o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}
         else if(TODAY_RE.test(o.kommentar)||tw){ // «idg»/«ikvld»/«etter jobb» uten dato → i dag (ordet gir tid; ellers naa+2t, maks 21:15)
           const d=new Date(now());if(tw)d.setHours(tw.hh,tw.mm,0,0);else{d.setMinutes(Math.ceil((d.getMinutes()+120)/30)*30,0,0);if(d.getHours()>21||(d.getHours()===21&&d.getMinutes()>15))d.setHours(21,15,0,0);}
           if(d>now()){o.dato=toLocal(d);o.eksaktDato=false;o.datoFallback=true;}}

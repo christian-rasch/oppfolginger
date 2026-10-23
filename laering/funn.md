@@ -1,6 +1,6 @@
 # Funn fra gjennomganger
 
-## 23.10.2026 (build 134) – Christian snur regelen for samme ukedag med klokkeslett
+## 23.10.2026 (build 134–135) – Christian snur regelen for samme ukedag med klokkeslett, og gir bindingsregel
 Utløser: Christian leste endringene fra 21.10 og sa at «Hjemme tirsdag kl 17» skrevet en tirsdag skal bety NESTE tirsdag.
 
 ### Svar fra Christian (gjelder som regel)
@@ -10,6 +10,12 @@ Utløser: Christian leste endringene fra 21.10 og sa at «Hjemme tirsdag kl 17»
   alt +7 på begge kortene, det var koden som overstyrte. 4 tester snudd, alle OK.
 - Konsekvens: Jacobs «Kontakt i 17/18 tiden tirsdag» (13.10 kl 14:12) får fasit 20.10 kl 17, selv om Jacob selv flyttet kortet
   til 13.10 kl 17:15. Christian vet det og vil ha den enkle regelen. Christians testkort «Hjemme tirsdag kl 17» → 27.10 (står riktig).
+- **Bare bindingstid, ingenting om oppfølging → uken før bindingen går ut** (build 135). «Binding til mai» → 24. april (uken før
+  den 1. i måneden, siden dagen er ukjent); «Binding 20. februar» → 13. februar; «Binding frem til 05.12.2026» → 28. november; uten
+  årstall = neste gang måneden kommer; årstall i fortid = ingen dato; er uken før alt passert → i morgen kl 12. Ligger sist i
+  fallback-kjeden i normaliserDato (`bindingSlutt`), så «ringe februar», «imorgen», klokkeslett osv. vinner alltid. Instruksen er
+  uendret: modellen svarer «ingen» på slike notater (riktig), appen regner ut datoen. I dataene er det bare Christians to testkort
+  som er bindings-alene; 3 tester fra 21.10 snudd (de forventet ingen dato), 11 nye. Fasit: de 2 testkortene → 13.02.2027.
 - Bevisst ikke gjort: ingen ny instrukstekst (modellen gjør alt dette riktig selv); ingen eval kjørt (API).
 
 ## 22.10.2026 (build 133) – svar fra Christian + regel for «i morgen» rett etter midnatt
