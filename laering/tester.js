@@ -101,13 +101,24 @@ N('«tirsdag neste uke kl 17» skrevet tirsdag → neste uke, ikke i dag',{dato:
 N('«neste tirsdag kl 17» skrevet tirsdag → urørt',{dato:'2026-10-27T17:00',eksaktDato:false},'Ring neste tirsdag kl 17','2026-10-20T10:00','2026-10-27T17:00');
 N('fortids-ukedag + klokkeslett → urørt',{dato:'2026-10-27T17:00',eksaktDato:false},'Snakket med kona tirsdag, ring kl 17','2026-10-20T10:00','2026-10-27T17:00');
 N('AI satte i dag + tid ikke passert → +7 (Christian 23.10: ukedag = aldri i dag)',{dato:'2026-10-20T17:00',eksaktDato:false},'Hjemme tirsdag kl 17','2026-10-20T00:58','2026-10-27T17:00');
-// --- 21.10.2026 (ekte kort): bindings-maaned er ikke oppfoelging naar AI ga null ---
-N('«Binding 20. februar … sende tilbud», AI null → ingen dato (ikke 1. feb)',{dato:null},'Binding 20. februar, kun internett i dag, sende tilbud. Mobil happybytes 10mbit ubegrenset','2026-10-20T00:54',null);
+// --- 21.10.2026 (ekte kort): bindings-maaned er ikke oppfoelgingsmaaned; 23.10.2026 (Christian): BARE binding, ingen oppfoelging nevnt → uken FOER bindingen gaar ut ---
+N('«Binding 20. februar … sende tilbud», AI null → uken foer 20. feb 2027',{dato:null},'Binding 20. februar, kun internett i dag, sende tilbud. Mobil happybytes 10mbit ubegrenset','2026-10-20T00:54','2027-02-13T12:00');
 N('«Ute av binding februar, ringe desember», AI null → desember',{dato:null},'Ute av binding februar, ringe desember når hun holder på å gå ut av binding. Riks og nexgt','2026-09-29T17:47','2026-12-01T12:00');
 N('«Ringe i februar binding til mars», AI null → februar',{dato:null},'Ringe [tlf] Ringe i februar binding til mars. Banhof 500.','2026-10-06T17:46','2027-02-01T12:00');
-N('«Ferdig i binding i juli» alene, AI null → ingen dato',{dato:null},'Har veldig mye streaming. Ferdig i binding i juli.','2026-09-26T22:53',null);
-N('«Binding går ut april», AI null → ingen dato',{dato:null},'Måtte tenke. Binding går ut april','2026-09-17T16:08',null);
+N('«Ferdig i binding i juli» alene, AI null → uken foer 1. juli 2027',{dato:null},'Har veldig mye streaming. Ferdig i binding i juli.','2026-09-26T22:53','2027-06-24T12:00');
+N('«Binding går ut april», AI null → uken foer 1. april 2027',{dato:null},'Måtte tenke. Binding går ut april','2026-09-17T16:08','2027-03-25T12:00');
 N('«Ringe februar … Binding til mai», AI null → februar (som før)',{dato:null},'Ringe februar. Eier begge husene her 100 linje på ene 500 på andre nexgt. Binding til mai ca.','2026-10-09T18:20','2027-02-01T12:00');
+N('«binding til mai» alene → 24. april 2027',{dato:null},'Telenor 500, binding til mai','2026-10-20T15:00','2027-04-24T12:00');
+N('«Binding frem til 05.12.2026» alene → 28. nov 2026',{dato:null},'Kone og mann på mobil abb. Begge har Telia i dag. Binding frem til 05.12.2026','2026-09-15T21:27','2026-11-28T12:00');
+N('«bindingstid til 31.12.2027» alene → 24. des 2027',{dato:null},'3 internett abbonomenter hos NextGenTel og RiksTV med bindingstid til 31.12.2027','2026-09-30T16:15','2027-12-24T12:00');
+N('«bunnet opp paa mobil til juni 2027» alene → 25. mai 2027',{dato:null},'Kunden er bunnet opp på mobil til juni 2027','2026-10-19T15:03','2027-05-25T12:00');
+N('«ute av binding i april» alene → 25. mars 2027',{dato:null},'Ute av binding i april. Vil over til oss','2026-09-17T14:47','2027-03-25T12:00');
+N('binding gaar ut om 4 dager → i morgen kl 12',{dato:null},'binding til mai','2026-04-28T15:00','2026-04-29T12:00');
+N('binding med aarstall i fortid → ingen dato',{dato:null},'binding til 31.12.2025','2026-10-20T15:00',null);
+N('«Binding hos Banhof et år frem i tid» uten maaned → ingen dato',{dato:null},'(NY) Telenor Binding hos Banhof et år frem i tid, skal svare ja','2026-10-05T19:49',null);
+N('«Er i binding» uten slutt → ingen dato',{dato:null},'Måtte regne på det og er i binding','2026-09-08T16:36',null);
+N('binding + klokkeslett → klokkeslettet vinner',{dato:null},'Binding til mai, ring 18','2026-10-20T15:00','2026-10-20T18:00');
+N('binding + imorgen → imorgen vinner',{dato:null},'Xx ringe imorgen hadde alt av fotball 300linje nexgt, i binding.','2026-09-24T20:26','2026-09-25T12:00');
 // --- 21.10.2026: modellen skrev to JSON-objekter («Korrigering: …») på «Komme tilbke» i 3 av 5 kjøringer → bruk det siste ---
 const J=(name,t,want)=>ok('json: '+name,api.sisteJsonObjekt(t),want);
 J('to objekter → det siste',' {"dato":"2026-10-19T21:05","datoGrunn":"a"}\n\nKorrigering: Naa er 19:05 {ikke json}.\n\n{"dato":"2026-10-19T21:15","datoGrunn":"b"}',{dato:'2026-10-19T21:15',datoGrunn:'b'});
