@@ -1,5 +1,63 @@
 # Funn fra gjennomganger
 
+## 24.10.2026 (build 135, uendret) – tredje automatiske gjennomgang
+**Utløser:** 17 nye kort, 8 rettelser. Forrige gjennomgang 21.10 (nullpunkt for denne er build 135 fra 23.10, som aldri var målt
+med eval før nå). **Umerkede AI-kort: 22** (Haakon 10, Jørgen 6, Joshua 4, Fredrik 1, Simon 1 – ingen fra Christian), alle blindt
+merket. 19 i eval: 2 holdt utenfor fordi notatet ble skrevet ETTER import (Joshua «Fredag kl 19» og «Ring Imrg tlf to salg» – AI så
+tomt notat og svarte riktig «ingen»), 1 usikker (Haakon «Ringe neste mandag» skrevet torsdag, se spørsmål).
+
+**Tall:** 358 kort, 216 med AI, 166 i eval (32 holdt utenfor: notat endret etter import; 17 Christians testkort), 43 rettet av
+selger totalt. Stille feil: **0** (de 7 gamle hos Haakon/Eskil har `laStaa`). Lært klokkeslett: 12 kort (alle Haakon, 21:00),
+2 rettet bort (17 %, under grensen 30 %): «neste mandag» → 12:00 og «lørdag midt i brann kamp» → 15:00. Promptstørrelse 15 837
+tegn (uendret).
+
+Eval mot fasit (Sonnet 5.5 medium, 166 kort):
+
+| | NYE kort (19, blind) | Kjede: dag | Kjede: eksakt (68 med tid) | Ga ingen dato (feil) | Falsk dato |
+|---|---|---|---|---|---|
+| Nullpunkt build 135 (09:37) | **19/19** | **166/166 (100 %)** | **68/68** | 0 | 0 |
+| Instruks uten «= I DAG»-setningen (09:41, 09:43) | 19/19 | 165/166 ×2 | 68/68 | 0 | 0 |
+| Kontroll, original igjen (09:46) | 19/19 | 166/166 | 68/68 | 0 | 0 |
+
+Rå (modellen alene) 164/166 i alle fire kjøringer – koden retter 2 gamle kort. **Appen selv traff 19/19 på de nye** (riktig dag
+på alt; på det usikre kortet beholdt Haakon dagen AI satte).
+
+**Selgerrettelser (8) – ingen tolkningsfeil:**
+- Jørgen 4: «Ring på fredag kl 11:00» → lørdag kl 16; «Ring 16:20» → dagen etter kl 17; «Ring på fredag» → onsdag uka etter;
+  «i januar/februar» (AI 1. jan) → 7. jan. Alle flyttet uten støtte i notatet = personlige valg.
+- Haakon 3 + 1: «ring opp imorgen om ikke» → to dager senere kl 15 (personlig); «Ring opp lørdag» 21 → 15 og «neste mandag»
+  21 → 12 (tidsrettelser bort fra lært time); «Ring opp» uten tid (AI null, riktig) → satte selv fredag kl 15.
+- Joshua 2: notatet skrevet etter import (over) – ikke AI-ens feil.
+
+**Mønstre vurdert – ingen fikk regel (bevis mangler):**
+- «neste mandag» skrevet torsdag: modellen svarte 26.10 (mandagen i neste uke) selv om instruksen sier førstkommende + 7 (= 2.11),
+  og Haakon beholdt 26.10. Instruksens «neste <ukedag>»-konvensjon kan være feil for akkurat denne kombinasjonen (ukedagen
+  ligger etter helga). 1 kort → usikker i fasit + spørsmål til Christian. «neste fredag» skrevet torsdag (samme dag, Haakon) gir
+  30.10 uansett konvensjon.
+- Måned alene = januar → 1. januar er helligdag (Jørgen valgte 7. jan). 1 kort. Kandidat hvis det kommer flere («etter nyttår»
+  = 8. januar finnes alt).
+- Haakon setter 15:00 på lørdagskort (2 kort 24.10), lært time er 21. Under grensen; `learnedHour` bruker én time per selger.
+  Kandidat: lært time per ukedag/helg – bare hvis andelen rettet bort stiger.
+- Nye skrivemåter uten betydning for dato: «Blr» (blir), «kontak», «prospects», «brann kamp» (gir ikke klokkeslett – riktig).
+- Pris/tall: «1197», «500», «698» ble korrekt ikke lest som klokkeslett (tester lagt til).
+
+**Forsøk på rydding – IKKE beholdt:** instruksen (DAG) sier fortsatt «Samme ukedag som i dag MED et klokkeslett som ennaa ikke
+er passert … = I DAG, ikke neste uke», som motsier Christians regel fra 23.10 (koden gjør +7 uansett). Fjernet setningen
+(15 837 → 15 691 tegn) og målte to ganger: 165/166 begge ganger, eneste bom Nicolais «Ring ila neste uke» (28.09 – kjent ustabil,
+bommet også i 21.10-kjøringene). Kontroll på originalen: 166/166. Originalen 2/2, endringen 0/2 på dét kortet – svakt bevis, men
+regelen «behold bare det som ikke er lavere» gjelder → `git checkout -- index.html`. Setningen er ufarlig så lenge koden
+overstyrer; spørsmål til Christian om den skal fjernes uten måling. Sammenslåing av de to «dag/tid trumfer handling»-setningene
+(kandidat siden 17.10) ble ikke prøvd i dag fordi målingen ikke klarer å skille så små endringer fra støy på ett kort.
+
+**Endringer:** index.html **uendret** (build 135 står). fasit.json +22 kort (252). tester.js +10 pipeline-tester fra ekte kort
+(162 OK, ingen kodeendring). eval-historikk 4 rader + note.
+
+**Bevisst ikke gjort:** modellsjekk (19 nye siden 21.10 < 40); regel for «ila neste uke» (fortsatt 1 kort, ren modellstøy);
+regel for «neste mandag» (1 kort, venter på Christian); endring av `learnedHour` (17 % rettet bort).
+
+**Trend (kjede: dag):** 17.10 etter 100 % (142) → 21.10 etter 99 % (182/183) → 24.10 100 % (166/166, uten testkort). Nye kort
+(blind): 9/9 → 51/51 → 19/19. Appen selv på nye selgerkort: 8/9 → 14/14 → 19/19.
+
 ## 23.10.2026 (build 134–135) – Christian snur regelen for samme ukedag med klokkeslett, og gir bindingsregel
 Utløser: Christian leste endringene fra 21.10 og sa at «Hjemme tirsdag kl 17» skrevet en tirsdag skal bety NESTE tirsdag.
 

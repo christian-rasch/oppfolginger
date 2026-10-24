@@ -1,6 +1,6 @@
 {
  "versjon": 1,
- "oppdatert": "2026-10-23",
+ "oppdatert": "2026-10-24",
  "beskrivelse": "Fasit for datotolkning: hva selgeren mente da notatet ble skrevet (bokstavelig lesing). tidFri=true: notatet sier ingen tid, bare dagen teller. usikker=true: telles ikke. naa=UTC (norsk tid = +1/+2 t), slik eksporten skriver det. test=true: Christians testkort – telles ikke. laStaa=true: kort på feil dag som Christian har sagt skal stå – ikke i rapporten.",
  "kort": [
   {
@@ -2585,6 +2585,248 @@
    "usikker": false,
    "kilde": "Claude-gjennomgang 21.10.2026",
    "merknad": "«Ringe imorgen» skrevet tirsdag"
+  },
+  {
+   "id": "simon.k|2026-10-23T12:57|d41d8cd98f",
+   "who": "simon.k",
+   "naa": "2026-10-23T12:57",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "tomt notat"
+  },
+  {
+   "id": "haakon.f|2026-10-21T15:19|2d50dda5c5",
+   "who": "haakon.f",
+   "naa": "2026-10-21T15:19",
+   "notat": "Måtte se over skal svare ja, ring opp fredag [tlf]",
+   "gull": "2026-10-23T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«ring opp fredag» skrevet onsdag; lært time 21 beholdt"
+  },
+  {
+   "id": "haakon.f|2026-10-21T16:34|e23b2a74d0",
+   "who": "haakon.f",
+   "naa": "2026-10-21T16:34",
+   "notat": "Skal 100 prosent svare ja ring opp imorgen om ikke",
+   "gull": "2026-10-22T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«ring opp imorgen om ikke» skrevet onsdag; selger flyttet til lørdag 24.10 kl 15 (personlig valg)"
+  },
+  {
+   "id": "haakon.f|2026-10-22T14:06|70100e1846",
+   "who": "haakon.f",
+   "naa": "2026-10-22T14:06",
+   "notat": "[tlf] Ringe neste mandag. Eier to hus hp",
+   "gull": "2026-10-26T12:00",
+   "tidFri": true,
+   "usikker": true,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ringe neste mandag» skrevet torsdag: mandagen i neste uke (26.10) eller førstkommende + 7 (2.11) slik instruksen sier? Selger beholdt 26.10 men satte 12:00 i stedet for lært 21. Spørsmål til Christian 24.10"
+  },
+  {
+   "id": "haakon.f|2026-10-22T14:32|21a862fa1b",
+   "who": "haakon.f",
+   "naa": "2026-10-22T14:32",
+   "notat": "[tlf] Terje, Ringe imorgen, litt misfornøyd med Altibox, kun snakka med kona.",
+   "gull": "2026-10-23T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ringe imorgen» skrevet torsdag; «snakka med kona» er fortid"
+  },
+  {
+   "id": "haakon.f|2026-10-22T16:52|b76b9c2441",
+   "who": "haakon.f",
+   "naa": "2026-10-22T16:52",
+   "notat": "Komme tilbake imorgen kl 14:00 prøvd å installere før men funket ikke",
+   "gull": "2026-10-23T14:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«imorgen kl 14:00» skrevet torsdag"
+  },
+  {
+   "id": "haakon.f|2026-10-22T17:09|fe5550c274",
+   "who": "haakon.f",
+   "naa": "2026-10-22T17:09",
+   "notat": "Ring opp lørdag midt i brann kamp",
+   "gull": "2026-10-24T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring opp lørdag» skrevet torsdag; «midt i brann kamp» gir ikke klokkeslett; selger satte 15:00 i stedet for lært 21"
+  },
+  {
+   "id": "haakon.f|2026-10-22T17:21|5187e0703c",
+   "who": "haakon.f",
+   "naa": "2026-10-22T17:21",
+   "notat": "Skal ta kontak, ring opp neste fredag, om ikke",
+   "gull": "2026-10-30T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«neste fredag» skrevet torsdag = fredag 30.10 (både «neste uke» og «førstkommende + 7» gir samme dag)"
+  },
+  {
+   "id": "haakon.f|2026-10-22T17:28|5f066bbe47",
+   "who": "haakon.f",
+   "naa": "2026-10-22T17:28",
+   "notat": "Komme tilbake mandag 1600. Mannen var ikke hjemme.",
+   "gull": "2026-10-26T16:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«mandag 1600» skrevet torsdag; «var ikke hjemme» er fortid"
+  },
+  {
+   "id": "haakon.f|2026-10-22T17:46|0ae309d528",
+   "who": "haakon.f",
+   "naa": "2026-10-22T17:46",
+   "notat": "Hc, var på farta sendt 1197. Ring opp",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring opp» uten dag/tid; «1197» er pris; selger satte 23.10 kl 15 selv (personlig valg)"
+  },
+  {
+   "id": "haakon.f|2026-10-23T15:58|d550dd8e82",
+   "who": "haakon.f",
+   "naa": "2026-10-23T15:58",
+   "notat": "Komme tilbake neste uke Blr svare ja sparer 500",
+   "gull": "2026-10-26T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«neste uke» skrevet fredag = mandag 26.10; «sparer 500» er pris"
+  },
+  {
+   "id": "fredrik.l|2026-10-22T15:57|36a5178cb7",
+   "who": "fredrik.l",
+   "naa": "2026-10-22T15:57",
+   "notat": "6 prospects ice Ringe 20:00",
+   "gull": "2026-10-22T20:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ringe 20:00» kl 17:57 = i dag"
+  },
+  {
+   "id": "joshua.i|2026-10-21T13:55|cc1e7ca929",
+   "who": "joshua.i",
+   "naa": "2026-10-21T13:55",
+   "notat": "[tlf] Ice [tlf] Shushan Ring etter 12",
+   "gull": "2026-10-22T12:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring etter 12» skrevet kl 15:55 (passert) = i morgen kl 12"
+  },
+  {
+   "id": "joshua.i|2026-10-21T15:13|d68c7f2ed1",
+   "who": "joshua.i",
+   "naa": "2026-10-21T15:13",
+   "notat": "Fredag kl 19",
+   "gull": "2026-10-23T19:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Fredag kl 19» skrevet onsdag; notatet skrevet ETTER import (AI så tomt notat) – utenfor eval; selger satte 18:30 selv"
+  },
+  {
+   "id": "joshua.i|2026-10-21T17:13|d41d8cd98f",
+   "who": "joshua.i",
+   "naa": "2026-10-21T17:13",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "tomt notat"
+  },
+  {
+   "id": "joshua.i|2026-10-21T17:23|2796d570bc",
+   "who": "joshua.i",
+   "naa": "2026-10-21T17:23",
+   "notat": "Ring Imrg tlf to salg",
+   "gull": "2026-10-22T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring Imrg» skrevet onsdag; notatet skrevet ETTER import (AI så tomt) – utenfor eval; selger satte 22.10 kl 15 selv"
+  },
+  {
+   "id": "jorgen.f|2026-10-21T09:40|df369fc5c8",
+   "who": "jorgen.f",
+   "naa": "2026-10-21T09:40",
+   "notat": "Ring på fredag kl 11:00",
+   "gull": "2026-10-23T11:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring på fredag kl 11:00» skrevet onsdag; selger flyttet til lørdag 24.10 kl 16 (personlig valg)"
+  },
+  {
+   "id": "jorgen.f|2026-10-21T09:55|fe62683da7",
+   "who": "jorgen.f",
+   "naa": "2026-10-21T09:55",
+   "notat": "Ring etter kl 16:00 denne kunden bør du få inn betaler 698 I dag hos ice uten sikkerhet noe som er viktig for kunden betaler også for skylagring De har 200 mbits den slår vi 60 gb u utlandet den slår vi Sikkerhet slår vi",
+   "gull": "2026-10-21T16:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring etter kl 16:00» kl 11:55 = i dag kl 16; «betaler 698 I dag» er tilstand, ikke dag"
+  },
+  {
+   "id": "jorgen.f|2026-10-21T10:32|c00a60f19a",
+   "who": "jorgen.f",
+   "naa": "2026-10-21T10:32",
+   "notat": "Ring 16:20",
+   "gull": "2026-10-21T16:20",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring 16:20» kl 12:32 = i dag; selger flyttet til 22.10 kl 17 (personlig valg)"
+  },
+  {
+   "id": "jorgen.f|2026-10-21T11:58|7b043d5475",
+   "who": "jorgen.f",
+   "naa": "2026-10-21T11:58",
+   "notat": "Ring kl 16:00 3 abo en ubegrenset 2 under 13",
+   "gull": "2026-10-21T16:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring kl 16:00» kl 13:58 = i dag"
+  },
+  {
+   "id": "jorgen.f|2026-10-21T12:24|64cd53f0c9",
+   "who": "jorgen.f",
+   "naa": "2026-10-21T12:24",
+   "notat": "Ring på fredag",
+   "gull": "2026-10-23T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«Ring på fredag» skrevet onsdag; selger flyttet til onsdag 28.10 (personlig valg)"
+  },
+  {
+   "id": "jorgen.f|2026-10-21T13:23|7b25d982f2",
+   "who": "jorgen.f",
+   "naa": "2026-10-21T13:23",
+   "notat": "Ring kunden opp igjen i januar/februar",
+   "gull": "2027-01-01T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 24.10.2026",
+   "merknad": "«i januar/februar» = første alternativ, den 1. (konvensjon); selger valgte 7. jan (1. jan er helligdag – personlig valg)"
   }
  ]
 }

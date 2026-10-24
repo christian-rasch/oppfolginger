@@ -35,3 +35,11 @@ Rader til og med 17.10.2026 har UTC-tid (2 timer bak norsk tid); fra nå norsk t
 Rader 21.10.2026: 09:35 = gammel eval med UTC-feil (187 kort, 4 av dem senere usikre); 09:39 = nullpunkt build 130 med
 korrigert tid; 09:41/09:43/09:54 (sonnet medium) = vaktene i build 131, før JSON-fiksen («ingen dato 1» = dobbel JSON på
 «Komme tilbke»); 09:54 = modellsjekk; 09:58 = endelig build 131. Se funn.md.
+| 2026-10-24 09:37 | claude-sonnet-5-5 | medium | 166 | 99% | 100% | 100% (68) | 0 | 0 | 19/19 | 2278 ms | 39530/41335 | 97% |
+| 2026-10-24 09:41 | claude-sonnet-5-5 | medium | 166 | 99% | 99% | 100% (68) | 0 | 0 | 19/19 | 2336 ms | 39530/42340 | 97% |
+| 2026-10-24 09:43 | claude-sonnet-5-5 | medium | 166 | 99% | 99% | 100% (68) | 0 | 0 | 19/19 | 2269 ms | 39530/42314 | 97% |
+| 2026-10-24 09:46 | claude-sonnet-5-5 | medium | 166 | 99% | 100% | 100% (68) | 0 | 0 | 19/19 | 2275 ms | 39530/41497 | 97% |
+
+Rader 24.10.2026 (166 kort = 183 minus Christians 17 testkort, pluss 19 nye blindt merkede): 09:37 = nullpunkt build 135; 09:41 og 09:43 =
+instruksen uten setningen «samme ukedag + klokkeslett ikke passert = I DAG» (motsier Christians regel 23.10) – eneste bom begge ganger
+var Nicolais ustabile «Ring ila neste uke»; 09:46 = kontroll på originalen (traff igjen). Originalen beholdt. Se funn.md.
