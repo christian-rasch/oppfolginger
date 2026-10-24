@@ -119,6 +119,17 @@ N('«Binding hos Banhof et år frem i tid» uten maaned → ingen dato',{dato:nu
 N('«Er i binding» uten slutt → ingen dato',{dato:null},'Måtte regne på det og er i binding','2026-09-08T16:36',null);
 N('binding + klokkeslett → klokkeslettet vinner',{dato:null},'Binding til mai, ring 18','2026-10-20T15:00','2026-10-20T18:00');
 N('binding + imorgen → imorgen vinner',{dato:null},'Xx ringe imorgen hadde alt av fotball 300linje nexgt, i binding.','2026-09-24T20:26','2026-09-25T12:00');
+// --- 24.10.2026 (ekte kort fra gjennomgangen, ingen kodeendring – dokumenterer dagens oppfoersel) ---
+N('«Ring etter 12» kl 15:55 (passert), AI i morgen → urørt',{dato:'2026-10-22T12:00',eksaktDato:false},'[tlf] Ice [tlf] Shushan Ring etter 12','2026-10-21T15:55','2026-10-22T12:00');
+N('«Ring etter 12» kl 15:55, AI tom → i morgen kl 12',{dato:null},'Ring etter 12','2026-10-21T15:55','2026-10-22T12:00');
+N('«Ring på fredag kl 11:00» onsdag → fredag 11:00',{dato:'2026-10-23T11:00',eksaktDato:false},'Ring på fredag kl 11:00','2026-10-21T11:40','2026-10-23T11:00');
+N('«mandag 1600» torsdag, AI tom → mandag 16:00 («var ikke hjemme» etter ukedagen er ikke fortid)',{dato:null},'Komme tilbake mandag 1600. Mannen var ikke hjemme.','2026-10-22T19:28','2026-10-26T16:00');
+N('«lørdag midt i brann kamp» → lørdag 12:00 (ingen tid i notatet)',{dato:null},'Ring opp lørdag midt i brann kamp','2026-10-22T19:09','2026-10-24T12:00');
+N('«neste fredag» torsdag, AI tom → fredag uka etter (30.10)',{dato:null},'Skal ta kontak, ring opp neste fredag, om ikke','2026-10-22T19:21','2026-10-30T12:00');
+N('«neste uke» fredag + lært time 21 → mandag kl 21 («sparer 500» er pris)',{dato:'2026-10-26T12:00',eksaktDato:false},'Komme tilbake neste uke Blr svare ja sparer 500','2026-10-23T17:58','2026-10-26T21:00',21);
+N('«i januar/februar» AI tom → 1. januar (første alternativ)',{dato:null},'Ring kunden opp igjen i januar/februar','2026-10-21T15:23','2027-01-01T12:00');
+N('«sendt 1197. Ring opp» → ingen dato (1197 er pris, ikke 11:97)',{dato:null},'Hc, var på farta sendt 1197. Ring opp','2026-10-22T19:46',null);
+N('«6 prospects ice Ringe 20:00», AI tom → i dag 20:00',{dato:null},'6 prospects ice Ringe 20:00','2026-10-22T17:57','2026-10-22T20:00');
 // --- 21.10.2026: modellen skrev to JSON-objekter («Korrigering: …») på «Komme tilbke» i 3 av 5 kjøringer → bruk det siste ---
 const J=(name,t,want)=>ok('json: '+name,api.sisteJsonObjekt(t),want);
 J('to objekter → det siste',' {"dato":"2026-10-19T21:05","datoGrunn":"a"}\n\nKorrigering: Naa er 19:05 {ikke json}.\n\n{"dato":"2026-10-19T21:15","datoGrunn":"b"}',{dato:'2026-10-19T21:15',datoGrunn:'b'});
