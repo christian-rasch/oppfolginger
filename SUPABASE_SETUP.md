@@ -142,3 +142,10 @@ Snarveien på iPad: Åpne URL `webapp://driv.app.snodriv.no/` → Vent 1 s → T
 - `supabase/functions/skjermbilde/index.ts` v2: svarer straks på `x-oppf-varm`; nøkkeloppslag ∥ lesing av kropp, bremse-telling ∥
   opplasting, `last_used_at` oppdateres etter svaret. Deployes på nytt (Management API, se deploy-skript i økt-notatene, eller
   Dashboard → Edge Functions → skjermbilde → lim inn koden → Deploy).
+
+## Tillegg 2026-10-24 — snarveien forenklet: server-delene brukes ikke lenger
+Christian gikk over til en snarvei uten opplasting (Åpne DrivMap → Vent 0,2 → Ta skjermbilde → Kopier til utklipp (kun lokalt) →
+Åpne Oppfølginger) og trykker LIM INN selv — det var raskest i praksis. Fra app build 2026-10-24-136 er nøkkelboksen under Min profil
+og innboks-hentingen (`innboksSjekk`/`innboksPoll`) fjernet. Edge Function `skjermbilde`, tabellene `oppf_innboks`/`oppf_snarvei_nokkel`
+og SQL-filene fra 18.10/20.10 ligger igjen ubrukt. Skru av varm-pingen: `supabase/sql/2026-10-24-snarvei-av.sql`
+(`select cron.unschedule('skjermbilde-varm');`). Gjeninnføring = `git revert` av commiten for build 136.

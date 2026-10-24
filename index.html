@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-23-135">
+<meta name="app-build" content="2026-10-24-136">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1064,7 +1064,7 @@
       if(!cloudInitBusy){cloudInitBusy=true;cloudInit().catch(function(){}).then(function(){cloudInitBusy=false;});}
       return;}
     if(!sbUser)return;
-    flushPendingImgs();flushLog();cloudHeartbeat(false);innboksSjekk();innboksPoll(); // snarveien kan ha lagt (eller være i ferd med å legge) et skjermbilde i innboksen
+    flushPendingImgs();flushLog();cloudHeartbeat(false);
     if(cloudState==='syncing'||cloudState==='conflict'||uiBusy())return;
     const t=Date.now();if(t-cloudWakeAt<30000)return; // maks én vekking pr. 30 s
     const stalePull=(t-(+new Date(cmeta(CKEY.pull)||0)))>5*60000;
@@ -1345,9 +1345,9 @@
       const was=!!sbUser;sbUser=session?session.user:null;
       if(was&&!sbUser)setCloudState('login'); // sesjonen forsvant → ikke vis «Synket» lenger
       renderCloudStatus();
-      if(!was&&sbUser){cloudReconcile().then(function(){cloudHeartbeat(true);flushLog();});flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();innboksSjekk();}
+      if(!was&&sbUser){cloudReconcile().then(function(){cloudHeartbeat(true);flushLog();});flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();}
       refreshPushGate();});
-    if(sbUser){cloudFetchApiKey();innboksSjekk();innboksPoll();await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();pushRefresh();} else setCloudState('login');
+    if(sbUser){cloudFetchApiKey();await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();pushRefresh();} else setCloudState('login');
     refreshPushGate();
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
     if(/[?&]laering=1/.test(location.search))laeringEksport(); // læringsgjennomgang: appen åpnes slik av laering/kjor-gjennomgang.command
@@ -1382,79 +1382,6 @@
     }catch(e){}
   }
 
-  // ---- snarvei «Lag oppfølging» (Kontrollsenter på iPad) → innboks i skyen → samme flyt som LIM INN ----
-  // Snarveien POSTer skjermbildet til Edge Function «skjermbilde» med selgerens nøkkel og åpner så appen. Her henter appen
-  // bildet (tabell oppf_innboks + fil i cardimg), kjører analysen og rydder opp. SQL: supabase/sql/2026-10-18-snarvei.sql.
-  const INNBOKS_TABLE='oppf_innboks',NOKKEL_TABLE='oppf_snarvei_nokkel',SNARVEI_K='oppf:snarvei:nokkel';
-  const SNARVEI_URL=CLOUD_SYNC_CONFIG.supabaseUrl+'/functions/v1/skjermbilde';
-  let innboksBusy=false,innboksAt=0;
-  async function innboksSjekk(tett){ // tett=true: kall fra innboksPoll → ingen 2 s-sperre (oppslaget er bittelite)
-    const c=getSupabaseClient();if(!c||!sbUser||adminView||navigator.onLine===false)return;
-    if(innboksBusy||(!tett&&Date.now()-innboksAt<2000))return;
-    if(analysing||pendingImg||$('pasteModal').classList.contains('open'))return; // et bilde er alt under behandling
-    innboksBusy=true;innboksAt=Date.now();
-    try{
-      const {data,error}=await c.from(INNBOKS_TABLE).select('id,path,created_at').is('hentet_at',null).order('created_at',{ascending:false}).limit(5);
-      if(error){if(!/(relation|schema cache|does not exist)/i.test(error.message||''))logEvent('innboks','les: '+error.message);return;} // tabellen finnes ikke ennå → stille
-      if(!data||!data.length)return;
-      // krev radene nå (så ikke to enheter tar samme bilde); kun det nyeste brukes, eldre forkastes
-      const {data:tatt,error:e2}=await c.from(INNBOKS_TABLE).update({hentet_at:new Date().toISOString()}).in('id',data.map(function(r){return r.id;})).is('hentet_at',null).select('id,path');
-      if(e2||!tatt||!tatt.length)return;
-      const rydd=function(){try{c.storage.from(IMG_BUCKET).remove(tatt.map(function(r){return r.path;})).then(function(){});c.from(INNBOKS_TABLE).delete().in('id',tatt.map(function(r){return r.id;})).then(function(){});}catch(e){}};
-      const nyeste=tatt.find(function(r){return r.id===data[0].id;})||tatt[0];
-      if(Date.now()-new Date(data[0].created_at).getTime()>6*3600000){rydd();return;} // gammelt bilde ingen hentet → ikke dukk opp dager senere
-      openPaste();setAiStatus('Henter skjermbildet fra snarveien …','busy');
-      const {data:blob,error:e3}=await c.storage.from(IMG_BUCKET).download(nyeste.path);
-      if(e3||!blob)throw new Error((e3&&e3.message)||'tom fil');
-      handleImageFile(blob); // → komprimering → AI → kontrollmenyen, nøyaktig som LIM INN (appen lagrer sitt eget kartbilde)
-      rydd();return true;
-    }catch(e){
-      logEvent('innboks','hent: '+((e&&e.message)||e));
-      if($('pasteModal').classList.contains('open')){setAiStatus('Fikk ikke hentet skjermbildet ('+((e&&e.message)||'feil')+'). Bruk LIM INN.','err');showUpload(true);}
-    }finally{innboksBusy=false;}
-  }
-  // Snarveien åpner appen før opplastingen er ferdig (så selgeren slipper å se iPaden «fryse»). Derfor: etter hver åpning/fokus
-  // ser vi etter bildet tett de første sekundene (opplastingen tar normalt 1–3 s) og sjeldnere opp til ~18 s.
-  let innboksPollTimer=null;
-  function innboksPoll(){
-    clearTimeout(innboksPollTimer);
-    const t0=Date.now(),steg=[700,1400,2200,3000,4000,5000,6500,8000,10000,12500,15000,18000];let i=0;
-    const neste=function(){
-      if(i>=steg.length||document.hidden||!sbUser)return;
-      innboksPollTimer=setTimeout(function(){i++;innboksSjekk(true).then(function(fant){if(!fant)neste();});},Math.max(0,t0+steg[i]-Date.now()));
-    };
-    neste();
-  }
-  // nøkkel pr. selger: lages her, bare hashen lagres i skyen; selve nøkkelen ligger lokalt så den kan kopieres inn i snarveien
-  async function sha256Hex(s){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(d)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
-  function snarveiNokkel(){try{return localStorage.getItem(SNARVEI_K)||'';}catch(e){return '';}}
-  async function snarveiLagNokkel(){
-    const c=getSupabaseClient();if(!c||!sbUser){toast('Logg inn først');return;}
-    if(!(window.crypto&&crypto.subtle&&crypto.getRandomValues)){toast('Krever den publiserte (https) appen');return;}
-    if(snarveiNokkel()&&!confirm('Lage ny nøkkel? Den gamle slutter å virke, og snarveien må få den nye.'))return;
-    const b=new Uint8Array(24);crypto.getRandomValues(b);
-    const key='oppf_'+btoa(String.fromCharCode.apply(null,b)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    try{
-      const hash=await sha256Hex(key);
-      const {error}=await c.from(NOKKEL_TABLE).upsert({user_id:sbUser.id,key_hash:hash},{onConflict:'user_id'});
-      if(error)throw error;
-      try{localStorage.setItem(SNARVEI_K,key);}catch(e){}
-      renderProfileBody();toast('Nøkkel laget — kopier den inn i snarveien');
-    }catch(e){logEvent('snarvei','nøkkel: '+((e&&e.message)||e));toast('Klarte ikke å lagre nøkkelen');}
-  }
-  function kopierTekst(t,msg){
-    try{navigator.clipboard.writeText(t).then(function(){toast(msg);},function(){toast('Kopiering feilet — marker og kopier manuelt');});}
-    catch(e){toast('Kopiering feilet — marker og kopier manuelt');}
-  }
-  function snarveiSectionHtml(){
-    const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Snarvei «Lag oppfølging»</b></div>';
-    const key=snarveiNokkel();
-    if(!key)return head+'<div class="cloud-row cloud-muted">Knappen i Kontrollsenter kan sende skjermbildet rett hit, uten LIM INN. Lag en nøkkel og lim den inn i snarveien én gang.</div>'
-      +'<div class="cloud-row cloud-btns"><button class="btn primary" id="snLag">Lag nøkkel</button></div>';
-    return head+'<div class="cloud-row cloud-muted">Nøkkelen din: <code>'+esc(key.slice(0,9))+'…'+esc(key.slice(-4))+'</code>. Lim den inn i snarveien «Lag oppfølging» der det står OPPFØLGING.</div>'
-      +'<div class="cloud-row cloud-btns"><button class="btn primary" id="snKopier">Kopier nøkkel</button><button class="btn" id="snAdresse">Kopier adresse</button><button class="btn" id="snLag">Lag ny nøkkel</button></div>';
-  }
-
   // ---- sky-synk UI ----
   function renderCloudModalBody(){
     const b=$('cloudBody');if(!b)return;
@@ -1485,7 +1412,6 @@
         +'<div class="cloud-row"><input id="pfNewPw" type="password" autocomplete="new-password" placeholder="nytt passord"></div>'
         +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pfSavePw">Lagre nytt passord</button></div>'
         +pushSectionHtml()
-        +snarveiSectionHtml()
         +adminSectionHtml();
     }else{
       b.innerHTML='<div class="cloud-row cloud-muted">Logg inn for å kunne bytte passord.</div>'
@@ -1535,9 +1461,6 @@
       if(id==='pfLogout'){cloudSignOut().then(renderProfileBody);return;}
       if(id==='pushOn'){enablePush();return;}
       if(id==='pushOff'){disablePush();return;}
-      if(id==='snLag'){snarveiLagNokkel();return;}
-      if(id==='snKopier'){kopierTekst(snarveiNokkel(),'Nøkkel kopiert — lim inn i snarveien');return;}
-      if(id==='snAdresse'){kopierTekst(SNARVEI_URL,'Adresse kopiert');return;}
       if(id==='adminLoad'){adminLoadSellers();return;}
       const sb=e.target.closest&&e.target.closest('.admin-seller');
       if(sb){adminEnterView(sb.getAttribute('data-uid'),sb.getAttribute('data-em'));return;}
