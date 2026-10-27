@@ -1,5 +1,61 @@
 # Funn fra gjennomganger
 
+## 27.10.2026 (build 137) – fjerde automatiske gjennomgang
+**Utløser:** 4 rettelser (6 nye kort). Forrige gjennomgang 24.10 (nullpunkt build 136, aldri målt før nå – 136 endret ikke datologikk).
+**Umerkede AI-kort: 9** (Haakon 4, Eskil 2, Joshua 1, Fredrik 1, Christian 1), alle blindt merket. 7 i eval: 1 test (Christians tomme
+notat), 1 usikker og uansett utenfor (Eskil «Ringe tirsdag» – AI leste «Ringe tirsdag neste uke» → 3.11, selgeren beholdt 3.11 men
+notatet sier nå bare «Ringe tirsdag»; notat endret etter import). Haakons tomme notat (AI riktig «ingen», han satte 26.10 kl 14 selv) er med.
+
+**Tall:** 335 kort (358 sist – selgerne sletter ferdige kort; 46 gamle fasit-kort finnes ikke lenger i eksporten), 214 med AI, 163 i eval
+(32 holdt utenfor: notat endret etter import; 18 Christians testkort), 48 rettet av selger totalt. Stille feil: **0**. Lært klokkeslett:
+12 kort (alle Haakon, 21:00), 2 rettet bort (17 %) – uendret siden 24.10, ingen nye kort med lært time (Haakons to nye uten tid ligger
+>15 dager frem, der brukes lært time bevisst ikke). Promptstørrelse 15 837 tegn (uendret).
+
+Eval mot fasit (Sonnet 5.5 medium, 163 kort):
+
+| | NYE kort (7, blind) | Kjede: dag | Kjede: eksakt (67 med tid) | Ga ingen dato (feil) | Falsk dato |
+|---|---|---|---|---|---|
+| Nullpunkt build 136 (09:35) | **7/7** | **163/163 (100 %)** | **67/67** | 0 | 0 |
+| Etter, build 137 (09:38) | **7/7** | **163/163 (100 %)** | **67/67** | 0 | 0 |
+
+Rå (modellen alene) 161/163 begge ganger – koden retter 2 gamle kort. **Appen selv traff 7/7 på de nye** (riktig dag på alt).
+
+**Selgerrettelser (5 siden 24.10) – ingen tolkningsfeil, alle er klokkeslett:**
+- Joshua «Komme tilbake torsdag» 12 → 17; Eskil «Ringe torsdag» 12 → 17; Haakon «Send melding 1. februar» 12 → 13:45 og
+  «ringe I sept 2027» 12 → 15. Ingen av notatene sier tid. Haakon «» (tomt notat): AI ingen dato (riktig), han satte dato selv.
+- Lært time dekker nå Eskil: med «Ringe torsdag» har han 3 rettelser fra 12:00 til 17:00 (to eldre kort der han også flyttet dagen,
+  pluss dette) → `learnedHour()` gir 17 for ham fra nå av, automatisk, uten kodeendring. Joshua har bare 1 (→ ingen lært time ennå).
+- Haakons to rettelser er på kort >15 dager frem, der lært time (21) med vilje ikke brukes – og han valgte 13:45/15, ikke 21, så
+  grensen er riktig.
+
+**Mønster med bevis → endret (kode i LAER-blokken, instruksen urørt):**
+1. **«ring opp <dagord> N» = klokkeslett i sikkerhetsnettet.** Haakon: «Skal svare ja ring opp imorgen 15» (19.10) og «Skal svare ja
+   ring opp mandag 15» (24.10) – 2 ekte kort, samme skrivemåte. Modellen traff begge (instruksen sier alt «tall rett etter ring =
+   klokkeslett»), men `timeFromText` fant ikke 15 når et dagord sto imellom → hadde AI svart 12:00 eller ingenting, ville kortet
+   fått kl 12. Nå godtar «ring N»-regexen et dagord (i morgen/imrg/i dag/i kveld/ukedag) mellom «ring (opp)» og tallet. Vern mot
+   dato-tall: tall fulgt av månedsnavn («ring mandag 7 juli», «mandag 26 oktober»), «.», «/» eller «voksen» o.l. er ikke tid; «mandag 50»
+   og «fredag 00» faller utenfor 1–23. 11 enkelttester + 11 pipeline-tester fra ekte kort (184 OK). Eval likt før/etter (ingen
+   bieffekt på de 163). Syntaks OK.
+
+**Mønstre vurdert – ingen regel (bevis mangler):**
+- `learnedHour()` teller bare rettelser bort fra 12:00, ikke kort der selgeren GODTOK den lærte timen. Haakon har nå nøyaktig 3
+  tellende rettelser til 21 (grensen) og 9 godtatte lært-time-kort som ikke teller; sletter han ett gammelt kort, faller lært time
+  bort. Ikke rørt (ligger utenfor LAER-blokken, eval kan ikke måle det, ingen feil har skjedd ennå). Kandidat hvis Haakon mister
+  21:00: la godtatte lært-time-kort telle som stemme.
+- Selgere som setter 17:00 på kort uten tid: Joshua 1, Eskil 3 (dekket av lært time nå). Ikke en instruksendring – 12:00 er fortsatt
+  riktig standard, lært time tar resten.
+- «Akkuratt bundet seg opp ringe I sept 2027»: bindingsord + måned med årstall → modellen og koden tok riktig måned (oppfMonth
+  hopper bare over måneder som står rett etter bindingsord). Dokumentert med test.
+
+**Rydding:** ikke gjort. Den motsigende «= I DAG»-setningen i instruksen ble målt 24.10 (3 kjøringer) og beholdt; Christian har ikke
+svart på om den skal ut uten måling. Med 7 nye kort er målingen like ustabil på små endringer som sist – prøver ikke igjen før svar.
+
+**Bevisst ikke gjort:** modellsjekk (26 nye kort siden 21.10 < 40); regel for «januar/februar» = første virkedag (fortsatt 1 kort,
+ubesvart spørsmål); regel for «neste mandag» skrevet torsdag (1 kort, ubesvart); endring av `learnedHour` (se over).
+
+**Trend (kjede: dag):** 21.10 etter 99 % (182/183) → 24.10 100 % (166/166) → 27.10 100 % (163/163). Nye kort (blind): 51/51 → 19/19 →
+7/7. Appen selv på nye selgerkort: 14/14 → 19/19 → 7/7.
+
 ## 24.10.2026 (build 135, uendret) – tredje automatiske gjennomgang
 **Utløser:** 17 nye kort, 8 rettelser. Forrige gjennomgang 21.10 (nullpunkt for denne er build 135 fra 23.10, som aldri var målt
 med eval før nå). **Umerkede AI-kort: 22** (Haakon 10, Jørgen 6, Joshua 4, Fredrik 1, Simon 1 – ingen fra Christian), alle blindt

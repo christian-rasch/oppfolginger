@@ -1,6 +1,6 @@
 {
  "versjon": 1,
- "oppdatert": "2026-10-24",
+ "oppdatert": "2026-10-27",
  "beskrivelse": "Fasit for datotolkning: hva selgeren mente da notatet ble skrevet (bokstavelig lesing). tidFri=true: notatet sier ingen tid, bare dagen teller. usikker=true: telles ikke. naa=UTC (norsk tid = +1/+2 t), slik eksporten skriver det. test=true: Christians testkort – telles ikke. laStaa=true: kort på feil dag som Christian har sagt skal stå – ikke i rapporten.",
  "kort": [
   {
@@ -2827,6 +2827,106 @@
    "usikker": false,
    "kilde": "Claude-gjennomgang 24.10.2026",
    "merknad": "«i januar/februar» = første alternativ, den 1. (konvensjon); selger valgte 7. jan (1. jan er helligdag – personlig valg)"
+  },
+  {
+   "id": "haakon.f|2026-10-24T13:03|d3a7507030",
+   "who": "haakon.f",
+   "naa": "2026-10-24T13:03",
+   "notat": "Skal svare ja ring opp mandag 15",
+   "gull": "2026-10-26T15:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "«ring opp mandag 15» skrevet lørdag = mandag 26.10 kl 15"
+  },
+  {
+   "id": "haakon.f|2026-10-24T14:45|d41d8cd98f",
+   "who": "haakon.f",
+   "naa": "2026-10-24T14:45",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "tomt notat (AI leste ingen tekst) → ingen dato er riktig; selger satte 26.10 kl 14 selv"
+  },
+  {
+   "id": "christian.rasch|2026-10-24T19:32|d41d8cd98f",
+   "who": "christian.rasch",
+   "naa": "2026-10-24T19:32",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "test": true,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "tomt notat fra Christian = test"
+  },
+  {
+   "id": "joshua.i|2026-10-26T16:41|c43b2c5814",
+   "who": "joshua.i",
+   "naa": "2026-10-26T16:41",
+   "notat": "Komme tilbake torsdag",
+   "gull": "2026-10-29T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "«torsdag» skrevet mandag = 29.10; selger satte kl 17 (tidsvalg, ingen tid i notatet)"
+  },
+  {
+   "id": "haakon.f|2026-10-26T18:02|fadabfb7fd",
+   "who": "haakon.f",
+   "naa": "2026-10-26T18:02",
+   "notat": "[tlf] Mobil u 30 Julian julseth Sende melding om ubegrenset i februar når de får Netflix via huset å han slipper via ice Send melding 1. februar",
+   "gull": "2027-02-01T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "«Send melding 1. februar» = 1. feb 2027; selger satte kl 13:45 (tidsvalg)"
+  },
+  {
+   "id": "eskil.a|2026-10-26T18:34|4c5ddfd450",
+   "who": "eskil.a",
+   "naa": "2026-10-26T18:34",
+   "notat": "Ringe tirsdag",
+   "gull": "2026-10-27T12:00",
+   "tidFri": true,
+   "usikker": true,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "notat endret etter import: AI leste «Ringe tirsdag neste uke» (→ 3.11, selger beholdt 3.11), kortet sier nå bare «Ringe tirsdag» (bokstavelig 27.10). Holdes utenfor eval"
+  },
+  {
+   "id": "fredrik.l|2026-10-26T18:43|52f71ed6c9",
+   "who": "fredrik.l",
+   "naa": "2026-10-26T18:43",
+   "notat": "Onsdag 18:00",
+   "gull": "2026-10-28T18:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "«Onsdag 18:00» skrevet mandag = 28.10 kl 18"
+  },
+  {
+   "id": "eskil.a|2026-10-26T19:01|8eef250665",
+   "who": "eskil.a",
+   "naa": "2026-10-26T19:01",
+   "notat": "Ringe torsdag",
+   "gull": "2026-10-29T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "«torsdag» skrevet mandag = 29.10; selger satte kl 17 (tidsvalg)"
+  },
+  {
+   "id": "haakon.f|2026-10-26T19:51|fa58ff9eb8",
+   "who": "haakon.f",
+   "naa": "2026-10-26T19:51",
+   "notat": "[tlf] Akkuratt bundet seg opp ringe I sept 2027.",
+   "gull": "2027-09-01T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 27.10.2026",
+   "merknad": "«ringe I sept 2027» = måned med årstall → 1. sep 2027; selger satte kl 15 (tidsvalg). «Akkuratt bundet seg opp» er bakgrunn, ikke dato"
   }
  ]
 }

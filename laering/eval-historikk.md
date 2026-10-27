@@ -43,3 +43,8 @@ korrigert tid; 09:41/09:43/09:54 (sonnet medium) = vaktene i build 131, før JSO
 Rader 24.10.2026 (166 kort = 183 minus Christians 17 testkort, pluss 19 nye blindt merkede): 09:37 = nullpunkt build 135; 09:41 og 09:43 =
 instruksen uten setningen «samme ukedag + klokkeslett ikke passert = I DAG» (motsier Christians regel 23.10) – eneste bom begge ganger
 var Nicolais ustabile «Ring ila neste uke»; 09:46 = kontroll på originalen (traff igjen). Originalen beholdt. Se funn.md.
+| 2026-10-27 09:35 | claude-sonnet-5-5 | medium | 163 | 99% | 100% | 100% (67) | 0 | 0 | 7/7 | 2379 ms | 38847/41492 | 97% |
+| 2026-10-27 09:38 | claude-sonnet-5-5 | medium | 163 | 99% | 100% | 100% (67) | 0 | 0 | 7/7 | 2364 ms | 38847/40513 | 97% |
+
+Rader 27.10.2026 (163 kort = 156 med fasit fra før + 7 nye blindt merkede; 46 gamle fasit-kort er slettet av selgerne og finnes ikke lenger i eksporten):
+09:35 = nullpunkt build 136; 09:38 = build 137 («ring opp <dagord> N» i sikkerhetsnettet). Likt resultat, endringen beholdt. Se funn.md.
