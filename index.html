@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-24-136">
+<meta name="app-build" content="2026-10-27-137">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -737,7 +737,8 @@
         const erAar=/^20[2-3]\d$/.test(tall)&&(/(?:jan|feb|mar|apr|mai|jun|jul|aug|sep|okt|nov|des)\w*\.?\s*$|\d{1,2}[./]\s*$|\b(?:i|til|fra|før|etter|innen)\s+$/i.test(foran)&&!/\b(?:kl|klokka|etter|før|rundt|ca|innen)\s*$/i.test(foran)||(/^202[4-9]$/.test(tall)&&!/\b(?:kl|klokka|etter|før|rundt|ca|ring\w*|innen|til)\s*$/i.test(foran)));
         if(erAar)continue; // aarstall («25. mars 2026», «til 2027»), ikke 20:26
         return {hh:+mm[1],mm:+mm[2],src:'hhmm'};}}
-    if((m=/\bring(?:e|er|es|t)?\s+(?:opp\s+|igjen\s+|tilbake\s+)?(\d{1,2})(?![\d:.]|\s*(?:dager|dag|uker|uke|mnd|måned|ganger|min|stk|linj|personer|pers|barn|voksne))/i.exec(k))){let hh=+m[1];if(m[1].length===1&&hh>=1&&hh<=11)hh+=12;if(hh<=23)return {hh,mm:0,src:'ring N'};}
+    // «ring 21», «ring opp 18» – og med dagord imellom: «ring opp imorgen 15», «ring opp mandag 15» (Haakon, 2 kort okt. 2026). Tall fulgt av maanedsnavn/«.»/«/» er en dato («ring mandag 7 juli»), ikke tid
+    if((m=/\bring(?:e|er|es|t)?\s+(?:opp\s+|igjen\s+|tilbake\s+)?(?:(?:i\s?morgen|imrg|i\s?mrg|imorra|i\s?dag|i\s?kveld|mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag)\s+)?(\d{1,2})(?![\d:.\/]|\s*(?:dager|dag|uker|uke|mnd|måned|ganger|min|stk|linj|personer|pers|barn|voksne|voksen|jan|feb|mar|apr|mai|jun|jul|aug|sep|okt|nov|des))/i.exec(k))){let hh=+m[1];if(m[1].length===1&&hh>=1&&hh<=11)hh+=12;if(hh<=23)return {hh,mm:0,src:'ring N'};}
     if((m=/\b(\d{1,2})(?:\s*[\/-]\s*\d{1,2})?\s*-?\s*tiden\b/i.exec(k))&&+m[1]<=23)return {hh:+m[1],mm:0,src:'N-tiden'}; // «17/18 tiden», «i 19-tiden»
     if((m=/\b(?:rundt|ca\.?|etter|fra)\s+(\d{1,2})(?:\s*[-–]\s*\d{1,2})?(?![\d:.]|\s*(?:dager|dag|uker|uke|mnd|måned|min|stk|år|aar|personer|barn|linj|kr|gig))/i.exec(k))&&+m[1]>=7&&+m[1]<=23)return {hh:+m[1],mm:0,src:'rundt/etter N'}; // «rundt 13-15», «etter 18»
     return null;
