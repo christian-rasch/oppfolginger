@@ -4,7 +4,7 @@
 //  2) kl. 21:45 (Oslo): daglig påminnelse om dagens kort som fortsatt står «Husk å send tilbud».
 //  3) dagsoversikt «Avtaler i dag: N» til selgerens valgte klokkeslett (varsler.dagOn / dagTid). Sendes ikke når N = 0.
 // Alle varsler er KUN tittel (ingen body) — Christian vil ha dem så minimalistiske som mulig (28.10).
-//  4) «Må gjøres» fra i går: N stk — valgfritt (varsler.gjoreOn / gjoreTid): send_offer-kort satt i går som fortsatt står. Ikke når N = 0.
+//  4) Ugjorte fra i går: N (het «Må gjøres» fra i går: N stk til 28.10) — valgfritt (varsler.gjoreOn / gjoreTid): send_offer-kort satt i går som fortsatt står. Ikke når N = 0.
 // Et kort med varselMute === dato er dempet fra appen → ingen flere avtale-varsler for den datoen.
 // Kalles hvert minutt av pg_cron. Hemmeligheter hentes fra Edge-secrets (aldri i koden).
 // Test fra terminalen (body): {test:true} = test-varsel, {test:'appt'} = avtalevarsel for neste avtale (med glød), {test:'offers'} = tilbud-påminnelse nå,
@@ -124,7 +124,7 @@ function gjoreDue(items: any[], target: string): any[] {
   return items.filter((it: any) => it && it.state !== 'fulgt' && it.nextAction === 'send_offer' && osloDateSafe(it.offerSince || it.opprettet) === target)
 }
 function gjorePayload(due: any[], tag: string) {
-  return { title: '«Må gjøres» fra i går: ' + due.length + ' stk', tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'gjore', gsub: 'send_offer' } }
+  return { title: 'Ugjorte fra i går: ' + due.length, tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'gjore', gsub: 'send_offer' } }
 }
 // test-kall med "email": kun den selgeren (via oppf_snapshots.email); uten → null = alle
 async function testOnly(body: any): Promise<Set<string> | null> {

@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-151">
+<meta name="app-build" content="2026-10-28-152">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1320,9 +1320,9 @@
       +'<div class="cloud-row vs-row"><span>Dagsoversikt</span><span class="vs-right"><div class="seg"><button type="button" data-vs="dag" data-v="0"'+(v.dagOn?'':' class="on"')+'>Av</button><button type="button" data-vs="dag" data-v="1"'+(v.dagOn?' class="on"':'')+'>På</button></div>'
       +(v.dagOn?'<button type="button" class="vs-val" data-vs="dagTid">kl. '+esc(v.dagTid)+'</button>':'')+'</span></div>'
       +(v.dagOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 Avtaler i dag: 4</span> én gang om dagen, til klokkeslettet du velger. Ikke på dager med 0.</div>') // forklaring kun når den er av; selve varselet vises som brikke (Christian 28.10)
-      +'<div class="cloud-row vs-row"><span>Må gjøres fra i går</span><span class="vs-right"><div class="seg"><button type="button" data-vs="gjore" data-v="0"'+(v.gjoreOn?'':' class="on"')+'>Av</button><button type="button" data-vs="gjore" data-v="1"'+(v.gjoreOn?' class="on"':'')+'>På</button></div>'
+      +'<div class="cloud-row vs-row"><span>Ugjorte fra i går</span><span class="vs-right"><div class="seg"><button type="button" data-vs="gjore" data-v="0"'+(v.gjoreOn?'':' class="on"')+'>Av</button><button type="button" data-vs="gjore" data-v="1"'+(v.gjoreOn?' class="on"':'')+'>På</button></div>'
       +(v.gjoreOn?'<button type="button" class="vs-val" data-vs="gjoreTid">kl. '+esc(v.gjoreTid)+'</button>':'')+'</span></div>'
-      +(v.gjoreOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 «Må gjøres» fra i går: 2 stk</span> dagen etter, til klokkeslettet du velger. Ikke når det er 0.</div>')
+      +(v.gjoreOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 Ugjorte fra i går: 2</span> «Må gjøres»-kort som ikke ble gjort i går, til klokkeslettet du velger. Ikke når det er 0.</div>')
       +'</div>';
   }
   function varslerRerender(){const el=$('pfVarsler');if(el)el.outerHTML=varslerRowsHtml();}
@@ -1334,7 +1334,7 @@
     else if(k==='ekstra')varslerSet({ekstra:vs.getAttribute('data-v')==='1'});
     else if(k==='dag')varslerSet({dagOn:vs.getAttribute('data-v')==='1'});
     else if(k==='gjore')varslerSet({gjoreOn:vs.getAttribute('data-v')==='1'});
-    else if(k==='gjoreTid')openNumPad({mode:'tid',value:varsler.gjoreTid,title:'«Må gjøres» fra i går kl.',onDone:function(v){varslerSet({gjoreTid:v});}});
+    else if(k==='gjoreTid')openNumPad({mode:'tid',value:varsler.gjoreTid,title:'Ugjorte fra i går kl.',onDone:function(v){varslerSet({gjoreTid:v});}});
   }
   /* ---- PUSH-VARSLER (påminnelse X min før avtale — X fra VARSEL-INNSTILLINGER over) ---- */
   const VAPID_PUBLIC='BNqXFxMvX7bEAp6Pj0OwVrT-U_uTpaCTUO2gKwG9QX0RddehoWmreLDnvx46pI6pFUJulkPVqvyE11sbBSoJ97Y';

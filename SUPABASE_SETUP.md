@@ -176,9 +176,9 @@ uten nett sendes ved neste synk (`oppf:varsler:dirty`). Triggeren bumper `update
 - **Demp-knapp** på kortet («🔕 Demp varsel») vises når ett varsel er sendt og ett gjenstår; den setter feltet `varselMute = dato`
   på kortet, og Edge Function hopper over kortet så lenge datoen er den samme (ny dato = varsel på igjen).
 - Ny valgfri innstilling **«Må gjøres fra i går»** (`varsler.gjoreOn`, standard av, + `gjoreTid`): til valgt klokkeslett dagen etter
-  sendes «Må gjøres» fra i går: N stk for send_offer-kort satt dagen før som fortsatt står. Den faste 21:45-påminnelsen er uendret.
+  sendes «Ugjorte fra i går: N» (til 28.10: «Må gjøres» fra i går: N stk) for send_offer-kort satt dagen før som fortsatt står. Den faste 21:45-påminnelsen er uendret.
   Dedupe `daily-gjore`, `notif_log`-kind `gjore` / `test-gjore`, test: `-d '{"test":"gjore"}'`.
 - **Ingen SQL** — kun redeploy av `notify-appointments` + app build 2026-10-28-140.
 - 28.10 (natt, build -141): alle push-varsler er nå **kun tittel** (ingen liten tekst under): «Avtale om X min — Navn», «Avtaler i dag: N»
-  (het før «Oppfølginger i dag»), «N nye tilbud å sende ut fra i dag» (21:45), «Må gjøres» fra i går: N stk, «Test-varsel ✓».
+  (het før «Oppfølginger i dag»), «N nye tilbud å sende ut fra i dag» (21:45), «Ugjorte fra i går: N», «Test-varsel ✓».
   Linja «from Oppfølginger» legges til av iPadOS (appens navn i manifestet) og kan ikke fjernes. Edge Function redeployes.
