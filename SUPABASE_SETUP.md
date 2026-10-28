@@ -182,3 +182,22 @@ uten nett sendes ved neste synk (`oppf:varsler:dirty`). Triggeren bumper `update
 - 28.10 (natt, build -141): alle push-varsler er nå **kun tittel** (ingen liten tekst under): «Avtale om X min — Navn», «Avtaler i dag: N»
   (het før «Oppfølginger i dag»), «N nye tilbud å sende ut fra i dag» (21:45), «Ugjorte fra i går: N», «Test-varsel ✓».
   Linja «from Oppfølginger» legges til av iPadOS (appens navn i manifestet) og kan ikke fjernes. Edge Function redeployes.
+
+## Tillegg 2026-10-28 (natt) — live feed for admin (build 153)
+**Hva:** Min profil → Selgere (admin) → knappen «Live feed» åpner et fullskjermsvindu som viser alt selgerne gjør, nyeste først:
+filter Alle / Kort / Innstillinger, velg selger, oppdateres automatisk hvert 10. sekund, «Last flere» for eldre. Kort-rader kan utvides
+til en hurtigvisning av kortet slik det var da (navn, type, salgsrunde, adresse, tidspunkt, handling, kommentar, besøksnr, eier, bilde →
+forstørret) og «Slik kortet er nå» (henter selgerens nåværende kort, bare lesing). Feeden er kun lesende: ingenting kan endres hos selgerne herfra.
+**Hva som logges (tabellen `oppf_hendelser`):** kortendringer felt for felt (fra → til; tasting slås sammen etter 2 s ro), nye kort
+(manuelt / AI), fjernet / angret / slettet / Rydd, AI-skjemaet (hvilke felt selgeren rettet etter AI-lesingen + sekunder), knappene
+demp / Salesforce / Naviger / bilde / + Ny manuell / oppdater, søk (teksten), fanebytter, Lim inn (start/feil); Min profil åpnet/lukket,
+varselinnstillinger (fra → til), passord endret (aldri verdien), inn-/utlogging, varsler på/av, varsel-sperre, API-nøkkel satt/fjernet
+(aldri verdien), synk-konflikt. Ingenting logges mens admin er inne i en selgers liste (ingen spor av admin-tilgang).
+**Utrulling — i denne rekkefølgen:** (1) kjør `supabase/sql/2026-10-28-feed.sql` i SQL Editor (tabell + RLS: selgere skriver egne rader
+med egen e-post, bare admin leser, ingen update/delete fra appen, pg_cron sletter etter 90 dager) — KJØRT 28.10 kl. 20:15, kontrollert
+28.10 kl. 20:30: alle tabeller i public har RLS på; ingen policyer for anon; oppf_snapshots/cardimg = egen rad/mappe eller admin;
+client_log/notif_log/notif_status/oppf_hendelser = kun admin lesing; notif_sent uten policyer (kun Edge Function). Feeden vises bare for
+admin (`isAdmin()` i adminSectionHtml/openFeed/feedLoad); loggingen hos selgerne koster ≈0,4 ms pr. lagring (300 kort) og sendes i bakgrunnen; (2) push appen (build 153). Hendelser køes lokalt
+(`localStorage oppf:feed`, maks 300) og sendes samlet når selgeren er innlogget og på nett; finnes ikke tabellen ennå, kastes køen.
+**Sjekk:** `select at, email, type, data from public.oppf_hendelser order by id desc limit 50;`
+

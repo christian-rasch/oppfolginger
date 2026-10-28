@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-152">
+<meta name="app-build" content="2026-10-28-153">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -490,6 +490,27 @@
   .admin-seller .as-sub{display:block;font-size:11px;color:var(--ink-dim);font-weight:400;margin-top:2px}
   .admin-seller .as-stale{color:var(--gold);font-weight:700}
   .admin-seller .as-stat{color:var(--ink);font-weight:700;margin-top:3px}
+  /* live feed (admin) */
+  .feed-card{width:min(1100px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;padding:16px 18px}
+  .feed-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--hair)}
+  .feed-sel{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:8px 10px}
+  .feed-live{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--mint);letter-spacing:.04em}.feed-live.busy{opacity:.45}
+  .feed-status{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-faint)}
+  .feed-body{flex:1;min-height:0;overflow:auto;margin:6px 0}
+  .feed-day{position:sticky;top:0;background:#0d1019;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);padding:10px 6px 6px;z-index:1}
+  .feed-row{display:grid;grid-template-columns:48px 96px 1fr;gap:10px;align-items:start;padding:8px 6px;border-bottom:1px solid var(--hair-2);font-size:13px;line-height:1.45}
+  .feed-row.har-kort{cursor:pointer}.feed-row.har-kort:hover{background:rgba(255,255,255,.03)}
+  .feed-row.ny{background:rgba(61,245,197,.09)}
+  .feed-tid{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-dim)}
+  .feed-who{color:var(--mint);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .feed-ic{margin-right:6px;opacity:.8}
+  .feed-qv{grid-column:1/-1;display:flex;gap:14px;padding:12px;margin-top:4px;background:rgba(255,255,255,.03);border:1px solid var(--hair);border-radius:12px;cursor:default}
+  .fq-img{width:118px;height:106px;flex:none;border-radius:11px;border:1px solid var(--hair);background:#24492f center/cover no-repeat;display:flex;align-items:flex-end;justify-content:center;cursor:default}
+  .fq-img.has{cursor:pointer}.fq-img.has:hover{border-color:var(--mint)}
+  .fq-img .thumb-lbl{font-family:"JetBrains Mono",monospace;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;padding:0 0 5px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+  .fq-img.no-img{background:rgba(255,255,255,.025);border:1px dashed var(--hair-2)}.fq-img.no-img .thumb-lbl{color:var(--ink-faint);text-shadow:none}
+  .fq-body{flex:1;min-width:0}.fq-navn{font-weight:800;font-size:15px;margin-bottom:5px}.fq-line{color:var(--ink-dim);margin-top:4px}.fq-kom{margin-top:7px}.fq-qc{color:var(--gold);font-weight:700}
+  .fq-meta{font-size:11.5px;color:var(--ink-faint)}.fq-btns{margin-top:9px}
   /* varsel-port: blokkerer hele appen til varsler er på */
   #pushGate{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(6,12,14,.94);backdrop-filter:blur(10px);padding:24px;font-family:"Schibsted Grotesk",sans-serif}
   #pushGate .pg-card{max-width:430px;width:100%;background:#0d1418;border:1px solid var(--hair-2);border-radius:20px;padding:30px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
@@ -681,6 +702,20 @@
       <div class="m-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span>Min profil</span><span style="display:flex;align-items:center;gap:9px"><button class="btn primary" id="btnNy" style="padding:9px 13px;font-size:12.5px">+ Ny manuell</button><button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button><button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button></span></div>
       <div id="profileBody"></div>
       <div class="m-foot"><button class="btn" id="profileClose">Lukk</button></div>
+    </div>
+  </div>
+  <!-- LIVE FEED (admin): alt selgerne gjør, nyeste først. Kun lesing. Fylles av feedRender() i script-blokk 2 -->
+  <div class="modal" id="feedModal">
+    <div class="m-card feed-card">
+      <div class="feed-head"><span class="m-title" style="margin:0">Live feed</span>
+        <div class="seg" id="feedKind"><button type="button" data-v="" class="on">Alle</button><button type="button" data-v="kort">Kort</button><button type="button" data-v="innstilling">Innstillinger</button></div>
+        <select id="feedSeller" class="feed-sel"><option value="">Alle selgere</option></select>
+        <button class="btn" id="feedRefresh">Oppdater</button>
+        <span id="feedLive" class="feed-live" title="Nye hendelser hentes automatisk mens vinduet er åpent">● hvert 10. sek</span><span id="feedStatus" class="feed-status"></span>
+        <button class="btn" id="feedClose" style="margin-left:auto">✕</button>
+      </div>
+      <div id="feedBody" class="feed-body"></div>
+      <div class="m-foot"><button class="btn" id="feedMore">Last flere</button></div>
     </div>
   </div>
 
@@ -982,6 +1017,7 @@
   let items=[];
   const byId=id=>items.find(i=>i.id===id);
   function save(){
+    feedDiff(); // live feed: kortendringer felt for felt (feed() logger ingenting i admin-visning)
     if(adminView){adminOnEdit();return;} // admin: endringer går til selgerens rad, din lokale data røres ikke
     store.set(KEY,JSON.stringify(items));cloudOnLocalSave();
   }
@@ -1053,7 +1089,7 @@
 
   // skriv skydata til lokal cache UTEN å trigge ny push (ingen ekko)
   function setLocalFollowupsFromCloud(data,serverAt){
-    items=(Array.isArray(data)?data:[]).map(migrate);
+    items=(Array.isArray(data)?data:[]).map(migrate);feedSnapReset(); // skyhenting er ikke en brukerendring
     store.set(KEY,JSON.stringify(items));
     setCmeta(CKEY.hash,stableFollowupHash(items));
     if(serverAt)setCmeta(CKEY.srv,serverAt);
@@ -1126,7 +1162,7 @@
       if(!cloudInitBusy){cloudInitBusy=true;cloudInit().catch(function(){}).then(function(){cloudInitBusy=false;});}
       return;}
     if(!sbUser)return;
-    flushPendingImgs();flushLog();cloudHeartbeat(false);varslerPull(false);
+    flushPendingImgs();flushLog();feedFlush();cloudHeartbeat(false);varslerPull(false);
     if(cloudState==='syncing'||cloudState==='conflict'||uiBusy())return;
     const t=Date.now();if(t-cloudWakeAt<30000)return; // maks én vekking pr. 30 s
     const stalePull=(t-(+new Date(cmeta(CKEY.pull)||0)))>5*60000;
@@ -1235,7 +1271,7 @@
     catch(e){toast('Kunne ikke hente selgerens data');return;}
     const stash=adminView?adminView.stash:items; // ved bytte mellom selgere: behold ORIGINAL egen liste
     adminView={userId:userId,email:email,stash:stash,varsler:varslerNorm(row&&row.varsler)}; // selgerens varsel-standard → skjemaet viser riktig utgangspunkt
-    items=(row&&Array.isArray(row.data)?row.data:[]).map(migrate);
+    items=(row&&Array.isArray(row.data)?row.data:[]).map(migrate);feedSnapReset();
     closeProfileModal();
     renderAdminBar();
     render();
@@ -1250,7 +1286,7 @@
     renderAdminBar();
     let mine=null;
     try{const raw=await store.get(KEY);if(raw)mine=JSON.parse(raw);}catch(e){}
-    items=(Array.isArray(mine)?mine:(Array.isArray(stash)?stash:[])).map(migrate);
+    items=(Array.isArray(mine)?mine:(Array.isArray(stash)?stash:[])).map(migrate);feedSnapReset();
     render();
   }
   function adminOnEdit(){
@@ -1274,6 +1310,250 @@
       const t=$('adminBarTxt');if(t)t.textContent='👁 Redigerer: '+adminView.email;}
     else bar.style.display='none';
   }
+  /* ---- LIVE FEED (admin): alt selgerne gjør køes lokalt (oppf:feed, maks 300) og sendes samlet til tabellen oppf_hendelser
+     (supabase/sql/2026-10-28-feed.sql; bare admin kan lese, RLS). Aldri passord/nøkler. Blokkerer aldri save()/render(): alt i try/catch,
+     sending debounced og fire-and-forget. Christian 28.10.2026 ---- */
+  const FEEDK='oppf:feed';let feedFlushT=null,feedFlushAt=0,feedRetry=0,feedLast={k:'',t:0};
+  function feedDevice(){try{return screen.width+'×'+screen.height+' '+(isStandalonePWA()?'pwa':'safari');}catch(e){return null;}}
+  function feedQ(){try{return JSON.parse(localStorage.getItem(FEEDK)||'[]')||[];}catch(e){return [];}}
+  function feed(kind,type,data,itemId){
+    try{
+      if(adminView)return; // admin inne i en selgers liste: ingenting logges (Christian 28.10: ingen spor av admin-tilgang)
+      data=data||{};
+      let js=JSON.stringify(data);
+      if(js.length>4000){delete data.kort;js=JSON.stringify(data);if(js.length>4000){data={avkortet:true};js=JSON.stringify(data);}}
+      const k=type+'|'+(itemId||'')+'|'+js,t=Date.now();
+      if(feedLast.k===k&&t-feedLast.t<1500)return;feedLast={k:k,t:t}; // dobbelttrykk → én rad
+      const a=feedQ();a.push({t:t,kind:kind,type:type,item:itemId||null,data:data});while(a.length>300)a.shift();
+      localStorage.setItem(FEEDK,JSON.stringify(a));
+      clearTimeout(feedFlushT);feedFlushT=setTimeout(feedFlush,1500);
+    }catch(e){}
+  }
+  async function feedFlush(){
+    if(!sbUser||navigator.onLine===false)return;
+    if(feedFlushAt&&Date.now()-feedFlushAt<20000)return; // én sending om gangen — med tidsgrense, så hengende nett ikke låser køen
+    const c=getSupabaseClient();if(!c)return;
+    const a=feedQ();if(!a.length)return;
+    feedFlushAt=Date.now();
+    try{
+      const bld=(document.querySelector('meta[name="app-build"]')||{}).content||null,dev=feedDevice();
+      const rows=a.map(function(r){return {user_id:sbUser.id,email:sbUser.email||null,at:new Date(r.t).toISOString(),kind:r.kind,type:r.type,item_id:r.item,data:r.data,build:bld,device:dev};});
+      const {error}=await c.from('oppf_hendelser').insert(rows);
+      if(!error||/^(22|23|42)/.test(String(error.code||''))){ // sendt — eller varig avvist (tabell mangler / ugyldig rad): kast, ellers låser køen seg
+        const sist=a[a.length-1].t;localStorage.setItem(FEEDK,JSON.stringify(feedQ().filter(function(r){return r.t>sist;}))); // behold det som kom til underveis
+        if(error)logEvent('feed','avvist: '+error.message);feedRetry=0;
+      }else{feedRetry=Math.min(60000,(feedRetry||2000)*2);clearTimeout(feedFlushT);feedFlushT=setTimeout(feedFlush,feedRetry);}
+    }catch(e){feedRetry=Math.min(60000,(feedRetry||2000)*2);clearTimeout(feedFlushT);feedFlushT=setTimeout(feedFlush,feedRetry);}
+    feedFlushAt=0;
+  }
+  // ---- kortendringer felt for felt: lista mot forrige lagring. Masseutskifting (oppstart, skyhenting, adminbytte) nullstiller UTEN å logge ----
+  const FEED_FELT=['navn','alder','telefon','adresse','salgsrunde','status','kanal','kommentar','dato','state','nextAction','sfNr','stjerner','varsel','quickComment','hasImg']; // ikke varselMute (dekkes av knapp.demp)
+  const FEED_LBL={navn:'navn',alder:'alder',telefon:'telefon',adresse:'adresse',salgsrunde:'salgsrunde',status:'type',kanal:'kanal',kommentar:'kommentar',dato:'tidspunkt',nextAction:'handling',sfNr:'besøksnr',stjerner:'stjerner',varsel:'varsel',quickComment:'hurtigkommentar',hasImg:'bilde',state:'status'};
+  let feedSnap=null,feedPend={},feedMark=null; // feedSnap: id → JSON av sporede felt. feedPend: id → {fra,til,angre,timer} (tasting slås sammen, 2 s ro). feedMark: 'angre'|'rydd' mens handlingen lagrer
+  function feedKort(it){return {navn:it.navn||'',alder:it.alder||null,adresse:it.adresse||'',salgsrunde:it.salgsrunde||'',status:it.status||'',dato:it.dato||null,nextAction:it.nextAction||null,kommentar:String(it.kommentar||'').slice(0,200),quickComment:it.quickComment||'',sfNr:it.sfNr||'',hasImg:!!it.hasImg,opprettet:it.opprettet||null};}
+  function feedTrk(it){const o={};FEED_FELT.forEach(function(f){o[f]=it[f]==null?null:it[f];});return JSON.stringify(o);}
+  function feedKlipp(v){return typeof v==='string'&&v.length>160?v.slice(0,160)+'…':v;}
+  function feedSnapReset(){try{feedSnap=new Map();items.forEach(function(it){feedSnap.set(it.id,feedTrk(it));});Object.keys(feedPend).forEach(function(id){clearTimeout(feedPend[id].timer);});feedPend={};}catch(e){feedSnap=null;}}
+  function feedK(id,type,extra){const it=byId(id);feed('kort',type,Object.assign({kort:it?feedKort(it):undefined},extra||{}),id);} // knappetrykk på et kort → med øyeblikksbilde av kortet
+  function feedPendFlush(id){const pd=feedPend[id];if(!pd)return;clearTimeout(pd.timer);delete feedPend[id];
+    const felt=Object.keys(pd.til);if(!felt.length)return;const diff={};
+    felt.forEach(function(f){diff[f]={fra:feedKlipp(pd.fra[f]),til:feedKlipp(pd.til[f])};});
+    feedK(id,pd.angre?'kort.angret':'kort.endret',{diff:diff,angre:pd.angre||undefined});}
+  function feedDiff(){ // kalles først i save()
+    try{
+      if(!feedSnap){feedSnapReset();return;}
+      const seen={},grp={},formOpen=$('formModal').classList.contains('open');
+      items.forEach(function(it){
+        seen[it.id]=1;const cur=feedTrk(it),old=feedSnap.get(it.id);
+        if(cur===old)return;feedSnap.set(it.id,cur);
+        if(old==null){const ai=!!(it.ai&&it.ai.ts); // nytt kort: AI-import har ai.ts fra openFormFromAI
+          feed('kort',ai?'kort.ai':'kort.ny',{kort:feedKort(it),ai:ai?{ms:it.ai.ms||null,dato:!!it.ai.dato,fallback:!!it.ai.fallback}:undefined},it.id);return;}
+        const a=JSON.parse(old),b=JSON.parse(cur);
+        if(a.state!==b.state){feedPendFlush(it.id);const ty=b.state==='fulgt'?'kort.fjernet':'kort.angret';(grp[ty]=grp[ty]||[]).push(it);}
+        if(formOpen&&editId===it.id&&aiRevealId===it.id)return; // AI-skjemaet er åpent: rettelsene samles i kort.ai-skjema (doSave)
+        FEED_FELT.forEach(function(f){
+          if(f==='state')return;const va=JSON.stringify(a[f]),vb=JSON.stringify(b[f]);if(va===vb)return;
+          const pd=feedPend[it.id]||(feedPend[it.id]={fra:{},til:{},angre:feedMark==='angre'});
+          if(!(f in pd.fra))pd.fra[f]=a[f];
+          if(JSON.stringify(pd.fra[f])===vb){delete pd.fra[f];delete pd.til[f];}else pd.til[f]=b[f]; // tilbake til utgangspunktet → ingen endring
+          clearTimeout(pd.timer);pd.timer=setTimeout(function(){feedPendFlush(it.id);},2000);
+        });
+      });
+      feedSnap.forEach(function(v,id){if(seen[id])return;feedSnap.delete(id);feedPendFlush(id);
+        const o=JSON.parse(v);if(o.state!=='fulgt'){o.id=id;(grp['kort.slettet']=grp['kort.slettet']||[]).push(o);}}); // fulgt→borte = 48 t-opprydding, ingen handling
+      Object.keys(grp).forEach(function(ty){const arr=grp[ty],d={kort:feedKort(arr[0])};
+        if(arr.length>1){d.n=arr.length;d.navn=arr.slice(0,12).map(function(x){return shortName(x.navn)||addrShort(x.adresse)||'';});}
+        if(feedMark==='angre'){d.angre=true;if(ty==='kort.fjernet')ty='kort.angret';}if(feedMark==='rydd')d.rydd=true;
+        feed('kort',ty,d,arr.length===1?arr[0].id:null);});
+    }catch(e){}
+  }
+  const FEED_V=['HP','HC','Vula','Roll','MOB'];
+  function feedAiSkjema(it){ // AI-skjemaet lagret: hva rettet selgeren i forhold til AI-ens forslag (ai.felt/ai.dato/ai.nextAction/ai.kommentar) + tider
+    try{
+      const ai=it.ai||{},fl=ai.felt||{},nrm=function(s){return String(s==null?'':s).trim().toLowerCase().replace(/\s+/g,' ');},tlf=function(s){return String(s==null?'':s).replace(/\D/g,'');};
+      const par={navn:[fl.navn,it.navn,nrm],alder:[fl.alder,it.alder,function(v){return +v||null;}],telefon:[fl.telefon,it.telefon,tlf],salgsrunde:[fl.salgsrunde,it.salgsrunde,nrm],adresse:[fl.adresse,it.adresse,nrm],
+        status:[FEED_V.includes(fl.status)?fl.status:'',it.status,nrm],dato:[ai.dato,it.dato,function(v){return v||null;}],nextAction:[NA_KEYS.includes(ai.nextAction)?ai.nextAction:'',it.nextAction,function(v){return v||'';}],kommentar:[ai.kommentar,it.kommentar,nrm]};
+      const diff={};Object.keys(par).forEach(function(f){const q=par[f];if(q[2](q[0])!==q[2](q[1]))diff[f]={fra:feedKlipp(q[0]==null?'':q[0]),til:feedKlipp(q[1]==null?'':q[1])};});
+      const ms=ai.ms||{};
+      feed('kort','kort.ai-skjema',{endret:Object.keys(diff),diff:diff,ms:{skjema:ms.skjema,endring:ms.endring,ai:ms.ai,total:ms.total},kort:feedKort(it)},it.id);
+      if(feedSnap)feedSnap.set(it.id,feedTrk(it)); // skjemaets endringer er dekket av denne raden — ikke også som kort.endret
+    }catch(e){}
+  }
+  // ---- admin-vinduet (#feedModal): filtre Alle/Kort/Innstillinger, selger, polling hvert 10. s, hurtigvisning av kortet, bilde, «Slik kortet er nå». KUN LESING ----
+  const feedSt={rows:[],kind:'',uid:'',sellers:[],timer:null,busy:false,open:null,imgs:new Map()};
+  const FEED_TYPE={'kort.ny':'la til kort manuelt','kort.ai':'leste kort med AI','kort.ai-skjema':'AI-skjema','kort.endret':'endret','kort.fjernet':'fjernet kort','kort.angret':'angret','kort.slettet':'slettet kort',
+    'knapp.salesforce':'kopierte besøksnr (Salesforce)','knapp.naviger':'trykket Naviger','knapp.bilde':'åpnet kartbildet','knapp.demp':'demp 2. varsel','knapp.ny':'trykket + Ny manuell','knapp.oppdater':'lastet appen på nytt','knapp.rydd':'Rydd eldre forfalte',
+    'lim-inn.start':'trykket Lim inn','lim-inn.feil':'AI-lesing feilet','sok':'søkte','fane':'byttet fane',
+    'profil.apnet':'åpnet Min profil','profil.lukket':'lukket Min profil','profil.varsel':'varselinnstilling','profil.passord':'endret passord','profil.login':'logget inn','profil.logout':'logget ut','profil.push':'varsler','profil.pushgate':'varsel-sperre','profil.nokkel':'API-nøkkel',
+    'synk.konflikt':'synk-konflikt','synk.na':'trykket Synk nå'};
+  const FEED_VIEW={avtaler:'Avtaler',uten:'Uten tidspunkt',gjore:'Må gjøres',alle:'Alle',forfalte:'Forfalte',send_offer:'Må gjøres',waiting_reply:'Tilbud sendt'};
+  const FEED_VS={min:'Varsel (min før)',ekstra:'Ekstra varsel',ekstraMin:'Ekstra varsel (min før)',dagOn:'Dagsoversikt',dagTid:'Dagsoversikt kl.',gjoreOn:'Ugjorte fra i går',gjoreTid:'Ugjorte fra i går kl.'};
+  function feedVal(f,v){ // verdi → lesbar tekst
+    if(v==null||v==='')return '–';
+    if(v===true)return 'på';if(v===false)return 'av';
+    if(f==='dato')return friendlyDate(v)||String(v);
+    if(f==='nextAction')return (NA_META[v]&&NA_META[v].label)||String(v);
+    if(f==='hasImg')return v?'ja':'nei';
+    if(f==='state')return v==='fulgt'?'fjernet':'aktiv';
+    if(typeof v==='object')return JSON.stringify(v).slice(0,80);
+    return String(v).slice(0,80);
+  }
+  function feedDiffTekst(diff){return Object.keys(diff||{}).map(function(f){return (FEED_LBL[f]||f)+': '+feedVal(f,diff[f].fra)+' → '+feedVal(f,diff[f].til);}).join(' · ');}
+  function feedSek(ms){return ms==null?'':' ('+(ms/1000).toFixed(ms<10000?1:0).replace('.',',')+' s)';}
+  function feedWho(em){return esc(String(em||'').split('@')[0]);}
+  function feedWhoRow(r){const s=feedSt.sellers.find(function(x){return x.user_id===r.user_id;});return feedWho((s&&s.email)||r.email);} // selger ut fra user_id (RLS-sikret), e-posten i raden bare som reserve
+  function feedTekst(r){
+    const d=r.data||{},ty=r.type||'';
+    const lbl=FEED_TYPE[ty]||ty,k=(r._naa&&r._naa.kort)||d.kort||{},navn=k.navn?esc(shortName(k.navn)):(k.adresse?esc(addrShort(k.adresse)):'');
+    let t='';
+    switch(ty){
+      case 'kort.ny':case 'kort.ai':t=lbl+(navn?' «'+navn+'»':'')+(d.ai&&d.ai.ms&&d.ai.ms.ai?' · AI'+feedSek(d.ai.ms.ai):'');break;
+      case 'kort.ai-skjema':t=(d.endret&&d.endret.length?'rettet etter AI-lesingen: '+esc(feedDiffTekst(d.diff)):'godtok AI-lesingen uten endringer')+feedSek(d.ms&&d.ms.skjema)+(d.ms&&d.ms.endring?' · første endring etter '+Math.round(d.ms.endring/1000)+' s':'')+(navn?' — «'+navn+'»':'');break;
+      case 'kort.endret':t='endret'+(navn?' «'+navn+'»':'')+': '+esc(feedDiffTekst(d.diff));break;
+      case 'kort.fjernet':case 'kort.angret':case 'kort.slettet':t=lbl+(d.n>1?' ('+d.n+' kort: '+esc((d.navn||[]).join(', '))+')':(navn?' «'+navn+'»':''))+(d.rydd?' · via Rydd':'')+(d.angre&&ty!=='kort.angret'?' · angre':'');if(ty==='kort.angret'&&d.diff)t+=': '+esc(feedDiffTekst(d.diff));break;
+      case 'knapp.demp':t=(d.til==='på'?'dempet 2. varsel':'skrudde 2. varsel på igjen')+(navn?' «'+navn+'»':'');break;
+      case 'knapp.rydd':t=lbl+': '+(d.avbrutt?'avbrutt':'fjernet')+' '+(d.n||0)+' kort';break;
+      case 'sok':t='søkte «'+esc(d.tekst||'')+'»'+(d.treff!=null?' ('+d.treff+' treff)':'');break;
+      case 'fane':t='byttet til '+(FEED_VIEW[d.view]||d.view||'')+(d.sub&&d.sub!=='alle'?' › '+(FEED_VIEW[d.sub]||d.sub):'');break;
+      case 'profil.varsel':t=(FEED_VS[d.felt]||d.felt)+': '+esc(feedVal('',d.fra))+' → '+esc(feedVal('',d.til));break;
+      case 'profil.lukket':t=lbl+(d.sek!=null?' etter '+d.sek+' s':'');break;
+      case 'profil.push':t='varsler '+(d.til||'')+(d.ok===false?' (mislyktes'+(d.grunn?': '+esc(d.grunn):'')+')':'');break;
+      case 'profil.pushgate':t=d.knapp?'varsel-sperre: trykket «sjekk igjen»':'fikk varsel-sperren (varsler er slått av på enheten)';break;
+      case 'profil.nokkel':t='API-nøkkel '+(d.til||'');break;
+      case 'profil.login':t=d.feil?'innlogging feilet: '+esc(d.feil):'logget inn';break;
+      case 'lim-inn.feil':t='AI-lesing feilet'+(d.varig?' (varig)':'')+(d.feil?': '+esc(d.feil):'');break;
+      case 'synk.konflikt':t=d.valg?'synk-konflikt: valgte '+esc(d.valg):'synk-konflikt vist ('+(d.lokalt||0)+' på enheten / '+(d.sky||0)+' i skyen)';break;
+      default:t=lbl+(navn?' «'+navn+'»':'')+(FEED_TYPE[ty]?'':' '+esc(JSON.stringify(d).slice(0,160)));
+    }
+    return t;
+  }
+  function feedQuery(c,mode){
+    let q=c.from('oppf_hendelser').select('id,user_id,email,at,kind,type,item_id,data,build,device').order('id',{ascending:false});
+    if(feedSt.kind)q=q.eq('kind',feedSt.kind);
+    if(feedSt.uid)q=q.eq('user_id',feedSt.uid);
+    const ids=feedSt.rows.map(function(r){return r.id;});
+    if(mode==='ny'&&ids.length)q=q.gt('id',Math.max.apply(null,ids)).limit(200);
+    else if(mode==='eldre'&&ids.length)q=q.lt('id',Math.min.apply(null,ids)).limit(150);
+    else q=q.limit(150);
+    return q;
+  }
+  async function feedLoad(mode){
+    const c=getSupabaseClient();if(!c||!isAdmin()||feedSt.busy)return;
+    feedSt.busy=true;const live=$('feedLive');if(live)live.classList.add('busy');
+    try{
+      const r=await feedQuery(c,mode);if(r.error)throw r.error;
+      const nye=r.data||[];
+      if(mode==='ny'){nye.forEach(function(x){x._ny=Date.now();});feedSt.rows=nye.concat(feedSt.rows);}
+      else if(mode==='eldre')feedSt.rows=feedSt.rows.concat(nye);
+      else feedSt.rows=nye;
+      feedSt.rows.sort(function(a,b){return a.at<b.at?1:(a.at>b.at?-1:b.id-a.id);}); // vises etter når det skjedde; id er bare markør for henting
+      if(feedSt.rows.length>600)feedSt.rows=feedSt.rows.slice(0,600);
+      const more=$('feedMore');if(more)more.style.display=(mode==='eldre'&&!nye.length)?'none':'';
+      if(mode!=='ny'||nye.length)feedRender();
+      const st=$('feedStatus');if(st)st.textContent='Oppdatert '+hhmm(new Date())+(mode==='ny'&&nye.length?' · '+nye.length+' nye':'');
+    }catch(e){const st=$('feedStatus');if(st)st.textContent='Kunne ikke hente: '+String(e&&e.message||e).slice(0,80);}
+    feedSt.busy=false;if(live)live.classList.remove('busy');
+  }
+  async function feedSellers(){
+    const c=getSupabaseClient();if(!c)return;
+    try{const r=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email');if(!r.error)feedSt.sellers=(r.data||[]).filter(function(x){return x.email;}).sort(function(a,b){return a.email<b.email?-1:1;});}catch(e){}
+    const sel=$('feedSeller');if(!sel)return;
+    sel.innerHTML='<option value="">Alle selgere</option>'+feedSt.sellers.map(function(s){return '<option value="'+esc(s.user_id)+'"'+(s.user_id===feedSt.uid?' selected':'')+'>'+feedWho(s.email)+'</option>';}).join('');
+  }
+  function feedEier(r){const s=feedSt.sellers.find(function(x){return x.user_id===r.user_id;});return {uid:r.user_id,em:(s&&s.email)||r.email};} // hvem kortet tilhører (ut fra user_id)
+  function feedQvHtml(r){
+    const naa=r._naa,k=(naa&&naa.kort)||r.data.kort,ei=feedEier(r),ty=k.status||'';
+    return '<div class="feed-qv">'
+      +'<div class="fq-img'+(k.hasImg?'':' no-img')+'" data-fimg="'+r.id+'"><span class="thumb-lbl">'+(k.hasImg?'Kart':'Ingen bilde')+'</span></div>'
+      +'<div class="fq-body"><div class="fq-navn">'+esc(k.navn||'—')+(k.alder?' <span class="cn-age '+ageCls(k.alder)+'">'+esc(k.alder)+' år</span>':'')+'</div>'
+      +'<div class="opf-meta">'+(ty?'<span class="type-chip '+typeCls(ty)+'">'+esc(ty==='MOB'?'MOBIL':ty)+'</span>':'')+(k.salgsrunde?'<span class="runde">'+esc(shortRunde(k.salgsrunde))+'</span>':'')+'</div>'
+      +'<div class="fq-line">'+esc(k.adresse||'Ingen adresse')+'</div>'
+      +'<div class="fq-line">'+(k.dato?'🕒 '+esc(friendlyDate(k.dato)||k.dato):'Uten tidspunkt')+(k.nextAction?' · '+esc((NA_META[k.nextAction]&&NA_META[k.nextAction].label)||k.nextAction):'')+'</div>'
+      +'<div class="fq-kom">'+(k.kommentar?'«'+esc(k.kommentar)+'»':'<span style="color:var(--ink-faint)">Ingen kommentar</span>')+(k.quickComment?' <span class="fq-qc">'+esc(k.quickComment)+'</span>':'')+'</div>'
+      +'<div class="fq-line fq-meta">'+(k.sfNr?'Besøksnr '+esc(k.sfNr)+' · ':'')+'Eier: '+feedWho(ei.em)+(k.opprettet?' · lagt til '+esc(fmtRel(k.opprettet)):'')+(naa?' · slik kortet er NÅ'+(naa.borte?' (finnes ikke lenger hos selgeren)':(naa.fulgt?' (fjernet, i arkivet)':''))+', hentet '+hhmm(new Date(naa.t)):' · slik kortet var da')+'</div>'
+      +'<div class="fq-btns"><button class="btn" data-fnaa="'+r.id+'">'+(naa?'Slik det var da':'Slik kortet er nå')+'</button></div>' // bare lesing — ingen redigering av selgerens kort herfra (Christian 28.10)
+      +'</div></div>';
+  }
+  function feedRender(){
+    const body=$('feedBody');if(!body)return;
+    if(!feedSt.rows.length){body.innerHTML='<div class="empty">Ingen hendelser'+(feedSt.kind||feedSt.uid?' for dette filteret':' ennå')+'.</div>';return;}
+    let html='',lastDay='';const n=now();
+    feedSt.rows.forEach(function(r){
+      const d=new Date(r.at),dk=dKey(d);
+      if(dk!==lastDay){lastDay=dk;html+='<div class="feed-day">'+(sameDay(d,n)?'I dag':dayLabel(d))+'</div>';}
+      const harKort=!!(r.data&&r.data.kort),open=feedSt.open===r.id;
+      html+='<div class="feed-row'+(r._ny&&Date.now()-r._ny<10000?' ny':'')+(harKort?' har-kort':'')+(open?' open':'')+'" data-fid="'+r.id+'">'
+        +'<span class="feed-tid">'+hhmm(d)+'</span><span class="feed-who">'+feedWhoRow(r)+'</span>'
+        +'<span class="feed-txt"><span class="feed-ic">'+(r.kind==='innstilling'?'⚙️':'🗂')+'</span>'+feedTekst(r)+'</span>';
+      if(open&&harKort)html+=feedQvHtml(r);
+      html+='</div>';
+    });
+    body.innerHTML=html;
+    if(feedSt.open!=null){const r=feedSt.rows.find(function(x){return x.id===feedSt.open;});if(r&&r.data&&r.data.kort&&r.data.kort.hasImg)feedLoadImg(r);}
+  }
+  async function feedLoadImg(r){ // bildet til et annet kort/selger: egen buffer (maks 40), aldri imgMem/IndexedDB (de er pr. kort-id for din egen liste)
+    const ei=feedEier(r),id=r.item_id;if(!id||!ei.uid)return;
+    const key=ei.uid+'/'+id;let d=feedSt.imgs.get(key);
+    if(d===undefined){d=null;const c=getSupabaseClient();
+      try{const res=await c.storage.from(IMG_BUCKET).download(key+'.jpg');if(!res.error&&res.data)d=await blobToDataURL(res.data);}catch(e){}
+      if(feedSt.imgs.size>40)feedSt.imgs.delete(feedSt.imgs.keys().next().value);feedSt.imgs.set(key,d);}
+    const el=document.querySelector('.feed-qv .fq-img[data-fimg="'+r.id+'"]');
+    if(el){if(d){el.style.backgroundImage="url('"+d+"')";el.classList.add('has');}else{el.classList.add('no-img');el.innerHTML='<span class="thumb-lbl">Bilde ikke funnet</span>';}}
+  }
+  function openFeed(){
+    if(!isAdmin())return;closeProfileModal();
+    const m=$('feedModal');if(!m)return;m.classList.add('open');
+    feedSellers();feedLoad('');
+    clearInterval(feedSt.timer);feedSt.timer=setInterval(function(){if(!document.hidden&&m.classList.contains('open'))feedLoad('ny');},10000);
+  }
+  function closeFeed(){const m=$('feedModal');if(m)m.classList.remove('open');clearInterval(feedSt.timer);feedSt.timer=null;}
+  async function feedVisNaa(r){ // «Slik kortet er nå»: hent selgerens nåværende kort fra skyen og vis det i hurtigvisningen — kun lesing, aldri redigeringsmodus
+    if(r._naa){delete r._naa;feedRender();return;}
+    const c=getSupabaseClient();if(!c||!isAdmin()||!r.item_id)return;
+    try{
+      const q=await c.from(CLOUD_SYNC_CONFIG.table).select('data').eq('user_id',r.user_id).maybeSingle();if(q.error)throw q.error;
+      const it=((q.data&&Array.isArray(q.data.data))?q.data.data:[]).find(function(x){return x&&x.id===r.item_id;});
+      r._naa=it?{kort:feedKort(it),fulgt:it.state==='fulgt',t:Date.now()}:{kort:r.data.kort,borte:true,t:Date.now()};
+      feedRender();
+    }catch(e){toast('Kunne ikke hente kortet nå');}
+  }
+  (function(){const m=$('feedModal');if(!m)return;
+    m.addEventListener('click',function(e){
+      if(e.target===m){closeFeed();return;}
+      const id=e.target.id;
+      if(id==='feedClose'){closeFeed();return;}
+      if(id==='feedRefresh'){feedLoad('');return;}
+      if(id==='feedMore'){feedLoad('eldre');return;}
+      const kb=e.target.closest('#feedKind button');if(kb){feedSt.kind=kb.dataset.v||'';segSet($('feedKind'),feedSt.kind);feedSt.open=null;feedLoad('');return;}
+      const nb=e.target.closest('[data-fnaa]');if(nb){const r=feedSt.rows.find(function(x){return String(x.id)===nb.dataset.fnaa;});if(r)feedVisNaa(r);return;}
+      const im=e.target.closest('.fq-img.has');if(im){const r=feedSt.rows.find(function(x){return String(x.id)===im.dataset.fimg;});if(!r)return;
+        const ei=feedEier(r),d=feedSt.imgs.get(ei.uid+'/'+r.item_id);if(d)openLightbox({adresse:r.data.kort&&r.data.kort.adresse},d);return;}
+      if(e.target.closest('.feed-qv'))return; // klikk inne i hurtigvisningen (tekst) lukker ikke
+      const row=e.target.closest('.feed-row.har-kort');if(row){const rid=+row.dataset.fid;feedSt.open=feedSt.open===rid?null:rid;feedRender();}
+    });
+    const sel=$('feedSeller');if(sel)sel.addEventListener('change',function(){feedSt.uid=this.value;feedSt.open=null;feedLoad('');});
+    if(/[?&]feedtest=1/.test(location.search))window.__feed={st:feedSt,render:feedRender,tekst:feedTekst,open:function(){m.classList.add('open');}}; // testkrok (Playwright uten innlogging)
+  })();
 
   /* ---- VARSEL-INNSTILLINGER: selgerens standard (minutter før, ekstra varsel, dagsoversikt) ----
      Lokalt i oppf:varsler, i skyen i kolonnen oppf_snapshots.varsler (SQL: supabase/sql/2026-10-28-varsler.sql).
@@ -1289,7 +1569,9 @@
   let varslerPullAt=0;
   function varslerDefaults(){return adminView?(adminView.varsler||VDEF):varsler;} // skjemaet viser selgerens standard når admin redigerer et selgerkort
   function varslerSet(patch){
+    const prev=varsler;
     varsler=varslerNorm(Object.assign({},varsler,patch));
+    try{Object.keys(patch||{}).forEach(function(k){if(prev&&prev[k]!==varsler[k])feed('innstilling','profil.varsel',{felt:k,fra:prev[k],til:varsler[k]});});}catch(e){} // live feed
     setCmeta(VKEY,JSON.stringify(varsler));setCmeta(VDIRTY,'1');
     varslerPush();varslerRerender();
   }
@@ -1370,15 +1652,15 @@
     if(!sbUser){toast('Logg inn først');return;}
     let perm=pushPermission();
     if(perm!=='granted'){try{perm=await Notification.requestPermission();}catch(e){}}
-    if(perm!=='granted'){pushTriedFailed=true;toast('Varsler ble ikke tillatt');renderProfileBody();refreshPushGate();return;}
+    if(perm!=='granted'){pushTriedFailed=true;feed('innstilling','profil.push',{til:'på',ok:false,grunn:'avslått'});toast('Varsler ble ikke tillatt');renderProfileBody();refreshPushGate();return;}
     const reg=await ensureSwReg();if(!reg){pushTriedFailed=true;toast('Kunne ikke starte varsler');refreshPushGate();return;}
     try{
       let sub=await reg.pushManager.getSubscription();
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
       const ok=await savePushSub(sub);
-      pushTriedFailed=false;
+      pushTriedFailed=false;feed('innstilling','profil.push',{til:'på',ok:!!ok});
       toast(ok?'Varsler er på ✓':'Varsler på enheten, men lagring feilet');
-    }catch(e){pushTriedFailed=true;toast('Kunne ikke slå på varsler: '+((e&&e.message)||''));}
+    }catch(e){pushTriedFailed=true;feed('innstilling','profil.push',{til:'på',ok:false,grunn:String((e&&e.message)||'').slice(0,80)});toast('Kunne ikke slå på varsler: '+((e&&e.message)||''));}
     renderProfileBody();refreshPushGate();
   }
   async function disablePush(){
@@ -1388,7 +1670,7 @@
         if(c&&sbUser){try{await c.from('push_subscriptions').update({enabled:false}).eq('endpoint',j.endpoint);}catch(e){}}
         await sub.unsubscribe();}
     }catch(e){}
-    toast('Varsler er av');renderProfileBody();
+    feed('innstilling','profil.push',{til:'av'});toast('Varsler er av');renderProfileBody();
   }
   // ved oppstart (innlogget + allerede tillatt): hold påmeldingen frisk i Supabase
   async function pushRefresh(){
@@ -1428,7 +1710,7 @@
   }
   function refreshPushGate(){
     const g=$('pushGate');if(!g)return;
-    if(pushGateNeeded()){renderPushGate();g.style.display='flex';}
+    if(pushGateNeeded()){if(g.style.display!=='flex')feed('innstilling','profil.pushgate',{vist:true});renderPushGate();g.style.display='flex';}
     else g.style.display='none';
   }
 
@@ -1448,17 +1730,18 @@
     setCloudState('syncing');
     try{const {error}=await c.auth.signInWithPassword({email:email,password:pw});
       if(error)throw error;renderCloudModalBody();} // onAuthStateChange håndterer sync + status
-    catch(e){setCloudState('error');toast('Innlogging feilet: '+(e&&e.message||''));}
+    catch(e){setCloudState('error');toast('Innlogging feilet: '+(e&&e.message||''));feed('innstilling','profil.login',{feil:String(e&&e.message||'').slice(0,80)});}
   }
   // Sett/endre passord (mens innlogget) — gjør hjemskjerm-appen selvgående.
   async function cloudSetPassword(pw){
     const c=getSupabaseClient();if(!c||!sbUser){toast('Logg inn først');return;}
     if(!pw||pw.length<6){toast('Passord må være minst 6 tegn');return;}
     try{const {error}=await c.auth.updateUser({password:pw});
-      if(error)throw error;toast('Passord lagret – bruk e-post + passord på hjemskjerm-appen');renderCloudModalBody();renderProfileBody();closeProfileModal();}
+      if(error)throw error;feed('innstilling','profil.passord');toast('Passord lagret – bruk e-post + passord på hjemskjerm-appen');renderCloudModalBody();renderProfileBody();closeProfileModal();}
     catch(e){toast('Kunne ikke lagre passord: '+(e&&e.message||''));}
   }
   async function cloudSignOut(){
+    feed('innstilling','profil.logout');try{await Promise.race([feedFlush(),sleep(1500)]);}catch(e){} // send køen FØR utlogging (etterpå avvises radene)
     const c=getSupabaseClient();if(c){try{await c.auth.signOut();}catch(e){}}
     if(adminView)adminExitView(); // tilbake til egen liste før utlogging
     adminSellersCache=null;
@@ -1476,9 +1759,9 @@
       const was=!!sbUser;sbUser=session?session.user:null;
       if(was&&!sbUser)setCloudState('login'); // sesjonen forsvant → ikke vis «Synket» lenger
       renderCloudStatus();
-      if(!was&&sbUser){cloudReconcile().then(function(){cloudHeartbeat(true);flushLog();});flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();varslerPull(true);}
+      if(!was&&sbUser){feed('innstilling','profil.login');cloudReconcile().then(function(){cloudHeartbeat(true);flushLog();});flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();varslerPull(true);}
       refreshPushGate();});
-    if(sbUser){cloudFetchApiKey();await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();pushRefresh();varslerPull(true);} else setCloudState('login');
+    if(sbUser){cloudFetchApiKey();await cloudReconcile();cloudHeartbeat(true);flushLog();feedFlush();flushPendingImgs();pushRefresh();varslerPull(true);} else setCloudState('login');
     refreshPushGate();
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
     if(/[?&]laering=1/.test(location.search))laeringEksport(); // læringsgjennomgang: appen åpnes slik av laering/kjor-gjennomgang.command
@@ -1583,11 +1866,13 @@
     var btnTxt=adminLoading?'Henter…':(adminSellersCache?'Oppdater':'Hent selgere');
     return '<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Selgere (admin)</b></div>'
       +'<div class="cloud-row cloud-muted">Velg en selger for å se og endre oppfølgingene deres. Din egen liste er trygg imens.</div>'
-      +'<div class="cloud-row cloud-btns"><button class="btn" id="adminLoad"'+(adminLoading?' disabled':'')+'>'+btnTxt+'</button></div>'
+      +'<div class="cloud-row cloud-btns"><button class="btn" id="adminLoad"'+(adminLoading?' disabled':'')+'>'+btnTxt+'</button><button class="btn" id="adminFeed">Live feed</button></div>'
       +mineOld+'<div>'+lst+'</div>';
   }
-  function openProfileModal(){renderProfileBody();$('profileModal').classList.add('open');}
-  function closeProfileModal(){$('profileModal').classList.remove('open');adminSellersCache=null;adminLoading=false;}
+  let feedProfilAt=0;
+  function openProfileModal(){renderProfileBody();$('profileModal').classList.add('open');feedProfilAt=Date.now();feed('innstilling','profil.apnet');}
+  function closeProfileModal(){const pm=$('profileModal');if(pm.classList.contains('open'))feed('innstilling','profil.lukket',{sek:Math.round((Date.now()-feedProfilAt)/1000)}); // bare når den faktisk var åpen (kalles også ved selgerbytte/ny)
+    pm.classList.remove('open');adminSellersCache=null;adminLoading=false;}
   function wireProfileUI(){
     const pb=$('btnProfile');if(pb)pb.addEventListener('click',openProfileModal);
     const m=$('profileModal');
@@ -1601,6 +1886,7 @@
       if(id==='pushOn'){enablePush();return;}
       if(id==='pushOff'){disablePush();return;}
       if(id==='adminLoad'){adminLoadSellers();return;}
+      if(id==='adminFeed'){openFeed();return;}
       const vs=e.target.closest&&e.target.closest('[data-vs]'); // varsel-innstillinger (knapper med tekst → closest, ikke e.target.id)
       if(vs){varslerClick(vs);return;}
       const sb=e.target.closest&&e.target.closest('.admin-seller');
@@ -1610,7 +1896,7 @@
     const pg=$('pushGate');if(pg)pg.addEventListener('click',function(e){
       const id=e.target.id;
       if(id==='pgEnable')enablePush();
-      else if(id==='pgRecheck')location.reload();
+      else if(id==='pgRecheck'){feed('innstilling','profil.pushgate',{knapp:'sjekk'});location.reload();}
     });
     document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshPushGate();}); // hver gang appen åpnes igjen
     window.addEventListener('focus',refreshPushGate);
@@ -1620,6 +1906,7 @@
     const info=$('cloudConflictInfo');
     if(info)info.textContent='Denne enheten: '+localData.length+' oppfølginger · Sky: '+(Array.isArray(cloudData)?cloudData.length:0)+' oppfølginger.';
     $('cloudConflictModal').classList.add('open');
+    feed('innstilling','synk.konflikt',{vist:true,lokalt:localData.length,sky:Array.isArray(cloudData)?cloudData.length:0});
   }
   function wireCloudUI(){
     const ind=$('cloudInd');if(ind)ind.addEventListener('click',function(){closeProfileModal();openCloudModal();});
@@ -1630,16 +1917,16 @@
       if(id==='cloudClose'){closeCloudModal();return;}
       if(id==='cloudLoginPw'){const em=($('cloudEmail')&&$('cloudEmail').value||'').trim();const pw=($('cloudPw')&&$('cloudPw').value||'');cloudSignInPassword(em,pw);return;}
       if(id==='cloudSavePw'){const pw=($('cloudNewPw')&&$('cloudNewPw').value||'');cloudSetPassword(pw);return;}
-      if(id==='cloudSyncNow'){cloudReconcile();return;}
+      if(id==='cloudSyncNow'){feed('innstilling','synk.na');cloudReconcile();return;}
       if(id==='cloudLogout'){cloudSignOut().then(renderCloudModalBody);return;}
     });
     const cf=$('cloudConflictModal');
     if(cf){
       const close=function(){cf.classList.remove('open');};
       const lo=$('cfgLocal'),cl=$('cfgCloud'),ca=$('cfgCancel');
-      if(lo)lo.addEventListener('click',function(){close();cloudPush();});
-      if(cl)cl.addEventListener('click',function(){if(conflictData)setLocalFollowupsFromCloud(conflictData.cloud,conflictData.serverAt);close();setCloudState('synced');});
-      if(ca)ca.addEventListener('click',function(){close();setCloudState('dirty');});
+      if(lo)lo.addEventListener('click',function(){feed('innstilling','synk.konflikt',{valg:'enhet'});close();cloudPush();});
+      if(cl)cl.addEventListener('click',function(){feed('innstilling','synk.konflikt',{valg:'sky'});if(conflictData)setLocalFollowupsFromCloud(conflictData.cloud,conflictData.serverAt);close();setCloudState('synced');});
+      if(ca)ca.addEventListener('click',function(){feed('innstilling','synk.konflikt',{valg:'avbryt'});close();setCloudState('dirty');});
     }
   }
 
@@ -1829,7 +2116,7 @@
 
   // ---------- rendering + gruppering ----------
   // view = hovedvisning: avtaler | gjore | uten | alle.  sub = Avtaler-underfilter: alle | forfalte
-  let view='avtaler', sub='alle', gjoreSub='send_offer', searchQuery='';
+  let view='avtaler', sub='alle', gjoreSub='send_offer', searchQuery='';let sokT=null;
   function updateBars(){
     const searching=!!searchQuery;
     $('mainbar').style.display=searching?'none':'';
@@ -2144,10 +2431,11 @@
     try{const c=await caches.open('oppf-glow');const r=await c.match('./oppf-swver');const v=r?await r.text():'ukjent (ikke 147+)';
       logEvent('sw','versjon '+v+' · styrer siden: '+!!(navigator.serviceWorker&&navigator.serviceWorker.controller));}catch(e){}
   },4000);
-  $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
-  $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
-  $('subbarGjore').addEventListener('click',e=>{const b=e.target.closest('button');if(b){gjoreSub=b.dataset.sg;render();}});
-  $('searchBox').addEventListener('input',function(){searchQuery=this.value.trim();render();});
+  $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b){feed('kort','fane',{view:b.dataset.v,sub:sub});setView(b.dataset.v);}});
+  $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b){feed('kort','fane',{view:view,sub:b.dataset.s});setSub(b.dataset.s);}});
+  $('subbarGjore').addEventListener('click',e=>{const b=e.target.closest('button');if(b){feed('kort','fane',{view:'gjore',sub:b.dataset.sg});gjoreSub=b.dataset.sg;render();}});
+  $('searchBox').addEventListener('input',function(){searchQuery=this.value.trim();render();
+    clearTimeout(sokT);sokT=setTimeout(function(){if(searchQuery)feed('kort','sok',{tekst:searchQuery.slice(0,80),treff:document.querySelectorAll('#list .opf-card').length});},800);}); // live feed: søketeksten 800 ms etter siste tastetrykk
 
   // sett nextAction og stempel når «send tilbud» settes (styrer kategori i «Må gjøres»)
   function applyNA(it,na){
@@ -2238,10 +2526,10 @@
   function purgeEldre(){
     const eldre=items.filter(i=>i.state!=='fulgt'&&i.dato&&daysSince(p(i.dato))>=14);
     if(!eldre.length){toast('Ingen oppfølginger forfalt for 2 uker eller mer siden');return;}
-    if(!confirm('Fjerne '+eldre.length+' oppfølginger som forfalt for 2 uker eller mer siden?'))return;
+    if(!confirm('Fjerne '+eldre.length+' oppfølginger som forfalt for 2 uker eller mer siden?')){feed('kort','knapp.rydd',{n:eldre.length,avbrutt:true});return;}
     const ids=eldre.map(i=>i.id);
     ids.forEach(id=>{const it=byId(id);if(it){it.state='fulgt';it.avgjort=Date.now();}});
-    save();render();
+    feedMark='rydd';save();feedMark=null;render();
     toastUndo('Fjernet '+ids.length+' eldre forfalte',function(){
       ids.forEach(id=>{const it=byId(id);if(it){it.state='aktiv';it.avgjort=null;}});
       save();render();
@@ -2266,7 +2554,7 @@
     const nt=e.target.closest('.opf-note');
     if(nt&&card){if(!nt.querySelector('.opf-note-edit'))inlineEditNote(card);return;}
     const sfb=e.target.closest('.act-sf');
-    if(sfb&&sfb.dataset.sf){e.preventDefault();copyText(sfb.dataset.sf,'');sfPop(sfb);return;}
+    if(sfb&&sfb.dataset.sf){e.preventDefault();if(card)feedK(card.dataset.id,'knapp.salesforce',{sfNr:sfb.dataset.sf});copyText(sfb.dataset.sf,'');sfPop(sfb);return;}
     if(sfb&&card){openForm(byId(card.dataset.id));return;} // Salesforce uten besøksnummer → åpne redigering så nummeret kan legges inn (28.10)
     const ez=e.target.closest('.opf-ident');
     if(ez&&card){ez.classList.remove('flash');void ez.offsetWidth;ez.classList.add('flash');setTimeout(function(){ez.classList.remove('flash');},520);openForm(byId(card.dataset.id));return;} // hele navn→adresse-boksen åpner redigering + grønt blink
@@ -2276,14 +2564,16 @@
     if(ac&&card){checkOffAction(byId(card.dataset.id));return;}
     if(e.target.closest('.act-navedit')&&card){openForm(byId(card.dataset.id));return;}
     const th=e.target.closest('.opf-thumb');
-    if(th){e.preventDefault();const ti=card?byId(card.dataset.id):null;if(ti&&ti.hasImg)openLightbox(ti);else if(ti)openForm(ti);return;} // bilde → forstørret; «Ingen bilde»-ruta → rediger (28.10)
+    if(th){e.preventDefault();const ti=card?byId(card.dataset.id):null;if(ti&&ti.hasImg){feedK(ti.id,'knapp.bilde');openLightbox(ti);}else if(ti)openForm(ti);return;} // bilde → forstørret; «Ingen bilde»-ruta → rediger (28.10)
     const mb=e.target.closest('.act-mute'); // demp / angre demping av neste varsel for dette kortet
     if(mb&&card){const mi=byId(card.dataset.id);if(mi){
+      feedK(mi.id,'knapp.demp',{til:varselMuted(mi)?'av':'på'});
       if(varselMuted(mi)){delete mi.varselMute;toast('Varsel på igjen');}
       else{mi.varselMute=mi.dato;toast('Neste varsel dempet');}
       save();render();}return;}
     if(e.target.closest('.act-done')&&card){fullfor(byId(card.dataset.id));return;}
     // resten av kortflaten (topp, bunn, venstre rundt datoblokka) → rediger oppfølging (Christian 28.10). Datoblokka selv beholder dato-velgeren.
+    if(e.target.closest('.act-nav')&&card){feedK(card.dataset.id,'knapp.naviger');return;} // live feed; lenka åpner selv (ingen preventDefault)
     // 28.10: også tomrommet i handlingsraden og mellomrommene i knappekolonnen (iPad skalerer kortet til ~0,8 → rammen er bare 8–14 pt bred)
     if(card&&!e.target.closest('.when-edit,.opf-note,button,a,input,textarea,[contenteditable]')){openForm(byId(card.dataset.id));return;}
   });
@@ -2331,8 +2621,8 @@
   }
 
   // ---------- lightbox ----------
-  function openLightbox(it){$('lbImg').src=FULL; // plassholder; ekte fullbilde hentes under
-    if(it&&it.hasImg)getCardImg(it.id).then(function(d){if(d)$('lbImg').src=d;});
+  function openLightbox(it,durl){$('lbImg').src=durl||FULL; // plassholder; ekte fullbilde hentes under (durl = ferdig bilde fra live-feeden)
+    if(!durl&&it&&it.hasImg)getCardImg(it.id).then(function(d){if(d)$('lbImg').src=d;});
     const d=$('lbDriv');const adr=it&&it.adresse;
     if(adr){d.href='https://maps.google.com/?q='+encodeURIComponent(adr);d.style.display='';}
     else d.style.display='none';
@@ -2755,6 +3045,7 @@
       if(JSON.stringify([formGather(),fHandling])!==formSnap)toast('Lagret'); // bare når noe faktisk er endret (Christian 28.10)
       if(editId===aiRevealId){ // AI-import: alltid fane-bytte + grønt blink som manuell
         if(it.ai&&it.ai.ms&&it.ai.ms.skjema==null)it.ai.ms.skjema=Date.now()-formOpenedAt; // ms fra AI-skjemaet åpnet til selgeren lagret (28.10)
+        feedAiSkjema(it); // live feed: hva selgeren rettet etter AI-lesingen
         navToItem(it);revealId=it.id;aiRevealId=null;}
       else if(it.dato!==editOrigDato){ // redigering av eksisterende kort → bli i visningen; pil/blink kun ved hovedfanebytte (Avtaler ↔ Uten tidspunkt)
         const destTab=it.dato?'avtaler':'uten';
@@ -2795,9 +3086,9 @@
   $('formModal').addEventListener('keydown',function(e){ // Enter = lagre; Shift+Enter = linjeskift i kommentar
     if(e.key==='Enter'&&!e.shiftKey&&!savingLock&&$('formModal').classList.contains('open')){e.preventDefault();doSave();}
   });
-  $('btnNy').addEventListener('click',function(){closeProfileModal();pendingCardImg=null;formFromPaste=false;openForm(null);});
+  $('btnNy').addEventListener('click',function(){feed('kort','knapp.ny');closeProfileModal();pendingCardImg=null;formFromPaste=false;openForm(null);});
   // hent nyeste versjon (cache-omgåelse) — slipper å re-installere appen på hjemskjerm
-  $('btnReload').addEventListener('click',function(){location.href=location.pathname+'?t='+Date.now();});
+  $('btnReload').addEventListener('click',function(){feed('kort','knapp.oppdater');location.href=location.pathname+'?t='+Date.now();}); // raden ligger i køen til neste åpning
 
   // ---------- sikkerhetskopi: Kopier alt / Importer ----------
   // «Kopier alt» / «Importer» er fjernet (erstattet av sky-synk)
@@ -2854,7 +3145,7 @@
   function toastUndo(msg,fn,ms){
     $('toastMsg').textContent=msg;
     const u=$('toastUndo');u.style.display='';
-    u.onclick=function(){u.style.display='none';$('toast').classList.remove('show');fn();};
+    u.onclick=function(){u.style.display='none';$('toast').classList.remove('show');feedMark='angre';try{fn();}finally{feedMark=null;}}; // live feed: lagringen i fn() stemples som angre
     $('toast').classList.add('show');
     clearTimeout(toastTimer);
     toastTimer=setTimeout(function(){$('toast').classList.remove('show');u.style.display='none';},ms||6000);
@@ -3107,14 +3398,14 @@
       }catch(e){
         lastErr=e;console.warn('AI-analyse '+(i+1)+'/'+N+':',e&&e.message);
         if(aiErrPermanent(e)){ // ugyldig nøkkel / tom kreditt / avviklet modell — nytter ikke å prøve igjen: vis den ekte årsaken
-          analysing=false;logEvent('ai','import: '+aiErrText(e));
+          analysing=false;logEvent('ai','import: '+aiErrText(e));feed('kort','lim-inn.feil',{feil:String(aiErrText(e)).slice(0,120),varig:true});
           setAiStatus('AI-feil: '+aiErrText(e)+' — gi beskjed til Christian. Fyll inn manuelt med + Ny oppfølging.','err');return;}
         if(i<N-1)await sleep(2000*Math.pow(2,i)); // 2/4/8 s — midlertidige feil (nett, overbelastet API)
       }
     }
     analysing=false;
     const why=lastErr?(' ('+String((lastErr&&lastErr.message)||lastErr).slice(0,80)+')'):'';
-    logEvent('ai','import feilet'+why);
+    logEvent('ai','import feilet'+why);feed('kort','lim-inn.feil',{feil:why.slice(0,120)});
     setAiStatus('Fikk ikke analysert bildet'+why+'. Prøv igjen — eller fyll inn manuelt med + Ny oppfølging.','err');
   }
   // bildehåndtering — FileReader.readAsDataURL, ALDRI blob-URL (blokkert i sandkassen)
@@ -3177,7 +3468,7 @@
       openPaste();setAiStatus('Fant ikke noe bilde i utklippstavla — kopier kart-skjermbildet og prøv igjen.','err');showUpload(true); // ingen bilde → tilby opplasting
     }catch(e){ /* «Lim inn» avbrutt/avvist → ingen popup, ingen flikring */ }
   }
-  $('btnPaste').addEventListener('click',quickPasteAnalyze);
+  $('btnPaste').addEventListener('click',function(){feed('kort','lim-inn.start');quickPasteAnalyze();});
   $('pasteModal').addEventListener('click',function(e){if(e.target===$('pasteModal')){pendingImg=null;pendingCardImg=null;formFromPaste=false;closePaste();}});
   $('pzEdit').addEventListener('paste',function(e){
     const cd=e.clipboardData;let f=null;
@@ -3229,14 +3520,14 @@
     aiKey=$('keyInp').value.trim();
     store.set(KEYK,aiKey);
     aiWarm=false;closeKey();
-    toast(aiKey?'API-nøkkel lagret':'API-nøkkel fjernet');
+    toast(aiKey?'API-nøkkel lagret':'API-nøkkel fjernet');feed('innstilling','profil.nokkel',{til:aiKey?'satt':'fjernet'}); // aldri selve nøkkelen
     if(aiKey){
       if(pendingImg||$('pasteModal').classList.contains('open'))setAiStatus('Varmer opp AI …','busy');
       warmupAI();
     }
   });
   $('keyRemove').addEventListener('click',function(){
-    aiKey='';store.set(KEYK,'');$('keyInp').value='';aiWarm=false;closeKey();toast('API-nøkkel fjernet');
+    aiKey='';store.set(KEYK,'');$('keyInp').value='';aiWarm=false;closeKey();toast('API-nøkkel fjernet');feed('innstilling','profil.nokkel',{til:'fjernet'});
   });
   function openFormFromAI(o){
     // opprett + lagre oppfølgingen med en gang, og åpne den i redigering (videre endringer auto-lagres)
