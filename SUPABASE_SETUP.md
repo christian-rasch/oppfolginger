@@ -199,5 +199,6 @@ med egen e-post, bare admin leser, ingen update/delete fra appen, pg_cron slette
 client_log/notif_log/notif_status/oppf_hendelser = kun admin lesing; notif_sent uten policyer (kun Edge Function). Feeden vises bare for
 admin (`isAdmin()` i adminSectionHtml/openFeed/feedLoad); loggingen hos selgerne koster ≈0,4 ms pr. lagring (300 kort) og sendes i bakgrunnen; (2) push appen (build 153). Hendelser køes lokalt
 (`localStorage oppf:feed`, maks 300) og sendes samlet når selgeren er innlogget og på nett; finnes ikke tabellen ennå, kastes køen.
+**«Mine egne» (build 154):** bryter i feed-vinduet, standard AV for admin: av = Christians egne handlinger logges ikke og vises ikke; på = logges og vises som for selgerne. Lagres på enheten (`oppf:feed:egne`).
 **Sjekk:** `select at, email, type, data from public.oppf_hendelser order by id desc limit 50;`
 
