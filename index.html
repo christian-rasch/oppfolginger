@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-143">
+<meta name="app-build" content="2026-10-28-144">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -110,7 +110,7 @@
   /* Oppfølginger: .lcard brukes nå kun av Annulleringer-listen */
   .lcard .main .cn{font-size:18px;font-weight:800}
   /* ===== Oppfølgingskort v3 — roligere 3-kolonners oppsett ===== */
-  .opf-card{display:grid;grid-template-columns:96px 1fr 240px;gap:18px;padding:16px 18px;align-items:center}
+  .opf-card{display:grid;grid-template-columns:96px 1fr 240px;gap:18px;padding:16px 18px;align-items:center;cursor:pointer} /* cursor:pointer: iPad-Safari sender ellers ikke trykk fra «døde» områder i kortet til klikk-lytteren */
   .opf-card.waitreply{border-color:rgba(232,194,107,.32)}
   .opf-card.replied{border-color:rgba(61,245,197,.3)}
   /* KOL 1 — tid/dato-skinne */
@@ -2059,13 +2059,16 @@
       searchQuery='';const sbx=$('searchBox');if(sbx)sbx.value='';}
     render();
     // kortet finnes ikke lokalt ennå (laget i skyen/på annen enhet)? → hent fra skyen nå i stedet for å vente på neste vekking
-    if(!byId(glow.ids[0])&&sbUser&&!adminView&&cloudState!=='syncing'){clearTimeout(cloudPushTimer);cloudReconcile();}
-    // kortene kan mangle lokalt til sky-hentingen er ferdig → prøv i inntil ~8 s, og lys opp på nytt hvis lista tegnes om igjen etter hentingen (nytt DOM-element)
-    let tries=0,glowed=null;
+    if(!glow.ids.some(byId)&&sbUser&&!adminView&&cloudState!=='syncing'){clearTimeout(cloudPushTimer);cloudReconcile();}
+    // kortene kan mangle lokalt til sky-hentingen er ferdig → prøv i inntil ~8 s, og lys opp på nytt hvis lista tegnes om igjen etter hentingen (nytt DOM-element).
+    // Se etter HVILKET SOM HELST av kortene — passerte avtaler ligger under Forfalte og finnes ikke i Alle-visningen.
+    let tries=0,glowed=null,glowN=0;
     (function tryGlow(){
-      const listEl=$('list'),el=listEl&&listEl.querySelector('.opf-card[data-id="'+glow.ids[0]+'"]');
-      if(el&&el!==glowed){glowCards(glow.ids);glowed=el;}
+      const listEl=$('list'),els=listEl?glow.ids.map(function(id){return listEl.querySelector('.opf-card[data-id="'+id+'"]');}).filter(Boolean):[];
+      const el=els[0]||null;
+      if(el&&el!==glowed){glowCards(glow.ids);glowed=el;glowN=els.length;}
       if(++tries<12)setTimeout(tryGlow,700);
+      else logEvent('glow',(glowed?'lyste '+glowN+' av ':'FANT INGEN av ')+glow.ids.length+' kort · fane '+(glow.view||'?')+'/'+(glow.sub||glow.gsub||'')+' · lokalt '+glow.ids.filter(byId).length+' · sky '+cloudState); // feilsøking: leses i client_log
     })();
   }
   function checkNotifGlowURL(){ // kaldstart via openWindow: glow ligger i URL-en
@@ -2409,7 +2412,7 @@
   $('list').addEventListener('scroll',closeQpop);
 
   // ---------- skjema (ny / rediger) med duplikatvern ----------
-  let editId=null,fDatoVal=null,fHandling=null,fStatusV='',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null,editOrigDato=null,dtSnapshot=null,fVarsel=null;
+  let editId=null,fDatoVal=null,fHandling=null,fStatusV='',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null,editOrigDato=null,dtSnapshot=null,fVarsel=null,formSnap=null,formOpenedAt=0;
   function segSet(seg,v){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
   // ---- tallskjerm: 1-9 / ⌫ 0 OK — minutter (0–999) eller klokkeslett (fire siffer HHMM). Egen modal, så tastaturet på enheten kommer aldri opp ----
   let npCfg=null,npDigits='';
@@ -2602,6 +2605,8 @@
     savingLock=false;
     $('fAiNote').style.display='none';
     $('fDelete').style.display=''; // Slett vises alltid; sletter lagret kort, eller forkaster nytt
+    formSnap=JSON.stringify([formGather(),fHandling]); // utgangspunkt → «Lagret» vises bare når noe faktisk er endret
+    formOpenedAt=Date.now(); // trykk på overlayet rett etter åpning (rask dobbelttrykk) skal ikke lukke skjemaet
     $('formModal').classList.add('open');
   }
   function closeForm(){$('formModal').classList.remove('open');}
@@ -2674,7 +2679,7 @@
       Object.assign(it,f);
       if(fHandling)applyNA(it,fHandling); // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       aiTrack(it);
-      toast('Lagret');
+      if(JSON.stringify([formGather(),fHandling])!==formSnap)toast('Lagret'); // bare når noe faktisk er endret (Christian 28.10)
       if(editId===aiRevealId){navToItem(it);revealId=it.id;aiRevealId=null;} // AI-import: alltid fane-bytte + grønt blink som manuell
       else if(it.dato!==editOrigDato){ // redigering av eksisterende kort → bli i visningen; pil/blink kun ved hovedfanebytte (Avtaler ↔ Uten tidspunkt)
         const destTab=it.dato?'avtaler':'uten';
@@ -2707,7 +2712,7 @@
     }
   });
   $('formModal').addEventListener('click',function(e){ // klikk på mørk overlay = lagre; tomt nytt skjema = lukk uten å lagre
-    if(e.target!==$('formModal')||savingLock)return;
+    if(e.target!==$('formModal')||savingLock||Date.now()-formOpenedAt<450)return; // rask dobbelttrykk på kortet traff overlayet → ikke lukk
     const navn=$('fNavn').value.trim(),adr=$('fAdr').value.trim();
     if(!editId&&!navn&&!adr){pendingCardImg=null;formFromPaste=false;closeForm();render();}
     else doSave();
