@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-154">
+<meta name="app-build" content="2026-10-28-155">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -499,7 +499,16 @@
   .feed-body{flex:1;min-height:0;overflow:auto;margin:6px 0}
   .feed-day{position:sticky;top:0;background:#0d1019;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);padding:10px 6px 6px;z-index:1}
   .feed-row{display:grid;grid-template-columns:48px 124px 1fr;gap:10px;align-items:start;padding:8px 6px;border-bottom:1px solid var(--hair-2);font-size:13px;line-height:1.45} /* 124px: «christian.rasch» får plass uten … (iPad 28.10) */
+  .feed-row{border-left:3px solid transparent}
+  .feed-row.t-ok{border-left-color:var(--mint)}.feed-row.t-rett{border-left-color:var(--gold)}.feed-row.t-bort{border-left-color:var(--red)}
   .feed-row.har-kort{cursor:pointer}.feed-row.har-kort:hover{background:rgba(255,255,255,.03)}
+  .feed-diff{grid-column:1/-1;display:grid;grid-template-columns:120px minmax(80px,.55fr) 22px 1fr;gap:6px 10px;margin:2px 0 4px 58px;padding:8px 10px;border-left:2px solid var(--hair);align-items:start} /* gammel verdi tar maks ~en tredel, pila står nær */
+  .fd-felt{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);padding-top:2px}
+  .fd-fra{color:var(--ink-faint);text-decoration:line-through;overflow-wrap:anywhere}
+  .fd-fra.tom,.fd-til.tom{text-decoration:none;font-style:italic;color:var(--ink-ghost);font-weight:400}
+  .fd-pil{color:var(--ink-faint);text-align:center}
+  .fd-til{color:var(--mint);font-weight:700;overflow-wrap:anywhere}
+  @media (max-width:700px){.feed-diff{grid-template-columns:96px 1fr}.fd-pil{display:none}.fd-fra,.fd-til{grid-column:2}}
   .feed-row.ny{background:rgba(61,245,197,.09)}
   .feed-tid{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-dim)}
   .feed-who{color:var(--mint);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1413,17 +1422,23 @@
     'synk.konflikt':'synk-konflikt','synk.na':'trykket Synk nå'};
   const FEED_VIEW={avtaler:'Avtaler',uten:'Uten tidspunkt',gjore:'Må gjøres',alle:'Alle',forfalte:'Forfalte',send_offer:'Må gjøres',waiting_reply:'Tilbud sendt'};
   const FEED_VS={min:'Varsel (min før)',ekstra:'Ekstra varsel',ekstraMin:'Ekstra varsel (min før)',dagOn:'Dagsoversikt',dagTid:'Dagsoversikt kl.',gjoreOn:'Ugjorte fra i går',gjoreTid:'Ugjorte fra i går kl.'};
-  function feedVal(f,v){ // verdi → lesbar tekst
+  function feedVal(f,v,max){ // verdi → lesbar tekst
+    max=max||80;
     if(v==null||v==='')return '–';
     if(v===true)return 'på';if(v===false)return 'av';
     if(f==='dato')return friendlyDate(v)||String(v);
     if(f==='nextAction')return (NA_META[v]&&NA_META[v].label)||String(v);
     if(f==='hasImg')return v?'ja':'nei';
     if(f==='state')return v==='fulgt'?'fjernet':'aktiv';
-    if(typeof v==='object')return JSON.stringify(v).slice(0,80);
-    return String(v).slice(0,80);
+    if(typeof v==='object')return JSON.stringify(v).slice(0,max);
+    return String(v).slice(0,max);
   }
   function feedDiffTekst(diff){return Object.keys(diff||{}).map(function(f){return (FEED_LBL[f]||f)+': '+feedVal(f,diff[f].fra)+' → '+feedVal(f,diff[f].til);}).join(' · ');}
+  function feedDiffHtml(diff){ // én retting per linje: felt · gammel verdi (gjennomstreket) → ny verdi (mint). «tom» når feltet var/ble tomt (Christian 28.10)
+    const keys=Object.keys(diff||{});if(!keys.length)return '';
+    return '<div class="feed-diff">'+keys.map(function(f){const fra=feedVal(f,diff[f].fra,200),til=feedVal(f,diff[f].til,200);
+      return '<span class="fd-felt">'+esc(FEED_LBL[f]||f)+'</span><span class="fd-fra'+(fra==='–'?' tom':'')+'">'+(fra==='–'?'tom':esc(fra))+'</span><span class="fd-pil">→</span><span class="fd-til'+(til==='–'?' tom':'')+'">'+(til==='–'?'tom':esc(til))+'</span>';}).join('')+'</div>';
+  }
   function feedSek(ms){return ms==null?'':' ('+(ms/1000).toFixed(ms<10000?1:0).replace('.',',')+' s)';}
   function feedWho(em){return esc(String(em||'').split('@')[0]);}
   function feedWhoRow(r){const s=feedSt.sellers.find(function(x){return x.user_id===r.user_id;});return feedWho((s&&s.email)||r.email);} // selger ut fra user_id (RLS-sikret), e-posten i raden bare som reserve
@@ -1432,10 +1447,11 @@
     const lbl=FEED_TYPE[ty]||ty,k=(r._naa&&r._naa.kort)||d.kort||{},navn=k.navn?esc(shortName(k.navn)):(k.adresse?esc(addrShort(k.adresse)):'');
     let t='';
     switch(ty){
-      case 'kort.ny':case 'kort.ai':t=lbl+(navn?' «'+navn+'»':'')+(d.ai&&d.ai.ms&&d.ai.ms.ai?' · AI'+feedSek(d.ai.ms.ai):'');break;
-      case 'kort.ai-skjema':t=(d.endret&&d.endret.length?'rettet etter AI-lesingen: '+esc(feedDiffTekst(d.diff)):'godtok AI-lesingen uten endringer')+feedSek(d.ms&&d.ms.skjema)+(d.ms&&d.ms.endring?' · første endring etter '+Math.round(d.ms.endring/1000)+' s':'')+(navn?' — «'+navn+'»':'');break;
-      case 'kort.endret':t='endret'+(navn?' «'+navn+'»':'')+': '+esc(feedDiffTekst(d.diff));break;
-      case 'kort.fjernet':case 'kort.angret':case 'kort.slettet':t=lbl+(d.n>1?' ('+d.n+' kort: '+esc((d.navn||[]).join(', '))+')':(navn?' «'+navn+'»':''))+(d.rydd?' · via Rydd':'')+(d.angre&&ty!=='kort.angret'?' · angre':'');if(ty==='kort.angret'&&d.diff)t+=': '+esc(feedDiffTekst(d.diff));break;
+      case 'kort.ny':case 'kort.ai':t=(navn?'<b>'+navn+'</b> — ':'')+(ty==='kort.ai'?'lest med AI':'lagt til manuelt')+(d.ai&&d.ai.ms&&d.ai.ms.ai?' · AI-svar på '+(d.ai.ms.ai/1000).toFixed(1).replace('.',',')+' s':'');break;
+      case 'kort.ai-skjema':{const n=d.endret?d.endret.length:0,sek=(d.ms&&d.ms.skjema!=null)?Math.round(d.ms.skjema/1000)+' s i skjemaet':'',fe=(d.ms&&d.ms.endring)?', første endring etter '+Math.round(d.ms.endring/1000)+' s':'';
+        t=(navn?'<b>'+navn+'</b> — ':'')+(n?'rettet '+n+' felt etter AI-lesingen':'godtok AI-lesingen uten endringer')+(sek?' · '+sek+(n?fe:''):'');break;} // rettingene vises linje for linje under (feedDiffHtml)
+      case 'kort.endret':{const n=Object.keys(d.diff||{}).length;t=(navn?'<b>'+navn+'</b> — ':'')+'endret '+n+(n===1?' felt':' felt');break;}
+      case 'kort.fjernet':case 'kort.angret':case 'kort.slettet':t=lbl+(d.n>1?' ('+d.n+' kort: '+esc((d.navn||[]).join(', '))+')':(navn?' <b>'+navn+'</b>':''))+(d.rydd?' · via Rydd':'')+(d.angre&&ty!=='kort.angret'?' · angre':'');break;
       case 'knapp.demp':t=(d.til==='på'?'dempet 2. varsel':'skrudde 2. varsel på igjen')+(navn?' «'+navn+'»':'');break;
       case 'knapp.rydd':t=lbl+': '+(d.avbrutt?'avbrutt':'fjernet')+' '+(d.n||0)+' kort';break;
       case 'sok':t='søkte «'+esc(d.tekst||'')+'»'+(d.treff!=null?' ('+d.treff+' treff)':'');break;
@@ -1507,10 +1523,16 @@
     feedSt.rows.forEach(function(r){
       const d=new Date(r.at),dk=dKey(d);
       if(dk!==lastDay){lastDay=dk;html+='<div class="feed-day">'+(sameDay(d,n)?'I dag':dayLabel(d))+'</div>';}
-      const harKort=!!(r.data&&r.data.kort),open=feedSt.open===r.id;
-      html+='<div class="feed-row'+(r._ny&&Date.now()-r._ny<10000?' ny':'')+(harKort?' har-kort':'')+(open?' open':'')+'" data-fid="'+r.id+'">'
+      const harKort=!!(r.data&&r.data.kort),open=feedSt.open===r.id,ty=r.type||'',dd=r.data||{};
+      let tc=''; // fargekant: mint = ok/nytt, gull = rettet/endret, rød = fjernet/feil
+      if(ty==='kort.ai-skjema')tc=(dd.endret&&dd.endret.length)?' t-rett':' t-ok';
+      else if(ty==='kort.ny'||ty==='kort.ai')tc=' t-ok';
+      else if(ty==='kort.endret'||ty==='kort.angret')tc=' t-rett';
+      else if(ty==='kort.fjernet'||ty==='kort.slettet'||ty==='lim-inn.feil')tc=' t-bort';
+      html+='<div class="feed-row'+tc+(r._ny&&Date.now()-r._ny<10000?' ny':'')+(harKort?' har-kort':'')+(open?' open':'')+'" data-fid="'+r.id+'">'
         +'<span class="feed-tid">'+hhmm(d)+'</span><span class="feed-who">'+feedWhoRow(r)+'</span>'
         +'<span class="feed-txt"><span class="feed-ic">'+(r.kind==='innstilling'?'⚙️':'🗂')+'</span>'+feedTekst(r)+'</span>';
+      if(dd.diff&&(ty==='kort.ai-skjema'||ty==='kort.endret'||ty==='kort.angret'))html+=feedDiffHtml(dd.diff); // én retting per linje
       if(open&&harKort)html+=feedQvHtml(r);
       html+='</div>';
     });
