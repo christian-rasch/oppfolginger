@@ -1,6 +1,6 @@
 {
  "versjon": 1,
- "oppdatert": "2026-10-27",
+ "oppdatert": "2026-10-28",
  "beskrivelse": "Fasit for datotolkning: hva selgeren mente da notatet ble skrevet (bokstavelig lesing). tidFri=true: notatet sier ingen tid, bare dagen teller. usikker=true: telles ikke. naa=UTC (norsk tid = +1/+2 t), slik eksporten skriver det. test=true: Christians testkort – telles ikke. laStaa=true: kort på feil dag som Christian har sagt skal stå – ikke i rapporten.",
  "kort": [
   {
@@ -74,11 +74,11 @@
    "who": "nicolai.b",
    "naa": "2026-09-28T18:02",
    "notat": "Ring Mai 2027. Bryr seg kun om pris",
-   "gull": "2027-05-01T12:00",
+   "gull": "2027-05-03T12:00",
    "tidFri": false,
    "usikker": false,
-   "kilde": "kortets dato (Claude-gjennomgang 15.10.2026: vurdert riktig)",
-   "merknad": ""
+   "kilde": "Christian 28.10.2026 (måned alene = første virkedag)",
+   "merknad": "«Ring Mai 2027»: 1. mai 2027 er lørdag og helligdag, 2. mai søndag → mandag 3. mai. Før 28.10 var fasiten 1. mai (kortets dato)"
   },
   {
    "id": "nicolai.b|2026-09-28T18:19|1d1527697f",
@@ -2626,9 +2626,9 @@
    "notat": "[tlf] Ringe neste mandag. Eier to hus hp",
    "gull": "2026-10-26T12:00",
    "tidFri": true,
-   "usikker": true,
-   "kilde": "Claude-gjennomgang 24.10.2026",
-   "merknad": "«Ringe neste mandag» skrevet torsdag: mandagen i neste uke (26.10) eller førstkommende + 7 (2.11) slik instruksen sier? Selger beholdt 26.10 men satte 12:00 i stedet for lært 21. Spørsmål til Christian 24.10"
+   "usikker": false,
+   "kilde": "Christian 28.10.2026",
+   "merknad": "«Ringe neste mandag» skrevet torsdag = mandag i uka som kommer (26.10). Christian 28.10: «neste <ukedag>» = «<ukedag> neste uke» = ukedagen i førstkommende uke. Selger beholdt 26.10, satte 12:00 i stedet for lært 21"
   },
   {
    "id": "haakon.f|2026-10-22T14:32|21a862fa1b",
@@ -2822,11 +2822,11 @@
    "who": "jorgen.f",
    "naa": "2026-10-21T13:23",
    "notat": "Ring kunden opp igjen i januar/februar",
-   "gull": "2027-01-01T12:00",
+   "gull": "2027-01-04T12:00",
    "tidFri": true,
    "usikker": false,
-   "kilde": "Claude-gjennomgang 24.10.2026",
-   "merknad": "«i januar/februar» = første alternativ, den 1. (konvensjon); selger valgte 7. jan (1. jan er helligdag – personlig valg)"
+   "kilde": "Christian 28.10.2026",
+   "merknad": "«i januar/februar» = første alternativ; måned alene = FØRSTE VIRKEDAG (Christian 28.10): 1. jan er helligdag, 2.–3. er helg → mandag 4. jan. Selger valgte 7. jan"
   },
   {
    "id": "haakon.f|2026-10-24T13:03|d3a7507030",

@@ -83,13 +83,29 @@ const nyeSignal={nye:nye.length,nyeUmerket:nye.filter(x=>x.prov).length,nyeRette
   nyeUtenDatoMedTidsord:nye.filter(x=>x.k.state!=='fulgt'&&!x.k.dato&&TW.test(x.k.kommentar||'')).length,
   nyeStilleFeil:stille.filter(s=>new Date(s.naa+':00Z')>SIDEN).length,siden:SIDEN.toISOString().slice(0,16)};
 
+// ---- fart (uten API, fra 28.10.2026 / build 148): kortene bærer ai.ms (komp, vent, ai, total, skjema, forsok, prosa, tegn, kald), ai.tok og ai.bilde ----
+// Medianer, ikke snitt (enkelte kort på 20–90 s ved dårlig dekning ville ellers dominere). «skjema» = ms fra AI-skjemaet åpnet til selgeren lagret.
+const fartKort=data.kort.filter(k=>k.ai&&k.ai.ms&&k.ai.ms.ai>0&&!erTestkort(k));
+const medL=a=>{if(!a.length)return null;a=a.slice().sort((x,y)=>x-y);return a[a.length>>1];};
+const fartAv=arr=>({kort:arr.length,aiMs:medL(arr.map(k=>k.ai.ms.ai)),totalMs:medL(arr.filter(k=>k.ai.ms.total>0).map(k=>k.ai.ms.total)),skjemaMs:medL(arr.filter(k=>k.ai.ms.skjema>0).map(k=>k.ai.ms.skjema)),
+  kompMs:medL(arr.filter(k=>k.ai.ms.komp>0).map(k=>k.ai.ms.komp)),ventMs:medL(arr.filter(k=>k.ai.ms.vent>0).map(k=>k.ai.ms.vent)),
+  flereForsok:arr.filter(k=>k.ai.ms.forsok>1).length,medProsa:arr.filter(k=>k.ai.ms.prosa>0).length,kald:arr.filter(k=>k.ai.ms.kald).length,
+  aiMsMedProsa:medL(arr.filter(k=>k.ai.ms.prosa>0).map(k=>k.ai.ms.ai)),aiMsUtenProsa:medL(arr.filter(k=>!(k.ai.ms.prosa>0)).map(k=>k.ai.ms.ai)),
+  utTokens:medL(arr.filter(k=>k.ai.tok).map(k=>k.ai.tok.ut)),cacheTreff:arr.filter(k=>k.ai.tok&&k.ai.tok.cache>0).length,kb:medL(arr.filter(k=>k.ai.bilde).map(k=>k.ai.bilde.kb))});
+const fartGrupper=f=>{const g={};fartKort.forEach(k=>{const key=f(k);if(key==null)return;(g[key]=g[key]||[]).push(k);});return Object.fromEntries(Object.entries(g).map(([k,v])=>[k,fartAv(v)]));};
+const fart={alle:fartAv(fartKort),nye:fartAv(fartKort.filter(k=>naaAv(k)>SIDEN)),prSelger:fartGrupper(k=>k.who),prBildePx:fartGrupper(k=>k.ai.bilde?k.ai.bilde.px:null)};
+const sek=ms=>ms==null?'–':(ms/1000).toFixed(1).replace('.',',')+' s';
+
 if(flag('bare-data')){
-  const r={data:dataFile.split('/').pop(),kortMedFasit:alle.length-umerket,umerket,notatEndretEtterImport:endret,rettetAvSelger:rettet,testkort,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},signal:nyeSignal,stilleFeil:stille,promptTegn:STATIC.length};
+  const r={data:dataFile.split('/').pop(),kortMedFasit:alle.length-umerket,umerket,notatEndretEtterImport:endret,rettetAvSelger:rettet,testkort,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},signal:nyeSignal,stilleFeil:stille,promptTegn:STATIC.length,fart};
   if(flag('json'))console.log(JSON.stringify(r,null,1));
   else{console.log('Kort med fasit: '+r.kortMedFasit+', uten fasit (nye): '+umerket+', notat endret etter import (holdes utenfor): '+endret+', rettet av selger: '+rettet+', Christians testkort (holdes utenfor): '+testkort+'\nStille feil (står på feil dag, ingen har rettet): '+stille.length);
     stille.forEach(x=>console.log('  ['+x.who+' '+x.naa+'] «'+x.notat+'» kort='+(x.kort||'ingen')+' fasit='+(x.fasit||'ingen')+(x.merknad?' – '+x.merknad:'')));
     console.log('Nye kort siden '+nyeSignal.siden+': '+nyeSignal.nye+' (uten fasit '+nyeSignal.nyeUmerket+', rettet '+nyeSignal.nyeRettet+', uten dato m/tidsord '+nyeSignal.nyeUtenDatoMedTidsord+', stille feil '+nyeSignal.nyeStilleFeil+')');
-    console.log('Lært klokkeslett brukt på '+laert.length+' kort, selger endret tiden på '+laertRettet+'. Fast instruks: '+STATIC.length+' tegn.');}
+    console.log('Lært klokkeslett brukt på '+laert.length+' kort, selger endret tiden på '+laertRettet+'. Fast instruks: '+STATIC.length+' tegn.');
+    const fa=fart.alle;console.log('Fart ('+fa.kort+' kort med måling, medianer): AI '+sek(fa.aiMs)+', fra bilde klart til svar '+sek(fa.totalMs)+', skjema '+sek(fa.skjemaMs)+', komprimering '+sek(fa.kompMs)+'; flere forsøk '+fa.flereForsok+', med prosa '+fa.medProsa+' (AI '+sek(fa.aiMsMedProsa)+' mot '+sek(fa.aiMsUtenProsa)+' uten), kald start '+fa.kald+', cache-treff '+fa.cacheTreff+', ut-tokens '+(fa.utTokens==null?'–':fa.utTokens)+', bilde '+(fa.kb==null?'–':fa.kb+' KB'));
+    Object.entries(fart.prSelger).forEach(([w,f])=>console.log('  '+w+': '+f.kort+' kort, AI '+sek(f.aiMs)+', skjema '+sek(f.skjemaMs)+', prosa '+f.medProsa+', flere forsøk '+f.flereForsok));
+    Object.entries(fart.prBildePx).forEach(([px,f])=>console.log('  bilde '+px+' px: '+f.kort+' kort, AI '+sek(f.aiMs)+', '+(f.kb==null?'–':f.kb+' KB')));}
   process.exit(0);
 }
 

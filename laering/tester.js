@@ -8,7 +8,7 @@ function laerApi(){
   const block=html.slice(html.indexOf('// [[LAER-START]]'),html.indexOf('// [[LAER-END]]'));
   const helpers=['const pad=','const p=s=>','const dKey=','const sameDay=','const startOfDay=','const startOfWeek=','const toLocal=','const MO=']
     .map(pre=>{const i=html.indexOf('\n  '+pre);if(i<0)throw new Error('fant ikke '+pre);return html.slice(i+1,html.indexOf('\n',i+1));}).join('\n');
-  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,nextWeekWeekday,normaliserDato,sisteJsonObjekt,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
+  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,nextWeekWeekday,normaliserDato,sisteJsonObjekt,salgsrundeFraLinje,foersteVirkedag,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
 }
 const api=laerApi();
 module.exports={laerApi};
@@ -27,10 +27,10 @@ T('[tlf] Ice Snakka med Anders (komme tilbake 19;00',19,0);T('M1 06.10 M1 08. Hi
 // --- 27.10.2026: «ring opp <dagord> N» = klokkeslett (Haakon «ring opp imorgen 15» 19.10, «ring opp mandag 15» 24.10); dag i maaneden med maanedsnavn bak er IKKE tid ---
 T('Skal svare ja ring opp mandag 15',15,0);T('Skal svare ja ring opp imorgen 15',15,0);T('ring opp fredag 9',21,0);T('ringe imrg 18',18,0);
 T('Ring mandag 7 juli [tlf]',null);T('ring lørdag 4 juli, [tlf]',null);T('kontakt kunden mandag 26 oktober',null);T('1197 ringe mandag 50',null);T('Kom tilbake fredag 00',null);T('ring mandag 7. om ikke',null);T('ring tirsdag 2 voksen 1 barn',null);
-// --- «<ukedag> neste uke» = ukedagen i NESTE kalenderuke ---
+// --- «<ukedag> neste uke» og (fra 28.10.2026) «neste <ukedag>» = ukedagen i FOERSTKOMMENDE uke ---
 const NW=(k,naa,want)=>{const d=api.nextWeekWeekday(k,new Date(naa));ok('neste uke: '+k+' @'+naa.slice(0,10),d?d.toISOString().slice(0,10):null,want);};
 NW('Ring tirsdag neste uke','2026-10-15T14:14','2026-10-20');NW('Ringe fredag neste uke. Er på sjøen','2026-09-14T16:21','2026-09-25');NW('Ringe tirsdag neste uke','2026-10-12T10:00','2026-10-20');NW('ring mandag til uka','2026-10-18T12:00','2026-10-19');NW('neste uke onsdag','2026-10-13T10:00','2026-10-21');
-NW('neste fredag','2026-08-26T16:18',null);NW('Ringe neste uke','2026-09-17T14:35',null);NW('ring tirsdag. neste uke er han borte','2026-10-15T14:14',null);
+NW('neste fredag','2026-08-26T16:18','2026-09-04');NW('Ringe neste mandag. Eier to hus hp','2026-10-22T16:06','2026-10-26');NW('neste mandag','2026-10-25T12:00','2026-10-26');NW('neste mandag','2026-10-26T12:00','2026-11-02');NW('neste tors','2026-10-22T16:06','2026-10-29');NW('Ringe neste uke','2026-09-17T14:35',null);NW('ring tirsdag. neste uke er han borte','2026-10-15T14:14',null);
 // --- tidsord ---
 ok('kveld',api.timeWordFromText('Ring Imrg kveld').hh,21);ok('etter jobb',api.timeWordFromText('kom etter jobb').hh,17);ok('ingen tidsord',api.timeWordFromText('ringe mannen'),null);
 // --- om N dager/uker ---
@@ -130,7 +130,7 @@ N('«mandag 1600» torsdag, AI tom → mandag 16:00 («var ikke hjemme» etter u
 N('«lørdag midt i brann kamp» → lørdag 12:00 (ingen tid i notatet)',{dato:null},'Ring opp lørdag midt i brann kamp','2026-10-22T19:09','2026-10-24T12:00');
 N('«neste fredag» torsdag, AI tom → fredag uka etter (30.10)',{dato:null},'Skal ta kontak, ring opp neste fredag, om ikke','2026-10-22T19:21','2026-10-30T12:00');
 N('«neste uke» fredag + lært time 21 → mandag kl 21 («sparer 500» er pris)',{dato:'2026-10-26T12:00',eksaktDato:false},'Komme tilbake neste uke Blr svare ja sparer 500','2026-10-23T17:58','2026-10-26T21:00',21);
-N('«i januar/februar» AI tom → 1. januar (første alternativ)',{dato:null},'Ring kunden opp igjen i januar/februar','2026-10-21T15:23','2027-01-01T12:00');
+N('«i januar/februar» AI tom → første virkedag i januar (Christian 28.10: 1. jan er helligdag, 2.–3. helg → 4. jan)',{dato:null},'Ring kunden opp igjen i januar/februar','2026-10-21T15:23','2027-01-04T12:00');
 N('«sendt 1197. Ring opp» → ingen dato (1197 er pris, ikke 11:97)',{dato:null},'Hc, var på farta sendt 1197. Ring opp','2026-10-22T19:46',null);
 N('«6 prospects ice Ringe 20:00», AI tom → i dag 20:00',{dato:null},'6 prospects ice Ringe 20:00','2026-10-22T17:57','2026-10-22T20:00');
 // --- 27.10.2026 (ekte kort fra gjennomgangen): «ring opp mandag 15» i sikkerhetsnettet + dokumentasjon av dagens oppfoersel ---
@@ -145,6 +145,29 @@ N('«ringe I sept 2027», AI tom → 1. sep 2027',{dato:null},'[tlf] Akkuratt bu
 N('«ringe I sept 2027», AI riktig + lært time 21, langt frem → urørt',{dato:'2027-09-01T12:00',eksaktDato:false},'[tlf] Akkuratt bundet seg opp ringe I sept 2027.','2026-10-26T20:51','2027-09-01T12:00',21);
 N('«Send melding 1. februar» (også «i februar» i teksten), AI tom → 1. feb 2027',{dato:null},'[tlf] Mobil u 30 Julian julseth Sende melding om ubegrenset i februar når de får Netflix via huset å han slipper via ice Send melding 1. februar','2026-10-26T20:02','2027-02-01T12:00');
 N('tomt notat, AI tom → ingen dato',{dato:null},'','2026-10-24T16:45',null);
+// --- 28.10.2026 (Christian): «neste <ukedag>» = ukedagen i foerstkommende uke (= «<ukedag> neste uke»); maaned alene = foerste virkedag; salgsrunde fra linja ---
+N('«neste mandag» torsdag, AI tom → mandag 26.10 (Haakon)',{dato:null},'[tlf] Ringe neste mandag. Eier to hus hp','2026-10-22T16:06','2026-10-26T12:00');
+N('«neste mandag» torsdag, AI +7 (2.11) → 26.10',{dato:'2026-11-02T12:00',eksaktDato:false},'[tlf] Ringe neste mandag. Eier to hus hp','2026-10-22T16:06','2026-10-26T12:00');
+N('«neste mandag» torsdag, AI riktig + lært time 21 → 26.10 kl 21',{dato:'2026-10-26T12:00',eksaktDato:false},'Ringe neste mandag','2026-10-22T16:06','2026-10-26T21:00',21);
+N('«neste mandag» søndag → i morgen (mandag i uka som kommer)',{dato:null},'ring neste mandag','2026-10-25T12:00','2026-10-26T12:00');
+N('«neste mandag» mandag → mandag om en uke',{dato:null},'ring neste mandag','2026-10-26T12:00','2026-11-02T12:00');
+N('«neste fredag» torsdag → fredag i uka som kommer (30.10), uendret',{dato:null},'Skal ta kontak, ring opp neste fredag, om ikke','2026-10-22T19:21','2026-10-30T12:00');
+N('«neste fredag kl 17» torsdag, AI i morgen → 30.10 kl 17',{dato:'2026-10-23T17:00',eksaktDato:false},'ring neste fredag kl 17','2026-10-22T19:21','2026-10-30T17:00');
+N('«Ring Mai 2027» AI tom → mandag 3. mai (1. mai er lørdag + helligdag; Nicolai)',{dato:null},'Ring Mai 2027. Bryr seg kun om pris','2026-09-28T18:02','2027-05-03T12:00');
+N('«Ring Mai 2027» AI 1. mai → 3. mai',{dato:'2027-05-01T12:00',eksaktDato:false},'Ring Mai 2027. Bryr seg kun om pris','2026-09-28T18:02','2027-05-03T12:00');
+N('«Ring Mai 2027» AI 1. mai merket eksakt → likevel 3. mai (ingen dagtall i notatet)',{dato:'2027-05-01T12:00',eksaktDato:true},'Ring Mai 2027. Bryr seg kun om pris','2026-09-28T18:02','2027-05-03T12:00');
+N('«i januar/februar» AI 1. jan → 4. jan (Jørgen)',{dato:'2027-01-01T12:00',eksaktDato:false},'Ring kunden opp igjen i januar/februar','2026-10-21T15:23','2027-01-04T12:00');
+N('«Ringe 1 februar» AI tom → den 1. (dagtall i notatet)',{dato:null},'Ringe 1 februar','2026-10-21T15:23','2027-02-01T12:00');
+N('«Ring 1. mai» AI 1. mai eksakt → beholdes (dagtall)',{dato:'2027-05-01T12:00',eksaktDato:true},'Ring 1. mai','2026-10-21T15:23','2027-05-01T12:00');
+N('«ringe august» AI tom → mandag 2. aug 2027',{dato:null},'ringe august','2026-10-21T15:23','2027-08-02T12:00');
+N('«ringe desember» AI tom → tirsdag 1. des 2026 (virkedag alt)',{dato:null},'ringe desember','2026-10-21T15:23','2026-12-01T12:00');
+N('«mandag 1. februar» AI eksakt → beholdes (ukedag i notatet)',{dato:'2027-02-01T12:00',eksaktDato:true},'ring mandag 1. februar','2026-10-21T15:23','2027-02-01T12:00');
+N('«binding til mai» alene → fortsatt uken foer den 1. (24. april)',{dato:null},'Telenor 500, binding til mai','2026-10-20T15:00','2027-04-24T12:00');
+const FV=(y,m,want)=>ok('første virkedag: '+y+'-'+(m+1),api.foersteVirkedag(y,m).toISOString().slice(0,10),want);
+FV(2027,0,'2027-01-04');FV(2027,4,'2027-05-03');FV(2026,11,'2026-12-01');FV(2027,7,'2027-08-02');FV(2026,4,'2026-05-04');FV(2027,1,'2027-02-01');FV(2027,11,'2027-12-01');
+const S=(inn,want)=>ok('salgsrunde: '+JSON.stringify(inn),api.salgsrundeFraLinje(inn),want);
+S('Troms Tromsø A 2','Tromsø A2');S('Troms Tromsø A2','Tromsø A2');S('Agder Lyngdal 2','Lyngdal 2');S('FTTH Oslo Hoeybraaten 2_Juli_26','Hoeybraaten 2');S('Tromsø A2','Tromsø A2');S('Lyngdal 2','Lyngdal 2');
+S('Vestland Åsane B 1','Åsane B1');S('Innlandet Hamar','Hamar');S('Troms Tromsø A 2 R2','Tromsø A2');S('A 2','');S('','');S(null,'');S('Rogaland Sandnes 12','Sandnes 12');S('Nordland Bodø C3 mai 26','Bodø C3');
 // --- 21.10.2026: modellen skrev to JSON-objekter («Korrigering: …») på «Komme tilbke» i 3 av 5 kjøringer → bruk det siste ---
 const J=(name,t,want)=>ok('json: '+name,api.sisteJsonObjekt(t),want);
 J('to objekter → det siste',' {"dato":"2026-10-19T21:05","datoGrunn":"a"}\n\nKorrigering: Naa er 19:05 {ikke json}.\n\n{"dato":"2026-10-19T21:15","datoGrunn":"b"}',{dato:'2026-10-19T21:15',datoGrunn:'b'});

@@ -30,6 +30,17 @@ laering/eval-historikk.md, laering/fasit.json og den NYESTE fila i laering/data/
 uten dato m/tidsord, stille feil), laertTime (hvor ofte selgerne retter bort fra lært klokkeslett – >30 % betyr at
 regelen er for aggressiv), notatEndretEtterImport, promptTegn (instruksens størrelse – skal ikke vokse ukontrollert).
 
+## 2b. Fart (uten API) – læring på hvor tiden går
+Samme stille.json har `fart` (fra build 148, 28.10.2026): medianer for AI-svartid (`aiMs`), fra bilde klart til svar
+(`totalMs`), skjematid (`skjemaMs` = fra AI-skjemaet åpnet til selgeren lagret), komprimering, andel med flere forsøk,
+med prosa før JSON-en, kald start, cache-treff, ut-tokens og bildestørrelse – totalt, for nye kort, pr. selger og pr.
+bildestørrelse (`prBildePx`). Selgeren skal kunne lagre kortet raskest mulig, så se etter: (a) selgere/kort der AI-tiden
+er mye høyere enn medianen (dekning? prosa?), (b) skjematid som vokser (selgeren må rette mye → tolkningsfeil, ikke fart),
+(c) etter et bildebytte: er treffet på nye kort med `bilde.px`=1280 like godt som med 1400? Les funn.md 17.10 og 28.10 før
+du foreslår fartsgrep: JSON-først, «maks to setninger», omrokkering, prefill, effort low, json_schema og ekstra kall er
+målt og forkastet – ikke test dem igjen. Fartsmotiverte instruksendringer går gjennom samme port som alt annet (steg 7:
+behold bare om treffet ikke blir dårligere). Skriv tallene i rapporten under «Fart».
+
 ## 3. Merk nye kort i fasiten (blind, se 0)
 For HVERT AI-kort uten fasit (umerket): gull «ÅÅÅÅ-MM-DDTHH:MM» eller null; tidFri; usikker; merknad.
 Legg inn i laering/fasit.json (id = who|opprettet|md5(kommentar)[0:10], se eval.mjs), kilde «Claude-gjennomgang
@@ -67,6 +78,7 @@ igjen (maks 3 forsøk). Blir det ikke bedre: behold originalen, skriv i funn.md 
 - laering/rapport-siste.md (maks 25 linjer, enkelt språk):
   linje 1: «ENDRINGER KLARE – si «push» til Claude for å publisere» eller «INGEN ENDRINGER NØDVENDIG»
   deretter: treff på nye kort (før → etter), totalt, hva som er endret (én linje per endring, `git diff --stat`),
+  «Fart» (én–to linjer: medianer fra steg 2b, og hva som evt. skiller seg ut pr. selger),
   «Kort som bør rettes manuelt» (selger, notat, riktig dato; ikke kort med `laStaa: true`), «Spørsmål til Christian» (usikre notater, maks 5 –
   han svarer i neste økt), og en sjekkliste over steg 2–8 med [x]/[ ].
 - `git add -A && git commit` med kort norsk melding som slutter med «(build …)» og linja

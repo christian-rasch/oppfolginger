@@ -1,5 +1,54 @@
 # Funn fra gjennomganger
 
+
+## 28.10.2026 (build 148) – Christians svar, fart-måling, salgsrunde, A/B-plan for mindre bilde
+**Svar fra Christian 28.10** (gjelder som regler, ikke spør igjen):
+- **«neste <ukedag>» = «<ukedag> neste uke» = ukedagen i FØRSTKOMMENDE uke** (uka som begynner førstkommende mandag).
+  Skrevet torsdag 22.10: «neste mandag» = 26.10 (ikke 2.11), «neste fredag» = 30.10 (ikke i morgen 23.10 – stemmer med
+  Haakons kort 17:21, fasit 30.10, Haakon godtok). Skrevet søndag 25.10: «neste mandag» = 26.10 (i morgen). Christians ord:
+  «mandag neste uke er mandag førstkommende uke». Kode: `NEXTWEEK_WD_RE` fanger nå også «neste <ukedag>», «+7»-grenen i
+  sikkerhetsnettet er fjernet, instruksen sier det samme. Fasit: Haakon «Ringe neste mandag» → 26.10 (ikke lenger usikker).
+- **Måned alene = første virkedag i måneden** (man–fre, ikke 1.1/1.5/17.5/25.12/26.12; bevegelige helligdager er ikke med):
+  «ringe i januar» = mandag 4.1.2027, «Ring Mai 2027» = mandag 3.5.2027. Gjøres deterministisk i `normaliserDato`
+  (`foersteVirkedag`), både når AI ga den 1. og i sikkerhetsnettet. IKKE når notatet har dagtall foran måneden («1. februar»),
+  eller når dagen kom fra en ukedag/«i morgen». Instruksen sier fortsatt «den 1.» (modellen regner ikke ukedager pålitelig).
+  Bindingsregelen (uken før den 1.) er uendret. Fasit: Jørgen «i januar/februar» → 2027-01-04, Nicolai «Ring Mai 2027» → 2027-05-03
+  (Nicolais kort står fortsatt på 1. mai → dukker opp som «bør rettes manuelt» i neste rapport; det er riktig).
+- **Lært klokkeslett teller også godtatte kort**: `learnedHour()` teller (a) rettet bort fra 12:00 → ny time, (b) BEHOLDT den lærte
+  timen → stemme for den, (c) rettet bort fra lært time → ny time (før kunne en lært time aldri avlæres, fordi `ai.dato` er etter
+  normalisering og aldri var 12:00 på slike kort). Beholdt 12:00 uten lært time = ingen informasjon. Konsekvens: timen blir
+  selvforsterkende; avlæring krever at rettelser overstiger godtatte blant de 40 nyeste. Sikkerhetsventil: `laertTime.selgerRettetTid`
+  >30 % i eval (i dag 2 av 12).
+- «Fjerne motsigende setning» i instruksen: fortsatt nei (målt 24.10, originalen traff bedre).
+Kontroll: 226/226 tester; kjørt gamle mot nye regler på AI-ens råforslag for alle 214 kort i eksporten 27.10 → nøyaktig 2 kort
+endrer dato (Nicolai mai, Jørgen januar), ingen andre. Ingen API-eval kjørt (reglene er deterministiske og Christians ord vinner).
+
+**Salgsrunde** (Christian: «A 2» skal bli «Tromsø A2»): nytt promptfelt `salgsrundeLinje` (linja ordrett), og appen regner selv
+`salgsrundeFraLinje()` (LAER-blokka, testet): siste stedsnavn + ev. bokstav A–D + tall uten mellomrom («Troms Tromsø A 2» → «Tromsø A2»,
+«Agder Lyngdal 2» → «Lyngdal 2», «FTTH Oslo Hoeybraaten 2_Juli_26» → «Hoeybraaten 2»). R1–R5 i linja = Roll uansett modellens status.
+Gamle kort med «Troms Tromsø A 2» vises «Tromsø A2» (`shortRunde`) og grupperes sammen med nye. Feltrekkefølgen i JSON er uendret
+(omrokkering endret nextAction 17.10). Ingen ekstra AI-kall for salgsrunde (Christians idé om bakgrunnslesing): alt kommer i samme
+svar, et ekstra kall = nytt bilde opp (≥1,5 s), kappløp med lagring og dobbel kostnad.
+
+**Fart – måling fra nå av** (Christian vil at selgeren skal kunne lagre raskest mulig; dato/tid først): hvert AI-kort får `ai.ms`
+(komp = komprimering, vent = venting på oppvarming, ai = selve kallet, total = fra bilde klart til svar, skjema = fra skjemaet åpnet
+til selgeren lagret, forsok, prosa = tegn før JSON, tegn, kald), `ai.tok` (inn/ut/cache/cacheSkriv) og `ai.bilde` (px, kb). Ingen
+personopplysninger. Admin-lista viser «AI median … · skjema median …» pr. selger (30 d). `eval.mjs --bare-data` har `fart`-blokk
+(totalt, nye, pr. selger, pr. bildestørrelse); gjennomgangen har nytt steg 2b «Fart». Forventning (fra 17.10): typisk 2,3–3,3 s der
+1,2–1,8 s er opplasting på wifi; på 4G/iPad mini er opplastingen den største posten. Oppvarmings-fiks: `cloudFetchApiKey` nullstilte
+`aiWarm` ved hver synlighet selv om nøkkelen var uendret → unødig ekstra ping (0–0,5 s); nå bare ved ny nøkkel.
+
+**A/B-test av mindre bilde – beslutningsregel skrevet FØR kjøring:** `laering/bilde-ab.js` (kjøres i innlogget admin-fane) sender
+hvert kort med bilde fra siste 14 dager gjennom samme kall to ganger: A = 1400 px/0,72 (som i dag), B = 1280 px/0,65 (re-kodet fra
+lagret A → dobbel komprimering, dvs. konservativ test). Avvik + 10 tilfeldige kort kjøres en gang til; «ekte» forskjell bare når
+A1==A2 og B1==B2 og A1≠B1, ellers støy; A1-mot-A2 er grunnlinja. **Bytt til 1280/0,65 (`AI_IMG_MAX`/`AI_IMG_Q` i index.html) bare
+hvis ekte = 0 på dag, klokkeslett, handling, navn og alder, og ekte for salgsrunde ≤ grunnlinja.** Resultat: (fylles inn etter kjøring).
+`compress()` tegner allerede to versjoner (kortbildet alltid 1400/0,72; AI-bildet styrt av flagget) – ingen atferdsendring før flagget flippes.
+Etter et bytte: sammenlign treff på nye kort med `bilde.px`=1280 mot 1400 (steg 2b).
+
+**Ikke gjort (bevisst):** bakgrunnslesing av salgsrunde (se over); JSON-først/omrokkering/prefill/effort low/json_schema (forkastet 17.10);
+instruks om første virkedag (modellen regner ikke ukedager; koden gjør det).
+
 ## 27.10.2026 (build 137) – fjerde automatiske gjennomgang
 **Utløser:** 4 rettelser (6 nye kort). Forrige gjennomgang 24.10 (nullpunkt build 136, aldri målt før nå – 136 endret ikke datologikk).
 **Umerkede AI-kort: 9** (Haakon 4, Eskil 2, Joshua 1, Fredrik 1, Christian 1), alle blindt merket. 7 i eval: 1 test (Christians tomme
