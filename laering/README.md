@@ -19,7 +19,15 @@ Hvert AI-kort bærer `ai.ms` (komprimering, venting på oppvarming, selve AI-kal
 skjemaet åpnet til selgeren lagret, forsøk, prosa før JSON, kald start), `ai.tok` (tokens) og `ai.bilde` (px, KB). Admin-lista i
 Min profil viser «AI median … · skjema median …» pr. selger (30 dager). `eval.mjs --bare-data` skriver `fart` (totalt, nye kort,
 pr. selger, pr. bildestørrelse), og gjennomgangen leser det i steg 2b. `bilde-ab.js` er A/B-testen som avgjør om AI-en kan få et
-mindre bilde (1280 px/0,65) uten at tolkningen endres – beslutningsregelen står i funn.md 28.10.
+mindre bilde (1280 px/0,65) uten at tolkningen endres – beslutningsregelen står i funn.md 28.10 (kjørt: rødt, bildet blir 1400).
+
+## Aktivitet og ukesrapport (fra build 149, 28.10.2026)
+Hvert AI-kort lagrer også AI-ens forslag felt for felt (`ai.felt`: navn, alder, telefon, salgsrunde, adresse, status), enhet/nett
+(`ai.enhet`) og tiden til selgerens første endring i skjemaet (`ai.ms.endring`). Eksporten oversetter felt-forslagene til koder
+(lik/fylt/endret/slettet – aldri verdier), tar med AI-/JS-feil fra client_log (30 d) og versjon/sist sett pr. selger.
+`eval.mjs --bare-data` skriver `aktivitet`; `eval.mjs --ukesrapport` lager en Markdown-rapport som `kjor-gjennomgang.command`
+skriver til `laering/ukesrapport.md` hver mandag (varsel på Macen): kort pr. selger, AI-andel, medianer, hva som rettes oftest,
+AI-feil, forfalte/uten tid, versjon, tregeste kort, tokens.
 
 ## Automatikken: lærer når det finnes noe å lære av
 `kjor-gjennomgang.command` startes hver dag 09:30 av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
@@ -84,3 +92,4 @@ tester.js laster blokken direkte, så en endring i appen testes 1:1.
 - `analyse-i-nettleser.js` – uthenting + anonymisering i den innloggede fanen.
 - `funn.md` – logg over hva som ble funnet og endret, per gjennomgang.
 - `bilde-ab.js` – A/B-test av bildestørrelse til AI-en (kjøres i innlogget admin-fane; resultat i funn.md).
+- `ukesrapport.md` – siste ukesrapport (lages automatisk mandager av `eval.mjs --ukesrapport`).

@@ -28,7 +28,11 @@ laering/eval-historikk.md, laering/fasit.json og den NYESTE fila i laering/data/
 ## 2. Signaler og stille feil (uten API)
 `node laering/eval.mjs --bare-data --json > laering/data/stille.json`. Les: signal (nye kort siden sist, rettet,
 uten dato m/tidsord, stille feil), laertTime (hvor ofte selgerne retter bort fra lært klokkeslett – >30 % betyr at
-regelen er for aggressiv), notatEndretEtterImport, promptTegn (instruksens størrelse – skal ikke vokse ukontrollert).
+regelen er for aggressiv), notatEndretEtterImport, promptTegn (instruksens størrelse – skal ikke vokse ukontrollert),
+og `aktivitet` (fra build 149): pr. selger siste 7/30 d – kort, AI-andel, `rettetFelt` (hvilke felt selgeren retter etter AI:
+navn/alder/telefon/salgsrunde/adresse/status/handling/kommentar/dato – koder lik/fylt/endret/slettet, aldri verdier), AI-feil fra
+client_log, forfalte/uten tid, versjon. Et felt som rettes på mange kort hos flere selgere er et mønster for steg 5 (f.eks.
+salgsrunde eller status lest feil), på samme måte som datobom. Ukesrapporten (`--ukesrapport`, mandager) bruker de samme tallene.
 
 ## 2b. Fart (uten API) – læring på hvor tiden går
 Samme stille.json har `fart` (fra build 148, 28.10.2026): medianer for AI-svartid (`aiMs`), fra bilde klart til svar

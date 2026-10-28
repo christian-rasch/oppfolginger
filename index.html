@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-148">
+<meta name="app-build" content="2026-10-28-149">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -422,6 +422,7 @@
   .vs-right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .vs-val{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;color:var(--mint);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:9px 13px;cursor:pointer;white-space:nowrap}
   .vs-val:active{border-color:rgba(61,245,197,.55)}
+  #pfVarsler .vs-val{min-width:126px;text-align:center} /* Min profil: lik bredde på alle tidsboksene («5 min før», «20 min før», «kl. 11:00») så AV/PÅ-velgerne står rett under hverandre (Christian 28.10) */
   .dt-flag.ok{color:var(--mint)}
   .dt-flag.miss{color:var(--red)}
   .full{grid-column:1/-1}
@@ -1485,15 +1486,21 @@
     const c=getSupabaseClient();if(!c||!sbUser||!isAdmin()){toast('Læringseksport krever admin-innlogging');return;}
     try{
       if(!aiKey)await cloudFetchApiKey(); // eval-skriptet trenger appens felles nøkkel
-      const d=await c.from(CLOUD_SYNC_CONFIG.table).select('email,data');if(d.error)throw d.error;
+      const d=await c.from(CLOUD_SYNC_CONFIG.table).select('email,data,app_build,last_seen_at');if(d.error)throw d.error;
       const scrub=t=>String(t||'').replace(/\d{8,}|(\d{2,3}\s?){3,4}/g,'[tlf]').replace(/\s+/g,' ').trim();
-      const out=[];
-      (d.data||[]).forEach(function(x){const who=String(x.email||'').split('@')[0];(Array.isArray(x.data)?x.data:[]).forEach(function(i){
+      const feltKode=function(a,b){a=String(a==null?'':a).trim().toLowerCase();b=String(b==null?'':b).trim().toLowerCase();return a===b?'lik':(!a&&b?'fylt':(a&&!b?'slettet':'endret'));}; // bare KODER ut, aldri verdiene
+      const out=[],selgere=[];
+      (d.data||[]).forEach(function(x){const who=String(x.email||'').split('@')[0];selgere.push({who:who,build:x.app_build||null,sistSett:x.last_seen_at?String(x.last_seen_at).slice(0,16):null});(Array.isArray(x.data)?x.data:[]).forEach(function(i){
         out.push({who:who,opprettet:i.opprettet?new Date(i.opprettet).toISOString().slice(0,16):null,state:i.state,status:i.status,nextAction:i.nextAction||null,
           dato:i.dato||null,kommentar:scrub(i.kommentar),
+          felt:(i.ai&&i.ai.felt)?{navn:feltKode(i.ai.felt.navn,i.navn),alder:feltKode(i.ai.felt.alder,i.alder),telefon:feltKode(i.ai.felt.telefon,i.telefon),salgsrunde:feltKode(i.ai.felt.salgsrunde,i.salgsrunde),adresse:feltKode(i.ai.felt.adresse,i.adresse),status:feltKode(i.ai.felt.status,i.status),handling:feltKode(i.ai.nextAction,i.nextAction),kommentar:feltKode(i.ai.kommentar,i.kommentar),dato:feltKode(i.ai.dato,i.dato)}:null, // hva selgeren rettet etter AI (build 149)
+          enhet:(i.ai&&i.ai.enhet)||null,
           ai:i.ai?{dato:i.ai.dato||null,raw:i.ai.raw||null,fallback:!!i.ai.fallback,eksakt:!!i.ai.eksakt,grunn:scrub(i.ai.grunn),kommentar:scrub(i.ai.kommentar),tidLaert:i.ai.tidLaert||null,tidFraNotat:!!i.ai.tidFraNotat,aarFikset:!!i.ai.aarFikset,ms:i.ai.ms||null,tok:i.ai.tok||null,bilde:i.ai.bilde||null,build:i.ai.build||null,ts:i.ai.ts?new Date(i.ai.ts).toISOString().slice(0,16):null}:null});});});
       const medAi=out.filter(function(i){return i.ai;}).length,rettet=out.filter(function(i){return i.ai&&i.ai.dato!==i.dato;}).length;
-      const blob=new Blob([JSON.stringify({hentet:new Date().toISOString(),antall:out.length,medAi:medAi,rettet:rettet,apikey:aiKey||'',kort:out},null,1)],{type:'application/json'});
+      let feil=[]; // AI-/JS-feil siste 30 d fra client_log (bare admin kan lese) → feilrate pr. selger i ukesrapporten. Feiltekster, ingen kortdata
+      try{const l=await c.from('client_log').select('email,kind,msg,at,build').gte('at',new Date(Date.now()-30*864e5).toISOString()).in('kind',['ai','js','promise']).order('at',{ascending:false}).limit(2000);
+        if(!l.error)feil=(l.data||[]).map(function(r){return {who:String(r.email||'').split('@')[0],kind:r.kind,msg:scrub(r.msg).slice(0,80),at:String(r.at||'').slice(0,16),build:r.build||null};});}catch(e){}
+      const blob=new Blob([JSON.stringify({hentet:new Date().toISOString(),antall:out.length,medAi:medAi,rettet:rettet,apikey:aiKey||'',selgere:selgere,feil:feil,kort:out},null,1)],{type:'application/json'});
       const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oppf-laering-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();
       setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},5000);
       toast('Læringsdata eksportert ('+out.length+' kort)');
@@ -2687,6 +2694,7 @@
   function liveCommit(immediate){
     if(!editId)return;const it=byId(editId);if(!it)return;
     const g=formGather();if(g.dato!==it.dato)it.datoTs=Date.now(); // tidspunkt endret → stempel (demp-knappen regner bare varsler etter dette som sendt)
+    if(editId===aiRevealId&&it.ai&&it.ai.ms&&it.ai.ms.endring==null&&Date.now()-formOpenedAt>300&&JSON.stringify([g,fHandling])!==formSnap)it.ai.ms.endring=Date.now()-formOpenedAt; // ms til selgerens FØRSTE endring i AI-skjemaet (build 149): leser og godtar, eller retter?
     Object.assign(it,g);
     if(fHandling)applyNA(it,fHandling);
     aiTrack(it);
@@ -3238,7 +3246,9 @@
     if(na&&NA_KEYS.includes(na))applyNA(card,na);
     // logg AI-ens opprinnelige forslag (skjult felt) → grunnlag for aa forbedre datotolkningen senere
     card.ai={dato:o.dato||null,raw:o.datoRaw||null,fallback:!!o.datoFallback,eksakt:!!o.eksaktDato,grunn:o.datoGrunn||'',kommentar:o.kommentar||'',nextAction:na||'',tidLaert:o.datoTidLaert||null,tidFraNotat:!!o.datoTidFraNotat,aarFikset:!!o.datoAarFikset,ts:Date.now(),build:(document.querySelector('meta[name="app-build"]')||{}).content||''};
-    if(o.maal){card.ai.ms={komp:o.maal.komp,vent:o.maal.vent,ai:o.maal.ai,total:o.maal.total,forsok:o.maal.forsok,prosa:o.maal.prosa,tegn:o.maal.tegn,kald:o.maal.kald};card.ai.tok=o.maal.tok;card.ai.bilde={px:o.maal.px,kb:o.maal.kb};} // fart pr. kort (28.10); ai.ms.skjema settes i doSave
+    if(o.maal){card.ai.ms={komp:o.maal.komp,vent:o.maal.vent,ai:o.maal.ai,total:o.maal.total,forsok:o.maal.forsok,prosa:o.maal.prosa,tegn:o.maal.tegn,kald:o.maal.kald};card.ai.tok=o.maal.tok;card.ai.bilde={px:o.maal.px,kb:o.maal.kb};} // fart pr. kort (28.10); ai.ms.skjema/endring settes i doSave/liveCommit
+    card.ai.felt={navn:navn,alder:o.alder||null,telefon:o.telefon||'',salgsrunde:o.salgsrunde||'',adresse:o.adresse||'',status:o.status||''}; // AI-ens forslag felt for felt → læringen ser hva selgeren retter (build 149). dato/handling/kommentar ligger alt i ai.*
+    try{card.ai.enhet={w:screen.width,h:screen.height,dpr:Math.round((window.devicePixelRatio||1)*10)/10,pwa:!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)),nett:(navigator.connection&&navigator.connection.effectiveType)||null};}catch(e){} // enhet/nett: forklarer trege kort (iPad mini? Safari i stedet for hjemskjerm?)
     aiMaal=null;
     if(pendingCardImg){card.hasImg=true;setCardImg(card.id,pendingCardImg);} // full kvalitet ≤1400px, lokalt
     pendingCardImg=null;formFromPaste=false;

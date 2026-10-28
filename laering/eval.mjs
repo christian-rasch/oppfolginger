@@ -96,8 +96,19 @@ const fartGrupper=f=>{const g={};fartKort.forEach(k=>{const key=f(k);if(key==nul
 const fart={alle:fartAv(fartKort),nye:fartAv(fartKort.filter(k=>naaAv(k)>SIDEN)),prSelger:fartGrupper(k=>k.who),prBildePx:fartGrupper(k=>k.ai.bilde?k.ai.bilde.px:null)};
 const sek=ms=>ms==null?'–':(ms/1000).toFixed(1).replace('.',',')+' s';
 
+// ---- aktivitet (uten API, fra build 149): kort pr. selger siste 7/30 d, AI-andel, hva som rettes felt for felt (k.felt = koder lik/fylt/endret/slettet),
+// feil fra client_log (data.feil), tilstand (forfalte/uten tid, alle aktive kort) og versjon/sist sett (data.selgere) ----
+const tsAv=k=>+new Date(String(k.opprettet||'')+':00Z');
+const NAA_MS=Date.now(),UKE=NAA_MS-7*864e5,MND=NAA_MS-30*864e5;
+const aktivitetAv=siden=>{const g={};data.kort.forEach(k=>{if(!(tsAv(k)>siden)||(k.ai&&erTestkort(k)))return;const a=g[k.who]=g[k.who]||{kort:0,ai:0,manuelle:0,medFelt:0,rettetFelt:{}};
+  a.kort++;if(k.ai){a.ai++;if(k.felt){a.medFelt++;Object.entries(k.felt).forEach(([f,v])=>{if(v!=='lik')a.rettetFelt[f]=(a.rettetFelt[f]||0)+1;});}}else a.manuelle++;});return g;};
+const tilstand={};data.kort.forEach(k=>{if(k.state==='fulgt')return;const t=tilstand[k.who]=tilstand[k.who]||{aktive:0,forfalte:0,uten:0,tilbud:0};t.aktive++;if(!k.dato)t.uten++;else if(new Date(k.dato)<new Date())t.forfalte++;if(k.nextAction==='send_offer')t.tilbud++;});
+const feilAv=siden=>{const g={};(data.feil||[]).forEach(f=>{const t=+new Date(String(f.at||'')+(/Z$|[+-]\d\d:\d\d$/.test(f.at||'')?'':':00Z'));if(!(t>siden))return;const a=g[f.who]=g[f.who]||{ai:0,aiPermanent:0,js:0};if(f.kind==='ai'){a.ai++;if(/^import:/.test(f.msg||''))a.aiPermanent++;}else a.js++;});return g;};
+const selgere={};(data.selgere||[]).forEach(s=>{selgere[s.who]=s;});
+const aktivitet={uke:aktivitetAv(UKE),mnd:aktivitetAv(MND),tilstand,feilUke:feilAv(UKE),feilMnd:feilAv(MND),selgere};
+
 if(flag('bare-data')){
-  const r={data:dataFile.split('/').pop(),kortMedFasit:alle.length-umerket,umerket,notatEndretEtterImport:endret,rettetAvSelger:rettet,testkort,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},signal:nyeSignal,stilleFeil:stille,promptTegn:STATIC.length,fart};
+  const r={data:dataFile.split('/').pop(),kortMedFasit:alle.length-umerket,umerket,notatEndretEtterImport:endret,rettetAvSelger:rettet,testkort,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},signal:nyeSignal,stilleFeil:stille,promptTegn:STATIC.length,fart,aktivitet};
   if(flag('json'))console.log(JSON.stringify(r,null,1));
   else{console.log('Kort med fasit: '+r.kortMedFasit+', uten fasit (nye): '+umerket+', notat endret etter import (holdes utenfor): '+endret+', rettet av selger: '+rettet+', Christians testkort (holdes utenfor): '+testkort+'\nStille feil (står på feil dag, ingen har rettet): '+stille.length);
     stille.forEach(x=>console.log('  ['+x.who+' '+x.naa+'] «'+x.notat+'» kort='+(x.kort||'ingen')+' fasit='+(x.fasit||'ingen')+(x.merknad?' – '+x.merknad:'')));
@@ -105,8 +116,38 @@ if(flag('bare-data')){
     console.log('Lært klokkeslett brukt på '+laert.length+' kort, selger endret tiden på '+laertRettet+'. Fast instruks: '+STATIC.length+' tegn.');
     const fa=fart.alle;console.log('Fart ('+fa.kort+' kort med måling, medianer): AI '+sek(fa.aiMs)+', fra bilde klart til svar '+sek(fa.totalMs)+', skjema '+sek(fa.skjemaMs)+', komprimering '+sek(fa.kompMs)+'; flere forsøk '+fa.flereForsok+', med prosa '+fa.medProsa+' (AI '+sek(fa.aiMsMedProsa)+' mot '+sek(fa.aiMsUtenProsa)+' uten), kald start '+fa.kald+', cache-treff '+fa.cacheTreff+', ut-tokens '+(fa.utTokens==null?'–':fa.utTokens)+', bilde '+(fa.kb==null?'–':fa.kb+' KB'));
     Object.entries(fart.prSelger).forEach(([w,f])=>console.log('  '+w+': '+f.kort+' kort, AI '+sek(f.aiMs)+', skjema '+sek(f.skjemaMs)+', prosa '+f.medProsa+', flere forsøk '+f.flereForsok));
-    Object.entries(fart.prBildePx).forEach(([px,f])=>console.log('  bilde '+px+' px: '+f.kort+' kort, AI '+sek(f.aiMs)+', '+(f.kb==null?'–':f.kb+' KB')));}
+    Object.entries(fart.prBildePx).forEach(([px,f])=>console.log('  bilde '+px+' px: '+f.kort+' kort, AI '+sek(f.aiMs)+', '+(f.kb==null?'–':f.kb+' KB')));
+    console.log('Aktivitet siste 7 d: '+Object.entries(aktivitet.uke).map(([w,a])=>w+' '+a.kort+' kort ('+a.ai+' AI'+(a.manuelle?', '+a.manuelle+' manuelle':'')+(Object.keys(a.rettetFelt).length?', rettet: '+Object.entries(a.rettetFelt).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([k,v])=>k+' '+v).join(' '):'')+((aktivitet.feilUke[w]||{}).ai?', AI-feil '+aktivitet.feilUke[w].ai:'')+')').join('; '));}
   process.exit(0);
+}
+
+// ---- ukesrapport (uten API): Markdown til stdout. kjor-gjennomgang.command skriver den til laering/ukesrapport.md hver mandag ----
+if(flag('ukesrapport')){
+  const pct=(a,b)=>b?Math.round(100*a/b)+' %':'–';
+  const iUke=k=>naaAv(k)>new Date(UKE);
+  const grp=(arr,f)=>{const g={};arr.forEach(k=>{(g[k.who]=g[k.who]||[]).push(f?f(k):k);});return g;};
+  const fartUke=Object.fromEntries(Object.entries(grp(fartKort.filter(iUke))).map(([w,v])=>[w,fartAv(v)]));
+  const endringUke=Object.fromEntries(Object.entries(grp(data.kort.filter(k=>k.ai&&k.ai.ms&&k.ai.ms.endring>0&&iUke(k)),k=>k.ai.ms.endring)).map(([w,v])=>[w,medL(v)]));
+  const alleWho=[...new Set([...Object.keys(aktivitet.uke),...Object.keys(selgere)])].sort();
+  const nyesteBuild=Object.values(selgere).reduce((m,s)=>s.build&&s.build>m?s.build:m,'');
+  const d0=new Date(UKE),d1=new Date();const dm=d=>d.getDate()+'.'+(d.getMonth()+1);
+  const L=[];L.push('# Ukesrapport Oppfølginger – '+dm(d0)+'–'+dm(d1)+'.'+d1.getFullYear()+' (laget '+d1.toISOString().slice(0,16).replace('T',' ')+' UTC)');
+  const sumU=Object.values(aktivitet.uke).reduce((s,a)=>({kort:s.kort+a.kort,ai:s.ai+a.ai}),{kort:0,ai:0});
+  const feilU=Object.values(aktivitet.feilUke).reduce((s,a)=>s+a.ai,0);
+  L.push('Siste 7 dager: '+sumU.kort+' kort ('+sumU.ai+' via AI, '+(sumU.kort-sumU.ai)+' manuelle), AI-feil '+feilU+', stille feil '+stille.length+', nye uten dato m/tidsord '+nyeSignal.nyeUtenDatoMedTidsord+'. Modell '+APP_MODEL+' ('+APP_EFFORT+'), instruks '+STATIC.length+' tegn.');
+  L.push('');L.push('| Selger | Kort 7 d | AI-andel | AI median | Skjema median | Første endring | Retter oftest (30 d) | AI-feil 7 d | Forfalte | Uten tid | Versjon | Sist sett |');L.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
+  alleWho.forEach(w=>{const a=aktivitet.uke[w]||{kort:0,ai:0,manuelle:0},m=aktivitet.mnd[w]||{rettetFelt:{},medFelt:0},f=fartUke[w],t=tilstand[w]||{forfalte:0,uten:0},e=aktivitet.feilUke[w]||{ai:0},s=selgere[w]||{};
+    const topp=Object.entries(m.rettetFelt).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([k,v])=>k+' '+v+'/'+m.medFelt).join(', ')||'–';
+    const ver=s.build?(s.build<nyesteBuild?'⚠ '+s.build:s.build):'–';
+    L.push('| '+w+' | '+a.kort+' | '+pct(a.ai,a.kort)+' | '+(f?sek(f.aiMs):'–')+' | '+(f?sek(f.skjemaMs):'–')+' | '+(endringUke[w]!=null?sek(endringUke[w]):'–')+' | '+topp+' | '+e.ai+' | '+t.forfalte+' | '+t.uten+' | '+ver+' | '+(s.sistSett?s.sistSett.slice(0,10):'–')+' |');});
+  const trege=fartKort.filter(iUke).sort((x,y)=>y.ai.ms.ai-x.ai.ms.ai).slice(0,3);
+  if(trege.length){L.push('');L.push('Tregeste AI-kort (7 d): '+trege.map(k=>k.who+' '+(k.ai.ts||k.opprettet)+' '+sek(k.ai.ms.ai)+(k.ai.ms.kald?' kald start':'')+(k.ai.ms.forsok>1?' '+k.ai.ms.forsok+' forsøk':'')+(k.ai.ms.prosa>0?' prosa':'')+(k.enhet?' '+k.enhet.w+'×'+k.enhet.h+(k.enhet.pwa?' hjemskjerm':' Safari')+(k.enhet.nett?' '+k.enhet.nett:''):'')).join('; '));}
+  const rf={};Object.values(aktivitet.mnd).forEach(a=>Object.entries(a.rettetFelt).forEach(([k,v])=>{rf[k]=(rf[k]||0)+v;}));const medFelt=Object.values(aktivitet.mnd).reduce((s,a)=>s+a.medFelt,0);
+  L.push('');L.push('Rettelser etter AI, alle selgere siste 30 d ('+medFelt+' kort med felt-logg): '+(Object.entries(rf).sort((x,y)=>y[1]-x[1]).map(([k,v])=>k+' '+v).join(', ')||'ingen data ennå (krever build ≥149)')+'.');
+  if(stille.length){L.push('');L.push('Kort som står på feil dag (stille feil): '+stille.map(x=>x.who+' «'+x.notat.slice(0,40)+'» kort='+(x.kort||'ingen')+' fasit='+(x.fasit||'ingen')).join('; '));}
+  const mk=fartKort.filter(k=>naaAv(k)>new Date(MND)&&k.ai.tok);const sum=f=>mk.reduce((s,k)=>s+(k.ai.tok[f]||0),0);
+  L.push('');L.push('Tokens siste 30 d ('+mk.length+' kort med måling): '+Math.round((sum('inn')+sum('cacheSkriv'))/1000)+'k inn, '+Math.round(sum('cache')/1000)+'k fra hurtigbuffer (billig), '+Math.round(sum('ut')/1000)+'k ut (det dyre). Hurtigbuffer traff på '+mk.filter(k=>k.ai.tok.cache>0).length+' av '+mk.length+'.');
+  console.log(L.join('\n'));process.exit(0);
 }
 
 // ---- modellkall (samme meldingsstruktur som appen: fast del med cache_control, deretter dynamisk del) ----

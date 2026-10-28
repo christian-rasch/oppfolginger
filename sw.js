@@ -3,7 +3,7 @@
    Alt annet (Supabase, jsdelivr, fonter, bilder) røres ikke. Auto-oppdatereren (?_v=) går alltid rett på nett
    og legger den ferske versjonen i cachen, så en ny utrulling når fram som før. */
 var CACHE='oppf-shell-v1';
-var SW_VER='148'; // skrives til Cache API («oppf-glow»/oppf-swver) ved aktivering, så appen kan logge hvilken versjon som faktisk kjører
+var SW_VER='149'; // skrives til Cache API («oppf-glow»/oppf-swver) ved aktivering, så appen kan logge hvilken versjon som faktisk kjører
 self.addEventListener('install', function(e){
   e.waitUntil(
     caches.open(CACHE).then(function(c){ return c.addAll(['./','apple-touch-icon.png']).catch(function(){}); })
