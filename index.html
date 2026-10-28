@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-138">
+<meta name="app-build" content="2026-10-28-139">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1276,12 +1276,12 @@
   function varslerRowsHtml(){ // radene i Min profil → Varsler (tegnes på nytt alene via varslerRerender, så et halvskrevet passord overlever)
     const v=varsler;
     return '<div id="pfVarsler">'
-      +'<div class="cloud-row vs-row"><span>Varsle meg</span><span class="vs-right"><button type="button" class="vs-val" data-vs="min">'+minLbl(v.min)+'</button></span></div>'
+      +'<div class="cloud-row vs-row"><span>Varsel</span><span class="vs-right"><button type="button" class="vs-val" data-vs="min">'+minLbl(v.min)+'</button></span></div>'
       +'<div class="cloud-row vs-row"><span>Ekstra varsel</span><span class="vs-right"><div class="seg"><button type="button" data-vs="ekstra" data-v="0"'+(v.ekstra?'':' class="on"')+'>Av</button><button type="button" data-vs="ekstra" data-v="1"'+(v.ekstra?' class="on"':'')+'>På</button></div>'
       +(v.ekstra?'<button type="button" class="vs-val" data-vs="ekstraMin">'+minLbl(v.ekstraMin)+'</button>':'')+'</span></div>'
       +'<div class="cloud-row vs-row"><span>Dagsoversikt</span><span class="vs-right"><div class="seg"><button type="button" data-vs="dag" data-v="0"'+(v.dagOn?'':' class="on"')+'>Av</button><button type="button" data-vs="dag" data-v="1"'+(v.dagOn?' class="on"':'')+'>På</button></div>'
       +(v.dagOn?'<button type="button" class="vs-val" data-vs="dagTid">kl. '+esc(v.dagTid)+'</button>':'')+'</span></div>'
-      +'<div class="cloud-row cloud-muted">'+(v.dagOn?'Du får «Oppfølginger i dag: N» hver dag kl. '+esc(v.dagTid)+'. Sendes ikke når du har null.':'Slå på for å få «Oppfølginger i dag: N» hver morgen.')+'</div>'
+      +(v.dagOn?'':'<div class="cloud-row cloud-muted">Slå på for å få «Oppfølginger i dag: 4» hver morgen, eller f.eks. rett før felt. Varsler ikke dager med 0 oppfølginger.</div>') // forklaring kun når den er av (Christian 28.10)
       +'</div>';
   }
   function varslerRerender(){const el=$('pfVarsler');if(el)el.outerHTML=varslerRowsHtml();}
@@ -1354,15 +1354,15 @@
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
       await savePushSub(sub);}catch(e){}
   }
-  function pushSectionHtml(){ // status for denne enheten + innstillingene (gjelder kontoen, dvs. alle enhetene — kan settes fra Mac også)
-    const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Varsler</b></div>';
-    let st;
-    if(!pushSupported())st='<div class="cloud-row cloud-muted">Varsler støttes ikke her. På iPad: legg appen til på Hjem-skjerm og åpne den derfra (iOS 16.4+). Innstillingene under gjelder likevel alle enhetene dine.</div>';
+  function pushSectionHtml(){ // innstillingene gjelder kontoen (alle enheter — kan settes fra Mac også); statuslinje vises KUN når varslinger ikke er på (rød, Christian 28.10)
+    const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Varslinger</b></div>';
+    const warn='<div class="cloud-row cloud-muted" style="color:var(--red)">';
+    let st='';
+    if(!pushSupported())st='<div class="cloud-row cloud-muted">Varslinger støttes ikke her. På iPad: legg appen til på Hjem-skjerm og åpne den derfra (iOS 16.4+). Innstillingene under gjelder likevel alle enhetene dine.</div>';
     else{const perm=pushPermission();
-      if(perm==='granted')st='<div class="cloud-row cloud-muted">På ✓ — du får påminnelse før hver avtale.</div>';
-      else if(perm==='denied')st='<div class="cloud-row cloud-muted">Varsler er blokkert. Skru på «Varsler» for appen i iPad-innstillinger for å bruke dette.</div>';
-      else st='<div class="cloud-row cloud-muted">Få en påminnelse før hver avtale.</div>'
-        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pushOn">🔔 Slå på varsler</button></div>';}
+      if(perm==='denied')st=warn+'Varslinger er av — blokkert på denne enheten. Skru på «Varslinger» for appen i iPad-innstillinger.</div>';
+      else if(perm!=='granted')st=warn+'Varslinger er av på denne enheten — du får ingen påminnelse før avtalene.</div>'
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pushOn">🔔 Slå på varslinger</button></div>';}
     return head+st+varslerRowsHtml();
   }
   // ---- VARSEL-PORT: blokkerer hele appen til varsler er på (kun i installert app på Hjem-skjerm) ----
