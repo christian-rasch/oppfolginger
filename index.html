@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-153">
+<meta name="app-build" content="2026-10-28-154">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -498,7 +498,7 @@
   .feed-status{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-faint)}
   .feed-body{flex:1;min-height:0;overflow:auto;margin:6px 0}
   .feed-day{position:sticky;top:0;background:#0d1019;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);padding:10px 6px 6px;z-index:1}
-  .feed-row{display:grid;grid-template-columns:48px 96px 1fr;gap:10px;align-items:start;padding:8px 6px;border-bottom:1px solid var(--hair-2);font-size:13px;line-height:1.45}
+  .feed-row{display:grid;grid-template-columns:48px 124px 1fr;gap:10px;align-items:start;padding:8px 6px;border-bottom:1px solid var(--hair-2);font-size:13px;line-height:1.45} /* 124px: «christian.rasch» får plass uten … (iPad 28.10) */
   .feed-row.har-kort{cursor:pointer}.feed-row.har-kort:hover{background:rgba(255,255,255,.03)}
   .feed-row.ny{background:rgba(61,245,197,.09)}
   .feed-tid{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-dim)}
@@ -710,6 +710,7 @@
       <div class="feed-head"><span class="m-title" style="margin:0">Live feed</span>
         <div class="seg" id="feedKind"><button type="button" data-v="" class="on">Alle</button><button type="button" data-v="kort">Kort</button><button type="button" data-v="innstilling">Innstillinger</button></div>
         <select id="feedSeller" class="feed-sel"><option value="">Alle selgere</option></select>
+        <span class="feed-status" title="Av: dine egne handlinger logges ikke og vises ikke. På: de logges og vises som for selgerne.">Mine egne</span><div class="seg" id="feedEgne"><button type="button" data-v="0" class="on">Av</button><button type="button" data-v="1">På</button></div>
         <button class="btn" id="feedRefresh">Oppdater</button>
         <span id="feedLive" class="feed-live" title="Nye hendelser hentes automatisk mens vinduet er åpent">● hvert 10. sek</span><span id="feedStatus" class="feed-status"></span>
         <button class="btn" id="feedClose" style="margin-left:auto">✕</button>
@@ -1314,11 +1315,14 @@
      (supabase/sql/2026-10-28-feed.sql; bare admin kan lese, RLS). Aldri passord/nøkler. Blokkerer aldri save()/render(): alt i try/catch,
      sending debounced og fire-and-forget. Christian 28.10.2026 ---- */
   const FEEDK='oppf:feed';let feedFlushT=null,feedFlushAt=0,feedRetry=0,feedLast={k:'',t:0};
+  const FEEDEGNE='oppf:feed:egne'; // admin: «Mine egne» av/på (standard AV): av = egne handlinger logges ikke og vises ikke i feeden (Christian 28.10)
+  function feedEgneOn(){try{return localStorage.getItem(FEEDEGNE)==='1';}catch(e){return false;}}
   function feedDevice(){try{return screen.width+'×'+screen.height+' '+(isStandalonePWA()?'pwa':'safari');}catch(e){return null;}}
   function feedQ(){try{return JSON.parse(localStorage.getItem(FEEDK)||'[]')||[];}catch(e){return [];}}
   function feed(kind,type,data,itemId){
     try{
       if(adminView)return; // admin inne i en selgers liste: ingenting logges (Christian 28.10: ingen spor av admin-tilgang)
+      if(isAdmin()&&!feedEgneOn())return; // admins egne handlinger logges bare når «Mine egne» er på
       data=data||{};
       let js=JSON.stringify(data);
       if(js.length>4000){delete data.kort;js=JSON.stringify(data);if(js.length>4000){data={avkortet:true};js=JSON.stringify(data);}}
@@ -1334,6 +1338,7 @@
     if(feedFlushAt&&Date.now()-feedFlushAt<20000)return; // én sending om gangen — med tidsgrense, så hengende nett ikke låser køen
     const c=getSupabaseClient();if(!c)return;
     const a=feedQ();if(!a.length)return;
+    if(isAdmin()&&!feedEgneOn()){try{localStorage.setItem(FEEDK,'[]');}catch(e){}return;} // kø fra før innloggingen var kjent → kastes når admin har «Mine egne» av
     feedFlushAt=Date.now();
     try{
       const bld=(document.querySelector('meta[name="app-build"]')||{}).content||null,dev=feedDevice();
@@ -1451,6 +1456,7 @@
     let q=c.from('oppf_hendelser').select('id,user_id,email,at,kind,type,item_id,data,build,device').order('id',{ascending:false});
     if(feedSt.kind)q=q.eq('kind',feedSt.kind);
     if(feedSt.uid)q=q.eq('user_id',feedSt.uid);
+    else if(!feedEgneOn()&&sbUser)q=q.neq('user_id',sbUser.id); // «Mine egne» av → skjul admins egne rader
     const ids=feedSt.rows.map(function(r){return r.id;});
     if(mode==='ny'&&ids.length)q=q.gt('id',Math.max.apply(null,ids)).limit(200);
     else if(mode==='eldre'&&ids.length)q=q.lt('id',Math.min.apply(null,ids)).limit(150);
@@ -1523,6 +1529,7 @@
   function openFeed(){
     if(!isAdmin())return;closeProfileModal();
     const m=$('feedModal');if(!m)return;m.classList.add('open');
+    const eg=$('feedEgne');if(eg)segSet(eg,feedEgneOn()?'1':'0');
     feedSellers();feedLoad('');
     clearInterval(feedSt.timer);feedSt.timer=setInterval(function(){if(!document.hidden&&m.classList.contains('open'))feedLoad('ny');},10000);
   }
@@ -1545,6 +1552,7 @@
       if(id==='feedRefresh'){feedLoad('');return;}
       if(id==='feedMore'){feedLoad('eldre');return;}
       const kb=e.target.closest('#feedKind button');if(kb){feedSt.kind=kb.dataset.v||'';segSet($('feedKind'),feedSt.kind);feedSt.open=null;feedLoad('');return;}
+      const eb=e.target.closest('#feedEgne button');if(eb){try{localStorage.setItem(FEEDEGNE,eb.dataset.v==='1'?'1':'0');}catch(x){}segSet($('feedEgne'),eb.dataset.v);feedSt.open=null;feedLoad('');return;}
       const nb=e.target.closest('[data-fnaa]');if(nb){const r=feedSt.rows.find(function(x){return String(x.id)===nb.dataset.fnaa;});if(r)feedVisNaa(r);return;}
       const im=e.target.closest('.fq-img.has');if(im){const r=feedSt.rows.find(function(x){return String(x.id)===im.dataset.fimg;});if(!r)return;
         const ei=feedEier(r),d=feedSt.imgs.get(ei.uid+'/'+r.item_id);if(d)openLightbox({adresse:r.data.kort&&r.data.kort.adresse},d);return;}
