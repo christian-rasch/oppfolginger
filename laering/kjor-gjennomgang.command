@@ -39,6 +39,10 @@ les(){ printf '%s' "$SIG" | node -e 'let s="";process.stdin.on("data",d=>s+=d).o
 NYE=$(les signal.nye); RETTET=$(les signal.nyeRettet); STILLE=$(les signal.nyeStilleFeil); UTEN=$(les signal.nyeUtenDatoMedTidsord)
 SIST=0; [[ -f "$STEMPEL" ]] && SIST=$(cat "$STEMPEL"); DAGER_SIDEN=$(( (NAA - SIST) / 86400 ))
 echo "$DAG: nye=$NYE rettet=$RETTET stille=$STILLE utenDato=$UTEN dagerSiden=$DAGER_SIDEN" >> "$LOGG"
+# ---- 2b) ukesrapport hver mandag (uten Claude): aktivitet, fart, rettelser pr. felt, AI-feil, forfalte, versjoner (fra build 149, 28.10) ----
+if [[ "$(date +%u)" == "1" ]]; then
+  if node laering/eval.mjs --ukesrapport > laering/ukesrapport.md 2>>"$LOGG"; then varsle "Ukesrapport klar (laering/ukesrapport.md): $(sed -n 2p laering/ukesrapport.md | cut -c1-80)"; else echo "$DAG: ukesrapport feilet" >> "$LOGG"; fi
+fi
 GRUNN=""
 (( NYE >= 12 )) && GRUNN="$NYE nye kort"
 (( RETTET >= 3 )) && GRUNN="${GRUNN:+$GRUNN, }$RETTET rettelser"
