@@ -2,7 +2,8 @@
 //  1) X min før hver avtale — X er selgerens standard (kolonnen oppf_snapshots.varsler.min, default 5) eller kortets egen
 //     overstyring (feltet varsel.min på kortet). Valgfritt ekstra varsel (varsler.ekstra / ekstraMin) med eget minutt-tall.
 //  2) kl. 21:45 (Oslo): daglig påminnelse om dagens kort som fortsatt står «Husk å send tilbud».
-//  3) dagsoversikt «Oppfølginger i dag: N» til selgerens valgte klokkeslett (varsler.dagOn / dagTid). Sendes ikke når N = 0.
+//  3) dagsoversikt «Avtaler i dag: N» til selgerens valgte klokkeslett (varsler.dagOn / dagTid). Sendes ikke når N = 0.
+// Alle varsler er KUN tittel (ingen body) — Christian vil ha dem så minimalistiske som mulig (28.10).
 //  4) «Må gjøres» fra i går: N stk — valgfritt (varsler.gjoreOn / gjoreTid): send_offer-kort satt i går som fortsatt står. Ikke når N = 0.
 // Et kort med varselMute === dato er dempet fra appen → ingen flere avtale-varsler for den datoen.
 // Kalles hvert minutt av pg_cron. Hemmeligheter hentes fra Edge-secrets (aldri i koden).
@@ -111,10 +112,7 @@ function dueToday(items: any[], today: string): any[] {
     .sort((a: any, b: any) => a.dato < b.dato ? -1 : a.dato > b.dato ? 1 : 0)
 }
 function dailyPayload(due: any[], tag: string) {
-  const n = due.length
-  const lines = due.slice(0, 4).map((d: any) => d.dato.slice(11, 16) + ' ' + ((d.navn || '').trim() || (d.adresse || '').trim() || '—'))
-  if (n > 4) lines.push('+ ' + (n - 4) + ' til')
-  return { title: 'Oppfølginger i dag: ' + n, body: lines.join('\n'), tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'avtaler', sub: 'alle' } }
+  return { title: 'Avtaler i dag: ' + due.length, tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'avtaler', sub: 'alle' } }
 }
 // ---- «Må gjøres» fra i går ----
 function osloDateSafe(v: unknown): string { const d = new Date(v as any); return Number.isFinite(d.getTime()) ? osloParts(d).date : '' } // '' ved ugyldig/manglende stempel (osloDate kaster)
@@ -124,10 +122,7 @@ function gjoreDue(items: any[], target: string): any[] {
   return items.filter((it: any) => it && it.state !== 'fulgt' && it.nextAction === 'send_offer' && osloDateSafe(it.offerSince || it.opprettet) === target)
 }
 function gjorePayload(due: any[], tag: string) {
-  const n = due.length
-  const lines = due.slice(0, 4).map((d: any) => (d.navn || '').trim() || (d.adresse || '').trim() || '—')
-  if (n > 4) lines.push('+ ' + (n - 4) + ' til')
-  return { title: '«Må gjøres» fra i går: ' + n + ' stk', body: lines.join('\n'), tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'gjore', gsub: 'send_offer' } }
+  return { title: '«Må gjøres» fra i går: ' + due.length + ' stk', tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'gjore', gsub: 'send_offer' } }
 }
 
 Deno.serve(async (req) => {
@@ -180,7 +175,7 @@ Deno.serve(async (req) => {
   if (body.test) {
     const { data } = await sb.from('push_subscriptions').select('user_id').eq('enabled', true)
     const ids = [...new Set((data || []).map((r: any) => r.user_id))]
-    for (const id of ids) await sendTo(id, { title: 'Test-varsel ✓', body: 'Varsler fungerer.', url: './' }, 'test', 'test')
+    for (const id of ids) await sendTo(id, { title: 'Test-varsel ✓', url: './' }, 'test', 'test')
     return Response.json({ ok: true, test: true, users: ids.length })
   }
 
@@ -218,10 +213,8 @@ Deno.serve(async (req) => {
                       { onConflict: 'user_id,item_id,dato', ignoreDuplicates: true }).select()
             if (!ins.data || !ins.data.length) continue
             const navn = (it.navn || '').trim()
-            const tid = it.dato.slice(11, 16)
             const r = await sendTo(row.user_id, {
               title: (pl.m === 0 ? 'Avtale nå' : 'Avtale om ' + pl.m + ' min') + (navn ? ' — ' + navn : ''),
-              body: (navn ? navn + ' • ' : '') + 'kl. ' + tid + (it.adresse ? ' • ' + it.adresse : ''),
               tag: pl.tag, url: './',
               glow: { ids: [String(it.id)], view: 'avtaler', sub: 'alle' }
             }, pl.kind, String(it.id), subs)
@@ -255,7 +248,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 3) dagsoversikt «Oppfølginger i dag: N» til selgerens valgte klokkeslett (varsler.dagOn + dagTid 'HH:MM'). Ikke når N = 0.
+    // 3) dagsoversikt «Avtaler i dag: N» til selgerens valgte klokkeslett (varsler.dagOn + dagTid 'HH:MM'). Ikke når N = 0.
     for (const row of snaps) {
       try {
         const def = obj(row.varsler)
