@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-144">
+<meta name="app-build" content="2026-10-28-145">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -2075,12 +2075,28 @@
     try{const m=/[?&]glow=([^&]+)/.exec(location.search);if(!m)return;
       const glow=JSON.parse(decodeURIComponent(m[1]));
       history.replaceState(null,'',location.origin+location.pathname+location.hash);
+      clearPendingGlow(); // samme glød ligger også i Cache API fra service workeren → ikke lys opp to ganger
       setTimeout(function(){applyNotifGlow(glow);},150);
     }catch(e){}
   }
   // varsel-klikk mens appen alt er åpen → melding fra service worker
   if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('message',function(e){
-    if(e.data&&e.data.type==='notif-glow')applyNotifGlow(e.data.glow);});}
+    if(e.data&&e.data.type==='notif-glow'){clearPendingGlow();applyNotifGlow(e.data.glow);}});}
+  // reservevei (iPad): service worker legger gløden i Cache API ved varsel-trykk, fordi postMessage ikke alltid når fram når appen alt er åpen.
+  // Sjekkes ved fokus/synlighet og ved oppstart; brukes kun hvis de andre veiene ikke alt har tatt den (da er lageret tømt).
+  function clearPendingGlow(){if('caches' in window){caches.open('oppf-glow').then(function(c){return c.delete('./oppf-glow');}).catch(function(){});}}
+  let pendingGlowBusy=false;
+  async function pendingGlowCheck(){
+    if(!('caches' in window)||pendingGlowBusy)return;pendingGlowBusy=true;
+    try{const c=await caches.open('oppf-glow');const r=await c.match('./oppf-glow');
+      if(r){await c.delete('./oppf-glow');const d=await r.json();
+        if(d&&d.glow&&Date.now()-(+d.t||0)<5*60000)applyNotifGlow(d.glow);}} // eldre enn 5 min = gammelt, hopp over
+    catch(e){}
+    pendingGlowBusy=false;
+  }
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)pendingGlowCheck();});
+  window.addEventListener('focus',pendingGlowCheck);
+  setTimeout(pendingGlowCheck,600); // oppstart: kaldstart via ?glow= tømmer lageret selv (checkNotifGlowURL), ellers tas den her
   $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
   $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
   $('subbarGjore').addEventListener('click',e=>{const b=e.target.closest('button');if(b){gjoreSub=b.dataset.sg;render();}});
