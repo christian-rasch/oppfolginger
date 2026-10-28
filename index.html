@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-141">
+<meta name="app-build" content="2026-10-28-142">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1044,7 +1044,7 @@
   async function cloudPush(){
     const c=getSupabaseClient();if(!c||!sbUser)return false;
     try{
-      const data=items;
+      const data=JSON.parse(JSON.stringify(items)); // øyeblikksbilde: hashen under må gjelde NØYAKTIG det som ble sendt — lages et kort mens opplastingen pågår, skal neste synk se det som usendt (ellers forsvant det stille ved neste henting)
       const base={user_id:sbUser.id,data:data,client_id:deviceId(),schema_version:1};
       // ta med e-post + appversjon (lar admin se lesbar liste + hvilken versjon hver selger kjører); faller tilbake uten hvis kolonnene ikke finnes ennå
       const bld=(document.querySelector('meta[name="app-build"]')||{}).content||null;
@@ -1055,7 +1055,8 @@
       setCmeta(CKEY.hash,stableFollowupHash(data));
       const {data:row}=await c.from(CLOUD_SYNC_CONFIG.table).select('updated_at').eq('user_id',sbUser.id).maybeSingle();
       if(row&&row.updated_at){setCmeta(CKEY.srv,row.updated_at);setCmeta(CKEY.pull,new Date().toISOString());}
-      setCloudState('synced');
+      if(stableFollowupHash(items)!==stableFollowupHash(data))cloudOnLocalSave(); // lista endret seg mens opplastingen pågikk → «Ikke synket» + ny synk om 1,5 s
+      else setCloudState('synced');
       if(cmeta(VDIRTY))varslerPush(); // raden finnes nå → usendte varsel-innstillinger kan skrives
       return true;
     }catch(e){logEvent('sync','push: '+((e&&e.message)||e));setCloudState('error');return false;}
@@ -1766,8 +1767,9 @@
       :'<button class="btn dim act-navedit" title="Mangler adresse — trykk for å legge inn">Naviger</button>';
     const kom=it.kommentar?'«'+esc(it.kommentar)+'»':'<span style="color:var(--ink-faint)">Ingen kommentar</span>';
     const qc=qcChipHTML(it);
-    const vt=it.state!=='fulgt'?varselTider(it):[],muted=varselMuted(it); // demp-knapp kun når ett varsel er sendt og ett gjenstår
-    const muteBtn=(vt.length===2&&+n<vt[1]&&(muted||+n>=vt[0]))
+    const vt=it.state!=='fulgt'?varselTider(it):[],muted=varselMuted(it); // demp-knapp kun når ett varsel FAKTISK er sendt og ett gjenstår
+    const kjent=Math.max(+it.opprettet||0,+it.datoTs||0); // kortet med dette tidspunktet fantes fra da av — fyringstider før dette ble aldri sendt
+    const muteBtn=(vt.length===2&&+n<vt[1]&&(muted||(+n>=vt[0]&&vt[0]>=kjent)))
       ?(muted?'<button class="btn act-mute on" title="Trykk for å få neste varsel likevel">🔔 Dempet</button>'
              :'<button class="btn act-mute" title="Ikke send neste varsel for denne avtalen">🔕 Demp 2. varsel</button>'):'';
     return '<div class="card opf-card'+late+'" data-id="'+it.id+'">'
@@ -2206,6 +2208,8 @@
       else{mi.varselMute=mi.dato;toast('Neste varsel dempet');}
       save();render();}return;}
     if(e.target.closest('.act-done')&&card){fullfor(byId(card.dataset.id));return;}
+    // resten av kortflaten (topp, bunn, venstre rundt datoblokka) → rediger oppfølging (Christian 28.10). Datoblokka selv beholder dato-velgeren.
+    if(card&&!e.target.closest('.when-edit,.opf-action,.opf-note,.opf-side,button,a,input,textarea,[contenteditable]')){openForm(byId(card.dataset.id));return;}
   });
 
   // ---------- stjerner + besøkskommentar (inline-redigering) ----------
@@ -2286,6 +2290,7 @@
   function applyDp(v){
     if(!dpItem)return;
     const it=dpItem,oldDato=it.dato,id=it.id;
+    if(v!==oldDato)it.datoTs=Date.now(); // tidspunkt endret → stempel (demp-knapp/varsel-historikk)
     it.dato=v;aiTrack(it,false);save();closeDpop(); // logg rettelse av AI-dato (utenfor skjema)
     if(v===oldDato){render();return;} // ingen reell endring → ingen glow
     const destTab=it.dato?'avtaler':'uten';
@@ -2605,7 +2610,8 @@
   }
   function liveCommit(immediate){
     if(!editId)return;const it=byId(editId);if(!it)return;
-    Object.assign(it,formGather());
+    const g=formGather();if(g.dato!==it.dato)it.datoTs=Date.now(); // tidspunkt endret → stempel (demp-knappen regner bare varsler etter dette som sendt)
+    Object.assign(it,g);
     if(fHandling)applyNA(it,fHandling);
     aiTrack(it);
     clearTimeout(liveTimer);
@@ -2656,6 +2662,7 @@
     let revealId=null,revealFlashTab=true,revealFrom=null,revealTo;
     if(editId){
       const it=byId(editId);
+      if(f.dato!==it.dato)it.datoTs=Date.now(); // tidspunkt endret → stempel
       Object.assign(it,f);
       if(fHandling)applyNA(it,fHandling); // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       aiTrack(it);
