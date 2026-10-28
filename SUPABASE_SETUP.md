@@ -149,3 +149,24 @@ Christian gikk over til en snarvei uten opplasting (Åpne DrivMap → Vent 0,2 �
 og innboks-hentingen (`innboksSjekk`/`innboksPoll`) fjernet. Edge Function `skjermbilde`, tabellene `oppf_innboks`/`oppf_snarvei_nokkel`
 og SQL-filene fra 18.10/20.10 ligger igjen ubrukt. Skru av varm-pingen: `supabase/sql/2026-10-24-snarvei-av.sql`
 (`select cron.unschedule('skjermbilde-varm');`). Gjeninnføring = `git revert` av commiten for build 136.
+
+## Tillegg 2026-10-28 — varsel-innstillinger pr. selger (minutter før, ekstra varsel, dagsoversikt)
+Selgeren velger selv under **Min profil → Varsler**: hvor mange minutter før avtalen varselet kommer (tallskjerm på skjermen,
+ikke tastaturet), et valgfritt **ekstra varsel** med eget minutt-tall, og en **dagsoversikt** («Oppfølginger i dag: N») til valgt
+klokkeslett (sendes ikke når N = 0). I skjemaet for en oppfølging vises standardverdiene ferdig utfylt og kan overstyres pr. kort
+(feltet `varsel` på kortet; mangler det, gjelder standarden).
+
+Utrulling — **i denne rekkefølgen**:
+1. **SQL Editor:** kjør `supabase/sql/2026-10-28-varsler.sql` (ny jsonb-kolonne `oppf_snapshots.varsler`; ingen nye policies —
+   RLS-reglene er pr. rad og dekker kolonnen). Sjekk: `select email, varsler from public.oppf_snapshots;`
+2. **Edge Function `notify-appointments`** deployes på nytt fra `supabase/functions/notify-appointments/index.ts`
+   (dashboard-editor eller Management API, som før). Den leser `varsler`-kolonnen (og klarer seg uten den til SQL-en er kjørt),
+   bruker selgerens/kortets minutt-tall i stedet for faste 5 min, sender evt. ekstra varsel, og dagsoversikten.
+   Dedupe-nøkkelen i `notif_sent` tar nå med minutt-tallet (`<id>@30`, `<id>@5#2`, `daily-count`).
+   Nye `kind`-verdier i `notif_log`: `appt2` (ekstra varsel), `daily` (dagsoversikt), `test-daily`.
+3. **Appen** (build 2026-10-28-138) pushes til GitHub Pages.
+
+Test fra terminalen (samme hoder som før): `-d '{"test":"daily"}'` sender dagsoversikten nå til alle som har den på
+(ignorerer klokkeslett og dedupe); `{"test":true}` og `{"test":"offers"}` virker som før.
+Appen skriver innstillingene med `UPDATE` på egen rad (aldri upsert) og holder en lokal kopi i `oppf:varsler`; en endring gjort
+uten nett sendes ved neste synk (`oppf:varsler:dirty`). Triggeren bumper `updated_at` kun når `data` endres, så innstillingene gir aldri «Konflikt».
