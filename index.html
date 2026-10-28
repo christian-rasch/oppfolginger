@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-149">
+<meta name="app-build" content="2026-10-28-150">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1814,7 +1814,7 @@
       +'<div class="opf-body">'
       +'<div class="opf-ident edit-zone" title="Trykk for å redigere">'
       +'<div class="opf-cust"><div class="cn"><span class="cn-name">'+(esc(shortName(it.navn))||'—')+'</span>'+age+'</div></div>'
-      +'<div class="opf-meta">'+(it.status?'<span class="type-chip '+typeCls(it.status)+'">'+esc(it.status)+'</span>':'')+runde+'</div>'
+      +'<div class="opf-meta">'+(it.status?'<span class="type-chip '+typeCls(it.status)+'">'+esc(it.status==='MOB'?'MOBIL':it.status)+'</span>':'')+runde+'</div>'
       +'<div class="addr">'+esc(addrShort(it.adresse))+'</div>'
       +'</div>'
       +'<div class="opf-action">'+actionControl(it)+tilbudInfo(it)+'</div>'
