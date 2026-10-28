@@ -10,8 +10,16 @@ Det er læringsdataene.
 
 ## Appen lærer selv (uten Claude)
 `learnedHour()` i index.html: når AI lander på standardtiden 12:00, ser appen på hva denne selgeren
-pleier å rette 12:00 til (siste 40 rettelser, minst 3 treff) og bruker hans vanlige time i stedet.
+pleier å sette (siste 40 stemmer, minst 3 treff) og bruker hans vanlige time i stedet. Fra 28.10.2026 teller både
+rettelser bort fra 12:00, kort der selgeren BEHOLDT den lærte timen, og rettelser bort fra den lærte timen (så den kan avlæres).
 Haakon som alltid ringer kl 15 eller 21 får altså sine tider automatisk.
+
+## Fart (fra build 148, 28.10.2026)
+Hvert AI-kort bærer `ai.ms` (komprimering, venting på oppvarming, selve AI-kallet, totalt fra bilde klart, skjematid = fra
+skjemaet åpnet til selgeren lagret, forsøk, prosa før JSON, kald start), `ai.tok` (tokens) og `ai.bilde` (px, KB). Admin-lista i
+Min profil viser «AI median … · skjema median …» pr. selger (30 dager). `eval.mjs --bare-data` skriver `fart` (totalt, nye kort,
+pr. selger, pr. bildestørrelse), og gjennomgangen leser det i steg 2b. `bilde-ab.js` er A/B-testen som avgjør om AI-en kan få et
+mindre bilde (1280 px/0,65) uten at tolkningen endres – beslutningsregelen står i funn.md 28.10.
 
 ## Automatikken: lærer når det finnes noe å lære av
 `kjor-gjennomgang.command` startes hver dag 09:30 av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
@@ -75,3 +83,4 @@ tester.js laster blokken direkte, så en endring i appen testes 1:1.
 - `kjor-gjennomgang.command` – jobben launchd starter.
 - `analyse-i-nettleser.js` – uthenting + anonymisering i den innloggede fanen.
 - `funn.md` – logg over hva som ble funnet og endret, per gjennomgang.
+- `bilde-ab.js` – A/B-test av bildestørrelse til AI-en (kjøres i innlogget admin-fane; resultat i funn.md).
