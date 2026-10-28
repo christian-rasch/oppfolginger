@@ -3,6 +3,7 @@
    Alt annet (Supabase, jsdelivr, fonter, bilder) røres ikke. Auto-oppdatereren (?_v=) går alltid rett på nett
    og legger den ferske versjonen i cachen, så en ny utrulling når fram som før. */
 var CACHE='oppf-shell-v1';
+var SW_VER='147'; // skrives til Cache API («oppf-glow»/oppf-swver) ved aktivering, så appen kan logge hvilken versjon som faktisk kjører
 self.addEventListener('install', function(e){
   e.waitUntil(
     caches.open(CACHE).then(function(c){ return c.addAll(['./','apple-touch-icon.png']).catch(function(){}); })
@@ -12,6 +13,7 @@ self.addEventListener('install', function(e){
 self.addEventListener('activate', function(e){
   e.waitUntil(
     caches.keys().then(function(ks){ return Promise.all(ks.filter(function(k){ return k!==CACHE && k!=='oppf-glow'; }).map(function(k){ return caches.delete(k); })); })
+      .then(function(){ return caches.open('oppf-glow').then(function(c){ return c.put('./oppf-swver', new Response(SW_VER)); }).catch(function(){}); })
       .then(function(){ return self.clients.claim(); })
   );
 });
@@ -56,9 +58,11 @@ self.addEventListener('notificationclick', function(e){
   var url = data.url || './';
   // Gløden legges også i Cache API («oppf-glow»): postMessage når ikke alltid fram på iPad når appen alt er åpen,
   // så appen sjekker dette lageret hver gang den får fokus (pendingGlowCheck i index.html) og sletter det etter bruk.
-  var stash = glow
-    ? caches.open('oppf-glow').then(function(c){ return c.put('./oppf-glow', new Response(JSON.stringify({ glow:glow, t:Date.now() }), { headers:{ 'Content-Type':'application/json' } })); }).catch(function(){})
-    : Promise.resolve();
+  var stash = caches.open('oppf-glow').then(function(c){
+    var ps = [ c.put('./oppf-lastclick', new Response(String(Date.now()))) ]; // feilsøking: appen logger når service workeren sist så et varsel-trykk
+    if (glow) ps.push(c.put('./oppf-glow', new Response(JSON.stringify({ glow:glow, t:Date.now() }), { headers:{ 'Content-Type':'application/json' } })));
+    return Promise.all(ps);
+  }).catch(function(){});
   e.waitUntil(
     stash.then(function(){ return clients.matchAll({ type:'window', includeUncontrolled:true }); }).then(function(list){
       for (var i=0;i<list.length;i++){

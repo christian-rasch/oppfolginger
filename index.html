@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-146">
+<meta name="app-build" content="2026-10-28-147">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -2087,10 +2087,12 @@
   // reservevei (iPad): service worker legger gløden i Cache API ved varsel-trykk, fordi postMessage ikke alltid når fram når appen alt er åpen.
   // Sjekkes ved fokus/synlighet og ved oppstart; brukes kun hvis de andre veiene ikke alt har tatt den (da er lageret tømt).
   function clearPendingGlow(){if('caches' in window){caches.open('oppf-glow').then(function(c){return c.delete('./oppf-glow');}).catch(function(){});}}
-  let pendingGlowBusy=false;
+  let pendingGlowBusy=false,swClickSeen=null;
   async function pendingGlowCheck(){
     if(!('caches' in window)||pendingGlowBusy)return;pendingGlowBusy=true;
-    try{const c=await caches.open('oppf-glow');const r=await c.match('./oppf-glow');
+    try{const c=await caches.open('oppf-glow');
+      const lc=await c.match('./oppf-lastclick');if(lc){const t=+(await lc.text());if(t&&t!==swClickSeen){if(swClickSeen!==null)logEvent('glow','service worker så varsel-trykk kl '+new Date(t).toLocaleTimeString('nb-NO'));swClickSeen=t;}} // feilsøking
+      const r=await c.match('./oppf-glow');
       if(r){await c.delete('./oppf-glow');const d=await r.json();
         if(d&&d.glow&&Date.now()-(+d.t||0)<5*60000)applyNotifGlow(d.glow,'lager');}} // eldre enn 5 min = gammelt, hopp over
     catch(e){}
@@ -2100,6 +2102,10 @@
   window.addEventListener('focus',pendingGlowCheck);
   setTimeout(pendingGlowCheck,600); // oppstart: kaldstart via ?glow= tømmer lageret selv (checkNotifGlowURL), ellers tas den her
   setInterval(function(){if(!document.hidden)pendingGlowCheck();},1500); // appen alt i forgrunnen når banneret trykkes → ingen fokus-hendelse, så lageret sjekkes jevnlig (billig)
+  setTimeout(async function(){ // feilsøking: hvilken service worker kjører faktisk på enheten? (skrives av sw.js ved aktivering)
+    try{const c=await caches.open('oppf-glow');const r=await c.match('./oppf-swver');const v=r?await r.text():'ukjent (ikke 147+)';
+      logEvent('sw','versjon '+v+' · styrer siden: '+!!(navigator.serviceWorker&&navigator.serviceWorker.controller));}catch(e){}
+  },4000);
   $('mainbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setView(b.dataset.v);});
   $('subbar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSub(b.dataset.s);});
   $('subbarGjore').addEventListener('click',e=>{const b=e.target.closest('button');if(b){gjoreSub=b.dataset.sg;render();}});
