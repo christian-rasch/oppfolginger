@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-150">
+<meta name="app-build" content="2026-10-28-151">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -422,7 +422,9 @@
   .vs-right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .vs-val{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;color:var(--mint);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:9px 13px;cursor:pointer;white-space:nowrap}
   .vs-val:active{border-color:rgba(61,245,197,.55)}
-  #pfVarsler .vs-val{min-width:126px;text-align:center} /* Min profil: lik bredde på alle tidsboksene («5 min før», «20 min før», «kl. 11:00») så AV/PÅ-velgerne står rett under hverandre (Christian 28.10) */
+  #pfVarsler .vs-val{min-width:126px;text-align:center}
+  .vs-help{margin-top:-2px;line-height:1.75}
+  .vs-eks{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--hair-2);border-radius:8px;padding:3px 9px;margin-right:4px;white-space:nowrap} /* slik varselet ser ut på låseskjermen */ /* Min profil: lik bredde på alle tidsboksene («5 min før», «20 min før», «kl. 11:00») så AV/PÅ-velgerne står rett under hverandre (Christian 28.10) */
   .dt-flag.ok{color:var(--mint)}
   .dt-flag.miss{color:var(--red)}
   .full{grid-column:1/-1}
@@ -1317,10 +1319,10 @@
       +(v.ekstra?'<button type="button" class="vs-val" data-vs="ekstraMin">'+minLbl(v.ekstraMin)+'</button>':'')+'</span></div>'
       +'<div class="cloud-row vs-row"><span>Dagsoversikt</span><span class="vs-right"><div class="seg"><button type="button" data-vs="dag" data-v="0"'+(v.dagOn?'':' class="on"')+'>Av</button><button type="button" data-vs="dag" data-v="1"'+(v.dagOn?' class="on"':'')+'>På</button></div>'
       +(v.dagOn?'<button type="button" class="vs-val" data-vs="dagTid">kl. '+esc(v.dagTid)+'</button>':'')+'</span></div>'
-      +(v.dagOn?'':'<div class="cloud-row cloud-muted">Slå på for å få «Avtaler i dag: 4» hver morgen, eller f.eks. rett før felt. Varsler ikke dager med 0 avtaler.</div>') // forklaring kun når den er av (Christian 28.10)
+      +(v.dagOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 Avtaler i dag: 4</span> én gang om dagen, til klokkeslettet du velger. Ikke på dager med 0.</div>') // forklaring kun når den er av; selve varselet vises som brikke (Christian 28.10)
       +'<div class="cloud-row vs-row"><span>Må gjøres fra i går</span><span class="vs-right"><div class="seg"><button type="button" data-vs="gjore" data-v="0"'+(v.gjoreOn?'':' class="on"')+'>Av</button><button type="button" data-vs="gjore" data-v="1"'+(v.gjoreOn?' class="on"':'')+'>På</button></div>'
       +(v.gjoreOn?'<button type="button" class="vs-val" data-vs="gjoreTid">kl. '+esc(v.gjoreTid)+'</button>':'')+'</span></div>'
-      +(v.gjoreOn?'':'<div class="cloud-row cloud-muted">Slå på for å få «Må gjøres» fra i går: 2 stk dagen etter, til valgt klokkeslett — bare kortene fra dagen før som ikke er gjort. Varsler ikke når det er 0.</div>')
+      +(v.gjoreOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 «Må gjøres» fra i går: 2 stk</span> dagen etter, til klokkeslettet du velger. Ikke når det er 0.</div>')
       +'</div>';
   }
   function varslerRerender(){const el=$('pfVarsler');if(el)el.outerHTML=varslerRowsHtml();}
