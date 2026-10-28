@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-139">
+<meta name="app-build" content="2026-10-28-140">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -151,8 +151,11 @@
   /* nyopprettet kort: grønn lysende ytterkant ~1s, deretter ~1s fade */
   .opf-card.justadded{animation:justAdded 3s ease forwards}
   @keyframes justAdded{0%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--mint)}2%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}68%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}100%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--hair)}}
+  /* varsel trykket: gull ytterkant rundt kortet (grønn = nytt/endret kort beholdes) */
+  .opf-card.notified{animation:notifGlow 3s ease forwards}
+  @keyframes notifGlow{0%{box-shadow:0 0 0 0 rgba(216,169,58,0);border-color:#d8a93a}2%{box-shadow:0 0 26px 3px rgba(216,169,58,.9);border-color:#d8a93a}68%{box-shadow:0 0 26px 3px rgba(216,169,58,.9);border-color:#d8a93a}100%{box-shadow:0 0 0 0 rgba(216,169,58,0);border-color:var(--hair)}}
   /* gult glow på dag-tekst i kortet + valgt kategori-overskrift (samme gull som fane-blinket) */
-  .opf-card.justadded .rail-day,.opf-card.justadded .rail-weekday,.opf-card.justadded .r-date,.grp.cat-glow{animation:dayGlow 3s ease}
+  .opf-card.justadded .rail-day,.opf-card.justadded .rail-weekday,.opf-card.justadded .r-date,.opf-card.notified .rail-day,.opf-card.notified .rail-weekday,.opf-card.notified .r-date,.grp.cat-glow{animation:dayGlow 3s ease}
   @keyframes dayGlow{0%{text-shadow:0 0 0 rgba(216,169,58,0)}2%{color:#d8a93a;opacity:1;text-shadow:0 0 10px rgba(216,169,58,.9)}68%{color:#d8a93a;opacity:1;text-shadow:0 0 10px rgba(216,169,58,.9)}100%{text-shadow:0 0 0 rgba(216,169,58,0)}}
   /* fane-blink: mørkere gul tekst (les bedre mot grønn bakgrunn) + gul ytterkant */
   .vfilter button.tab-flash{animation:tabFlash 2.1s ease}
@@ -298,6 +301,8 @@
   .addr.copyable{cursor:pointer;transition:color .15s}
   .addr.copyable:hover{color:var(--mint)}
   .btn.dim{opacity:.5}
+  .opf-side .btn.act-mute{white-space:nowrap;padding:7px 3px;font-size:11px;letter-spacing:-.01em} /* «🔕 Demp 2. varsel» på én linje i den smale kolonnen */
+  .opf-side .btn.act-mute.on{color:#f4d79a;border-color:rgba(232,194,107,.38);background:rgba(232,194,107,.1)} /* «Dempet»: gull, ikke deaktivert-grå */
   .opf-side a.btn{display:block;text-decoration:none}
 
   .lovet-strip{flex:none;margin-bottom:12px;border:1px solid rgba(232,194,107,.32);background:rgba(232,194,107,.06);border-radius:14px;padding:10px 16px 4px;position:relative;z-index:1}
@@ -1242,11 +1247,12 @@
      Lokalt i oppf:varsler, i skyen i kolonnen oppf_snapshots.varsler (SQL: supabase/sql/2026-10-28-varsler.sql).
      Skrives alltid med UPDATE på egen rad (aldri upsert — en tom rad ville gitt falsk «Konflikt»). Serveren bruker skyverdien.
      Pr. kort kan skjemaet overstyre med feltet varsel {min,ekstra,ekstraMin}; mangler det, gjelder standarden. */
-  const VKEY='oppf:varsler',VDIRTY='oppf:varsler:dirty',VDEF={min:5,ekstra:false,ekstraMin:15,dagOn:false,dagTid:'08:00'};
+  const VKEY='oppf:varsler',VDIRTY='oppf:varsler:dirty',VDEF={min:5,ekstra:false,ekstraMin:15,dagOn:false,dagTid:'08:00',gjoreOn:false,gjoreTid:'09:00'};
   function vNum(v,d){const n=Math.round(+v);return (v===null||v===undefined||v===''||!isFinite(n))?d:Math.max(0,Math.min(999,n));} // heltall 0–999, ellers d
   function varslerNorm(o){o=(o&&typeof o==='object')?o:{};
     return {min:vNum(o.min,VDEF.min),ekstra:typeof o.ekstra==='boolean'?o.ekstra:VDEF.ekstra,ekstraMin:vNum(o.ekstraMin,VDEF.ekstraMin),
-      dagOn:typeof o.dagOn==='boolean'?o.dagOn:VDEF.dagOn,dagTid:/^([01]\d|2[0-3]):[0-5]\d$/.test(o.dagTid||'')?o.dagTid:VDEF.dagTid};}
+      dagOn:typeof o.dagOn==='boolean'?o.dagOn:VDEF.dagOn,dagTid:/^([01]\d|2[0-3]):[0-5]\d$/.test(o.dagTid||'')?o.dagTid:VDEF.dagTid,
+      gjoreOn:typeof o.gjoreOn==='boolean'?o.gjoreOn:VDEF.gjoreOn,gjoreTid:/^([01]\d|2[0-3]):[0-5]\d$/.test(o.gjoreTid||'')?o.gjoreTid:VDEF.gjoreTid};}
   let varsler=varslerNorm((function(){try{return JSON.parse(cmeta(VKEY)||'{}');}catch(e){return {};}})());
   let varslerPullAt=0;
   function varslerDefaults(){return adminView?(adminView.varsler||VDEF):varsler;} // skjemaet viser selgerens standard når admin redigerer et selgerkort
@@ -1282,6 +1288,9 @@
       +'<div class="cloud-row vs-row"><span>Dagsoversikt</span><span class="vs-right"><div class="seg"><button type="button" data-vs="dag" data-v="0"'+(v.dagOn?'':' class="on"')+'>Av</button><button type="button" data-vs="dag" data-v="1"'+(v.dagOn?' class="on"':'')+'>På</button></div>'
       +(v.dagOn?'<button type="button" class="vs-val" data-vs="dagTid">kl. '+esc(v.dagTid)+'</button>':'')+'</span></div>'
       +(v.dagOn?'':'<div class="cloud-row cloud-muted">Slå på for å få «Oppfølginger i dag: 4» hver morgen, eller f.eks. rett før felt. Varsler ikke dager med 0 oppfølginger.</div>') // forklaring kun når den er av (Christian 28.10)
+      +'<div class="cloud-row vs-row"><span>Må gjøres fra i går</span><span class="vs-right"><div class="seg"><button type="button" data-vs="gjore" data-v="0"'+(v.gjoreOn?'':' class="on"')+'>Av</button><button type="button" data-vs="gjore" data-v="1"'+(v.gjoreOn?' class="on"':'')+'>På</button></div>'
+      +(v.gjoreOn?'<button type="button" class="vs-val" data-vs="gjoreTid">kl. '+esc(v.gjoreTid)+'</button>':'')+'</span></div>'
+      +(v.gjoreOn?'':'<div class="cloud-row cloud-muted">Slå på for å få «Må gjøres» fra i går: 2 stk dagen etter, til valgt klokkeslett — bare kortene fra dagen før som ikke er gjort. Varsler ikke når det er 0.</div>')
       +'</div>';
   }
   function varslerRerender(){const el=$('pfVarsler');if(el)el.outerHTML=varslerRowsHtml();}
@@ -1292,6 +1301,8 @@
     else if(k==='dagTid')openNumPad({mode:'tid',value:varsler.dagTid,title:'Dagsoversikt kl.',onDone:function(v){varslerSet({dagTid:v});}});
     else if(k==='ekstra')varslerSet({ekstra:vs.getAttribute('data-v')==='1'});
     else if(k==='dag')varslerSet({dagOn:vs.getAttribute('data-v')==='1'});
+    else if(k==='gjore')varslerSet({gjoreOn:vs.getAttribute('data-v')==='1'});
+    else if(k==='gjoreTid')openNumPad({mode:'tid',value:varsler.gjoreTid,title:'«Må gjøres» fra i går kl.',onDone:function(v){varslerSet({gjoreTid:v});}});
   }
   /* ---- PUSH-VARSLER (påminnelse X min før avtale — X fra VARSEL-INNSTILLINGER over) ---- */
   const VAPID_PUBLIC='BNqXFxMvX7bEAp6Pj0OwVrT-U_uTpaCTUO2gKwG9QX0RddehoWmreLDnvx46pI6pFUJulkPVqvyE11sbBSoJ97Y';
@@ -1732,6 +1743,15 @@
   }
   // adresse til visning: fjern norsk 4-sifret postnummer (beholder gate + sted). Full adresse beholdes til Naviger.
   function addrShort(a){return String(a||'').replace(/(^|,\s*)\d{4}\s+/g,'$1').trim();}
+  // varsel-tidspunkt (ms) for et kort: hovedvarsel + evt. ekstra, stigende — speiler varselFor() i Edge Function
+  function varselTider(it){
+    const t=it.dato?+p(it.dato):NaN;if(!isFinite(t))return [];
+    const d=varslerDefaults(),o=(it.varsel&&typeof it.varsel==='object')?it.varsel:{};
+    const min=vNum(o.min,d.min),ekstra=typeof o.ekstra==='boolean'?o.ekstra:d.ekstra,ekstraMin=vNum(o.ekstraMin,d.ekstraMin);
+    const out=[t-min*60000];if(ekstra&&ekstraMin!==min)out.push(t-ekstraMin*60000);
+    return out.sort(function(a,b){return a-b;});
+  }
+  function varselMuted(it){return typeof it.varselMute==='string'&&it.varselMute===it.dato;} // demping gjelder KUN denne datoen — ny dato = varsel på igjen
   function cardHTML(it,railCtx){
     const n=now(),t=it.dato?p(it.dato):null;
     const late=(t&&t<n)?' late':'';
@@ -1744,6 +1764,10 @@
       :'<button class="btn dim act-navedit" title="Mangler adresse — trykk for å legge inn">Naviger</button>';
     const kom=it.kommentar?'«'+esc(it.kommentar)+'»':'<span style="color:var(--ink-faint)">Ingen kommentar</span>';
     const qc=qcChipHTML(it);
+    const vt=it.state!=='fulgt'?varselTider(it):[],muted=varselMuted(it); // demp-knapp kun når ett varsel er sendt og ett gjenstår
+    const muteBtn=(vt.length===2&&+n<vt[1]&&(muted||+n>=vt[0]))
+      ?(muted?'<button class="btn act-mute on" title="Trykk for å få neste varsel likevel">🔔 Dempet</button>'
+             :'<button class="btn act-mute" title="Ikke send neste varsel for denne avtalen">🔕 Demp 2. varsel</button>'):'';
     return '<div class="card opf-card'+late+'" data-id="'+it.id+'">'
       +'<div class="opf-rail"><button class="when-edit" title="Endre dato/tid">'+railHTML(it,railCtx)+'</button></div>'
       +'<div class="opf-body">'
@@ -1756,7 +1780,7 @@
       +'<div class="opf-note" title="Trykk for å skrive kommentar">'+qc+'<span class="opf-note-text">'+kom+'</span><button class="qc-add" type="button" title="Hurtigvalg">+</button></div>'
       +'</div>'
       +'<div class="opf-side">'+(it.hasImg?'<a class="opf-thumb" href="#" title="Se kartbilde"><span class="thumb-lbl">Kart</span></a>':'<span class="opf-thumb no-img" title="Ingen kartbilde lastet opp"><span class="ni-box"></span><span class="thumb-lbl">Ingen bilde</span></span>')
-      +'<div class="side-btns">'+sfBtn+navBtn+'<button class="btn act-done">Fjern</button></div></div>'
+      +'<div class="side-btns">'+muteBtn+sfBtn+navBtn+'<button class="btn act-done">Fjern</button></div></div>' // demp øverst (Christian 28.10)
       +'</div>';
   }
 
@@ -2018,8 +2042,8 @@
     ids.forEach(function(id){
       const el=listEl.querySelector('.opf-card[data-id="'+id+'"]');if(!el)return;
       if(!first)first=el;
-      el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
-      setTimeout(function(){el.classList.remove('justadded');},3100);
+      el.classList.remove('justadded','notified');void el.offsetWidth;el.classList.add('notified'); // gull (varsel trykket) — grønn er for nytt/endret kort
+      setTimeout(function(){el.classList.remove('notified');},3100);
     });
     if(first)first.scrollIntoView({block:'center',behavior:'smooth'});
   }
@@ -2174,6 +2198,11 @@
     if(e.target.closest('.act-navedit')&&card){openForm(byId(card.dataset.id));return;}
     const th=e.target.closest('.opf-thumb');
     if(th){e.preventDefault();const ti=card?byId(card.dataset.id):null;if(ti&&ti.hasImg)openLightbox(ti);return;} // kun åpne forstørret hvis det finnes bilde
+    const mb=e.target.closest('.act-mute'); // demp / angre demping av neste varsel for dette kortet
+    if(mb&&card){const mi=byId(card.dataset.id);if(mi){
+      if(varselMuted(mi)){delete mi.varselMute;toast('Varsel på igjen');}
+      else{mi.varselMute=mi.dato;toast('Neste varsel dempet');}
+      save();render();}return;}
     if(e.target.closest('.act-done')&&card){fullfor(byId(card.dataset.id));return;}
   });
 
