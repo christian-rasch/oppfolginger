@@ -1,7 +1,10 @@
 // Supabase Edge Function: push-varsler.
-//  1) ~5 min før hver avtale.
+//  1) X min før hver avtale — X er selgerens standard (kolonnen oppf_snapshots.varsler.min, default 5) eller kortets egen
+//     overstyring (feltet varsel.min på kortet). Valgfritt ekstra varsel (varsler.ekstra / ekstraMin) med eget minutt-tall.
 //  2) kl. 21:45 (Oslo): daglig påminnelse om dagens kort som fortsatt står «Husk å send tilbud».
+//  3) dagsoversikt «Oppfølginger i dag: N» til selgerens valgte klokkeslett (varsler.dagOn / dagTid). Sendes ikke når N = 0.
 // Kalles hvert minutt av pg_cron. Hemmeligheter hentes fra Edge-secrets (aldri i koden).
+// Test fra terminalen (body): {test:true} = test-varsel, {test:'offers'} = tilbud-påminnelse nå, {test:'daily'} = dagsoversikt nå.
 // Logg: hver leveranse (ok/feil) skrives til notif_log, og hver kjøring oppdaterer notif_status (hjerteslag)
 // — se supabase/sql/2026-09-10-drift.sql. Dedupe-raden i notif_sent skrives først når det finnes en aktiv enhet å sende til.
 //
@@ -77,6 +80,41 @@ async function heartbeat(patch: Record<string, unknown>) {
   try { await sb.from('notif_status').upsert({ id: 1, ...patch }, { onConflict: 'id' }) } catch (_) {}
 }
 
+// ---- varsel-innstillinger (se supabase/sql/2026-10-28-varsler.sql) ----
+// heltall 0–999, ellers reserveverdien
+function num(v: unknown, d: number): number {
+  if (v === null || v === undefined || v === '' || !Number.isFinite(+(v as any))) return d
+  return Math.max(0, Math.min(999, Math.round(+(v as any))))
+}
+function obj(v: unknown): Record<string, any> { return (v && typeof v === 'object' && !Array.isArray(v)) ? v as Record<string, any> : {} }
+// gjeldende varsel for ett kort: kortets egen overstyring (it.varsel) foran selgerens standard (row.varsler) foran 5 / av / 15
+function varselFor(it: any, def: Record<string, any>) {
+  const ov = obj(it.varsel)
+  return {
+    min: num(ov.min, num(def.min, 5)),
+    ekstra: typeof ov.ekstra === 'boolean' ? ov.ekstra : !!def.ekstra,
+    ekstraMin: num(ov.ekstraMin, num(def.ekstraMin, 15)),
+  }
+}
+// alle selgere (user_id, data, varsler); faller tilbake uten varsler-kolonnen hvis SQL-en ikke er kjørt ennå
+async function loadSnaps(): Promise<any[]> {
+  let q: any = await sb.from('oppf_snapshots').select('user_id,data,varsler')
+  if (q.error && /varsler|column|schema cache/i.test(q.error.message || '')) q = await sb.from('oppf_snapshots').select('user_id,data')
+  if (q.error) throw q.error
+  return q.data || []
+}
+// dagens kort: aktive med dato i dag (også de som alt er passert), sortert på klokkeslett
+function dueToday(items: any[], today: string): any[] {
+  return items.filter((it: any) => it && it.state !== 'fulgt' && typeof it.dato === 'string' && it.dato.slice(0, 10) === today)
+    .sort((a: any, b: any) => a.dato < b.dato ? -1 : a.dato > b.dato ? 1 : 0)
+}
+function dailyPayload(due: any[], tag: string) {
+  const n = due.length
+  const lines = due.slice(0, 4).map((d: any) => d.dato.slice(11, 16) + ' ' + ((d.navn || '').trim() || (d.adresse || '').trim() || '—'))
+  if (n > 4) lines.push('+ ' + (n - 4) + ' til')
+  return { title: 'Oppfølginger i dag: ' + n, body: lines.join('\n'), tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'avtaler', sub: 'alle' } }
+}
+
 Deno.serve(async (req) => {
   if (CRON_SECRET && req.headers.get('x-cron-secret') !== CRON_SECRET)
     return new Response('forbidden', { status: 403 })
@@ -98,6 +136,19 @@ Deno.serve(async (req) => {
     }
     return Response.json({ ok: true, test: 'offers', sent: n })
   }
+  if (body.test === 'daily') { // test av dagsoversikten nå (kun selgere med dagsoversikt på; ignorer klokkeslett + dedupe)
+    const snaps = await loadSnaps()
+    const { date: today } = osloParts(new Date())
+    let n = 0
+    for (const row of snaps) {
+      if (!obj(row.varsler).dagOn) continue
+      const due = dueToday(Array.isArray(row.data) ? row.data : [], today)
+      if (!due.length) continue
+      await sendTo(row.user_id, dailyPayload(due, 'daily-count-test'), 'test-daily', 'daily-count')
+      n++
+    }
+    return Response.json({ ok: true, test: 'daily', sent: n })
+  }
   if (body.test) {
     const { data } = await sb.from('push_subscriptions').select('user_id').eq('enabled', true)
     const ids = [...new Set((data || []).map((r: any) => r.user_id))]
@@ -108,39 +159,47 @@ Deno.serve(async (req) => {
   const now = new Date()
   const off = osloOffsetMs(now)
   const { date: today, minutes: nowMin } = osloParts(now)
-  let sent = 0, offers = 0, failed = 0
+  let sent = 0, offers = 0, daily = 0, failed = 0
   try {
     await sb.from('notif_sent').delete().lt('sent_at', new Date(now.getTime() - 864e5).toISOString())
 
-    const { data: snaps, error: snapErr } = await sb.from('oppf_snapshots').select('user_id,data')
-    if (snapErr) throw snapErr
+    const snaps = await loadSnaps()
 
-    // 1) avtale-varsler ~5 min før
-    for (const row of snaps || []) {
-      const items = Array.isArray(row.data) ? row.data : []
-      let subs: any[] | null = null
-      for (const it of items) {
-        if (!it || it.state === 'fulgt' || typeof it.dato !== 'string') continue
-        const inst = apptInstant(it.dato, off)
-        if (inst == null) continue
-        const mins = (inst - now.getTime()) / 60000
-        if (mins < 4 || mins > 6) continue
-        if (subs === null) subs = await subsFor(row.user_id)
-        if (!subs.length) continue                       // ingen aktiv enhet → ingen dedupe-rad (kan leveres når enheten er tilbake)
-        const ins = await sb.from('notif_sent')
-          .upsert({ user_id: row.user_id, item_id: String(it.id), dato: it.dato },
-                  { onConflict: 'user_id,item_id,dato', ignoreDuplicates: true }).select()
-        if (!ins.data || !ins.data.length) continue
-        const navn = (it.navn || '').trim()
-        const tid = it.dato.slice(11, 16)
-        const r = await sendTo(row.user_id, {
-          title: 'Avtale om 5 min' + (navn ? ' — ' + navn : ''),
-          body: (navn ? navn + ' • ' : '') + 'kl. ' + tid + (it.adresse ? ' • ' + it.adresse : ''),
-          tag: 'appt-' + it.id, url: './',
-          glow: { ids: [String(it.id)], view: 'avtaler', sub: 'alle' }
-        }, 'appt', String(it.id), subs)
-        sent += r.ok; failed += r.fail
-      }
+    // 1) avtale-varsler: X min før (selgerens standard eller kortets egen overstyring) + evt. ekstra varsel med eget minutt-tall.
+    //    Dedupe-nøkkelen tar med minutt-tallet (id@30, id@5#2) → endres minuttene på et kort etter første varsel, kommer et nytt.
+    for (const row of snaps) {
+      try {
+        const items = Array.isArray(row.data) ? row.data : []
+        const def = obj(row.varsler)
+        let subs: any[] | null = null
+        for (const it of items) {
+          if (!it || it.state === 'fulgt' || typeof it.dato !== 'string') continue
+          const inst = apptInstant(it.dato, off)
+          if (inst == null) continue
+          const v = varselFor(it, def)
+          const plans = [{ m: v.min, key: String(it.id) + '@' + v.min, tag: 'appt-' + it.id, kind: 'appt' }]
+          if (v.ekstra && v.ekstraMin !== v.min) plans.push({ m: v.ekstraMin, key: String(it.id) + '@' + v.ekstraMin + '#2', tag: 'appt2-' + it.id, kind: 'appt2' })
+          for (const pl of plans) {
+            const d = (inst - pl.m * 60000 - now.getTime()) / 60000 // minutter til varselet skal gå; ±1 min = tre cron-tikk (som før)
+            if (d < -1 || d > 1) continue
+            if (subs === null) subs = await subsFor(row.user_id)
+            if (!subs.length) break                          // ingen aktiv enhet → ingen dedupe-rad (kan leveres når enheten er tilbake)
+            const ins = await sb.from('notif_sent')
+              .upsert({ user_id: row.user_id, item_id: pl.key, dato: it.dato },
+                      { onConflict: 'user_id,item_id,dato', ignoreDuplicates: true }).select()
+            if (!ins.data || !ins.data.length) continue
+            const navn = (it.navn || '').trim()
+            const tid = it.dato.slice(11, 16)
+            const r = await sendTo(row.user_id, {
+              title: (pl.m === 0 ? 'Avtale nå' : 'Avtale om ' + pl.m + ' min') + (navn ? ' — ' + navn : ''),
+              body: (navn ? navn + ' • ' : '') + 'kl. ' + tid + (it.adresse ? ' • ' + it.adresse : ''),
+              tag: pl.tag, url: './',
+              glow: { ids: [String(it.id)], view: 'avtaler', sub: 'alle' }
+            }, pl.kind, String(it.id), subs)
+            sent += r.ok; failed += r.fail
+          }
+        }
+      } catch (e: any) { console.error('avtale-varsler feilet for', row.user_id, String(e?.message || e).slice(0, 200)) } // én selger stopper ikke resten
     }
 
     // 2) kl. 21:45 (Oslo): tilbud der handlingen «Husk å send tilbud» ble SATT i dag (offerSince) og fortsatt står slik
@@ -166,7 +225,28 @@ Deno.serve(async (req) => {
         offers += r.ok; failed += r.fail
       }
     }
-    await heartbeat({ last_run: now.toISOString(), last_sent: sent + offers, last_failed: failed })
+
+    // 3) dagsoversikt «Oppfølginger i dag: N» til selgerens valgte klokkeslett (varsler.dagOn + dagTid 'HH:MM'). Ikke når N = 0.
+    for (const row of snaps) {
+      try {
+        const def = obj(row.varsler)
+        const tm = /^(\d{2}):(\d{2})$/.exec(String(def.dagTid || ''))
+        if (!def.dagOn || !tm) continue
+        const T = (+tm[1]) * 60 + (+tm[2])
+        if (nowMin < T || nowMin >= T + 5) continue            // 5 min vindu for cron-jitter; dedupe → kun én gang pr. dag
+        const due = dueToday(Array.isArray(row.data) ? row.data : [], today)
+        if (!due.length) continue
+        const subs = await subsFor(row.user_id)
+        if (!subs.length) continue
+        const ins = await sb.from('notif_sent')
+          .upsert({ user_id: row.user_id, item_id: 'daily-count', dato: today },
+                  { onConflict: 'user_id,item_id,dato', ignoreDuplicates: true }).select()
+        if (!ins.data || !ins.data.length) continue
+        const r = await sendTo(row.user_id, dailyPayload(due, 'daily-count-' + today), 'daily', 'daily-count', subs)
+        daily += r.ok; failed += r.fail
+      } catch (e: any) { console.error('dagsoversikt feilet for', row.user_id, String(e?.message || e).slice(0, 200)) }
+    }
+    await heartbeat({ last_run: now.toISOString(), last_sent: sent + offers + daily, last_failed: failed })
   } catch (e: any) {
     const msg = String(e?.message || e).slice(0, 500)
     console.error('notify-appointments feilet:', msg)
@@ -174,5 +254,5 @@ Deno.serve(async (req) => {
     return Response.json({ ok: false, error: msg }, { status: 500 })
   }
 
-  return Response.json({ ok: true, sent, offers, failed })
+  return Response.json({ ok: true, sent, offers, daily, failed })
 })

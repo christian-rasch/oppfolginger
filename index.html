@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-27-137">
+<meta name="app-build" content="2026-10-28-138">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -401,8 +401,21 @@
   .dttime-col button{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700;padding:8px 0;border-radius:7px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer}
   .dttime-col button.on{background:linear-gradient(135deg,var(--mint),#19c79a);color:#06120e;border-color:transparent}
   .dtmini-foot{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}
-  .t-grid button,.t-mins button{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:9px;padding:11px 0;cursor:pointer}
-  .t-grid button.on,.t-mins button.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
+  .t-grid button,.t-mins button,.np-grid button{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:9px;padding:11px 0;cursor:pointer}
+  .t-grid button.on,.t-mins button.on,.np-grid button.ok{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
+  /* tallskjerm (minutter før / klokkeslett): 1-2-3 / 4-5-6 / 7-8-9 / ⌫-0-OK — egen modal over profil og skjema, ingen tastatur */
+  .np-modal{z-index:210}
+  .np-card{width:min(300px,94vw)}
+  .np-disp{font-family:"JetBrains Mono",monospace;font-size:28px;font-weight:800;letter-spacing:.04em;text-align:center;color:var(--mint);padding:6px 0 12px}
+  .np-disp.empty{color:var(--ink-faint)} /* ingen siffer tastet ennå → nåværende verdi vises dempet */
+  .np-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .np-grid button{padding:14px 0;font-size:18px}
+  .np-grid button[disabled]{opacity:.35;cursor:default}
+  /* varsel-innstillinger (Min profil + skjema): tekst til venstre, knapper til høyre */
+  .vs-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .vs-right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .vs-val{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;color:var(--mint);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:9px 13px;cursor:pointer;white-space:nowrap}
+  .vs-val:active{border-color:rgba(61,245,197,.55)}
   .dt-flag.ok{color:var(--mint)}
   .dt-flag.miss{color:var(--red)}
   .full{grid-column:1/-1}
@@ -574,6 +587,10 @@
           </div>
           <div class="dt-wrap"><button type="button" class="dt-field" id="fDtField"><span class="dt-label empty" id="fDtLabel">(ingen tidspunkt)</span></button><span class="dt-flag" id="fDtFlag"></span></div>
         </div>
+        <div class="f-field full" id="fVarsel" style="display:none"><label>Varsel</label>
+          <div class="vs-row"><button type="button" class="vs-val" data-vs="min" id="fVarselMin">🔔 5 min før</button>
+            <span class="vs-right"><span class="dtpop-lbl">Ekstra varsel</span><div class="seg" id="fEkstra"><button type="button" data-vs="ekstra" data-v="0" class="on">Av</button><button type="button" data-vs="ekstra" data-v="1">På</button></div><button type="button" class="vs-val" data-vs="ekstraMin" id="fEkstraMin">15 min før</button></span></div>
+        </div>
         <div class="f-field full"><label>Besøkskommentar</label><textarea id="fKom"></textarea></div>
       </div>
     </div>
@@ -593,6 +610,14 @@
         <button class="btn" id="fDtCustom" type="button">Custom</button>
         <div class="dtpop-foot-right"><button class="btn" id="fDtBack" type="button">Tilbake</button><button class="btn primary" id="fDtDone" type="button">Lagre</button></div>
       </div>
+    </div>
+  </div>
+
+  <div class="modal np-modal" id="numPad">
+    <div class="m-card np-card">
+      <div class="m-title" id="npTitle">Minutter før</div>
+      <div class="np-disp" id="npDisp"></div>
+      <div class="np-grid" id="npKeys"><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k="bs" title="Slett siste siffer">⌫</button><button type="button" data-k="0">0</button><button type="button" class="ok" data-k="ok" id="npOk">OK</button></div>
     </div>
   </div>
 
@@ -1023,7 +1048,9 @@
       setCmeta(CKEY.hash,stableFollowupHash(data));
       const {data:row}=await c.from(CLOUD_SYNC_CONFIG.table).select('updated_at').eq('user_id',sbUser.id).maybeSingle();
       if(row&&row.updated_at){setCmeta(CKEY.srv,row.updated_at);setCmeta(CKEY.pull,new Date().toISOString());}
-      setCloudState('synced');return true;
+      setCloudState('synced');
+      if(cmeta(VDIRTY))varslerPush(); // raden finnes nå → usendte varsel-innstillinger kan skrives
+      return true;
     }catch(e){logEvent('sync','push: '+((e&&e.message)||e));setCloudState('error');return false;}
   }
   // hent + sammenlign; push/pull/konflikt etter reglene
@@ -1065,7 +1092,7 @@
       if(!cloudInitBusy){cloudInitBusy=true;cloudInit().catch(function(){}).then(function(){cloudInitBusy=false;});}
       return;}
     if(!sbUser)return;
-    flushPendingImgs();flushLog();cloudHeartbeat(false);
+    flushPendingImgs();flushLog();cloudHeartbeat(false);varslerPull(false);
     if(cloudState==='syncing'||cloudState==='conflict'||uiBusy())return;
     const t=Date.now();if(t-cloudWakeAt<30000)return; // maks én vekking pr. 30 s
     const stalePull=(t-(+new Date(cmeta(CKEY.pull)||0)))>5*60000;
@@ -1165,10 +1192,12 @@
     const c=getSupabaseClient();if(!c)return;
     clearTimeout(cloudPushTimer); // stopp evt. ventende synk mot egen konto
     let row=null;
-    try{const r=await c.from(CLOUD_SYNC_CONFIG.table).select('data').eq('user_id',userId).maybeSingle();row=r.data;if(r.error)throw r.error;}
+    try{let r=await c.from(CLOUD_SYNC_CONFIG.table).select('data,varsler').eq('user_id',userId).maybeSingle();
+      if(r.error&&/(varsler|column|schema cache)/i.test(r.error.message||''))r=await c.from(CLOUD_SYNC_CONFIG.table).select('data').eq('user_id',userId).maybeSingle(); // kolonnen varsler finnes ikke ennå
+      row=r.data;if(r.error)throw r.error;}
     catch(e){toast('Kunne ikke hente selgerens data');return;}
     const stash=adminView?adminView.stash:items; // ved bytte mellom selgere: behold ORIGINAL egen liste
-    adminView={userId:userId,email:email,stash:stash};
+    adminView={userId:userId,email:email,stash:stash,varsler:varslerNorm(row&&row.varsler)}; // selgerens varsel-standard → skjemaet viser riktig utgangspunkt
     items=(row&&Array.isArray(row.data)?row.data:[]).map(migrate);
     closeProfileModal();
     renderAdminBar();
@@ -1209,7 +1238,62 @@
     else bar.style.display='none';
   }
 
-  /* ---- PUSH-VARSLER (påminnelse 5 min før avtale) ---- */
+  /* ---- VARSEL-INNSTILLINGER: selgerens standard (minutter før, ekstra varsel, dagsoversikt) ----
+     Lokalt i oppf:varsler, i skyen i kolonnen oppf_snapshots.varsler (SQL: supabase/sql/2026-10-28-varsler.sql).
+     Skrives alltid med UPDATE på egen rad (aldri upsert — en tom rad ville gitt falsk «Konflikt»). Serveren bruker skyverdien.
+     Pr. kort kan skjemaet overstyre med feltet varsel {min,ekstra,ekstraMin}; mangler det, gjelder standarden. */
+  const VKEY='oppf:varsler',VDIRTY='oppf:varsler:dirty',VDEF={min:5,ekstra:false,ekstraMin:15,dagOn:false,dagTid:'08:00'};
+  function vNum(v,d){const n=Math.round(+v);return (v===null||v===undefined||v===''||!isFinite(n))?d:Math.max(0,Math.min(999,n));} // heltall 0–999, ellers d
+  function varslerNorm(o){o=(o&&typeof o==='object')?o:{};
+    return {min:vNum(o.min,VDEF.min),ekstra:typeof o.ekstra==='boolean'?o.ekstra:VDEF.ekstra,ekstraMin:vNum(o.ekstraMin,VDEF.ekstraMin),
+      dagOn:typeof o.dagOn==='boolean'?o.dagOn:VDEF.dagOn,dagTid:/^([01]\d|2[0-3]):[0-5]\d$/.test(o.dagTid||'')?o.dagTid:VDEF.dagTid};}
+  let varsler=varslerNorm((function(){try{return JSON.parse(cmeta(VKEY)||'{}');}catch(e){return {};}})());
+  let varslerPullAt=0;
+  function varslerDefaults(){return adminView?(adminView.varsler||VDEF):varsler;} // skjemaet viser selgerens standard når admin redigerer et selgerkort
+  function varslerSet(patch){
+    varsler=varslerNorm(Object.assign({},varsler,patch));
+    setCmeta(VKEY,JSON.stringify(varsler));setCmeta(VDIRTY,'1');
+    varslerPush();varslerRerender();
+  }
+  async function varslerPush(){ // UPDATE egen rad; dirty-flagget fjernes først når en rad faktisk ble truffet (raden lages av første synk)
+    const c=getSupabaseClient();if(!c||!sbUser)return;
+    try{const {data,error}=await c.from(CLOUD_SYNC_CONFIG.table).update({varsler:varsler}).eq('user_id',sbUser.id).select('user_id');
+      if(error){if(!/(varsler|column|schema cache)/i.test(error.message||''))logEvent('sync','varsler: '+error.message);return;}
+      if(data&&data.length)setCmeta(VDIRTY,null);
+    }catch(e){}
+  }
+  async function varslerPull(force){ // sky vinner lokalt (serveren bruker skyverdien) — men en usendt lokal endring sendes først
+    const c=getSupabaseClient();if(!c||!sbUser||adminView)return;
+    if(cmeta(VDIRTY)){varslerPush();return;}
+    if(!force&&Date.now()-varslerPullAt<10*60000)return; // maks hvert 10. min uten force
+    varslerPullAt=Date.now();
+    try{const {data:row,error}=await c.from(CLOUD_SYNC_CONFIG.table).select('varsler').eq('user_id',sbUser.id).maybeSingle();
+      if(error||!row||!row.varsler||typeof row.varsler!=='object')return;
+      varsler=varslerNorm(row.varsler);setCmeta(VKEY,JSON.stringify(varsler));varslerRerender();
+    }catch(e){}
+  }
+  function minLbl(m){return m+' min før';}
+  function varslerRowsHtml(){ // radene i Min profil → Varsler (tegnes på nytt alene via varslerRerender, så et halvskrevet passord overlever)
+    const v=varsler;
+    return '<div id="pfVarsler">'
+      +'<div class="cloud-row vs-row"><span>Varsle meg</span><span class="vs-right"><button type="button" class="vs-val" data-vs="min">'+minLbl(v.min)+'</button></span></div>'
+      +'<div class="cloud-row vs-row"><span>Ekstra varsel</span><span class="vs-right"><div class="seg"><button type="button" data-vs="ekstra" data-v="0"'+(v.ekstra?'':' class="on"')+'>Av</button><button type="button" data-vs="ekstra" data-v="1"'+(v.ekstra?' class="on"':'')+'>På</button></div>'
+      +(v.ekstra?'<button type="button" class="vs-val" data-vs="ekstraMin">'+minLbl(v.ekstraMin)+'</button>':'')+'</span></div>'
+      +'<div class="cloud-row vs-row"><span>Dagsoversikt</span><span class="vs-right"><div class="seg"><button type="button" data-vs="dag" data-v="0"'+(v.dagOn?'':' class="on"')+'>Av</button><button type="button" data-vs="dag" data-v="1"'+(v.dagOn?' class="on"':'')+'>På</button></div>'
+      +(v.dagOn?'<button type="button" class="vs-val" data-vs="dagTid">kl. '+esc(v.dagTid)+'</button>':'')+'</span></div>'
+      +'<div class="cloud-row cloud-muted">'+(v.dagOn?'Du får «Oppfølginger i dag: N» hver dag kl. '+esc(v.dagTid)+'. Sendes ikke når du har null.':'Slå på for å få «Oppfølginger i dag: N» hver morgen.')+'</div>'
+      +'</div>';
+  }
+  function varslerRerender(){const el=$('pfVarsler');if(el)el.outerHTML=varslerRowsHtml();}
+  function varslerClick(vs){ // klikk på en innstilling i Min profil (data-vs)
+    const k=vs.getAttribute('data-vs');
+    if(k==='min')openNumPad({mode:'min',value:varsler.min,title:'Varsle meg … min før',onDone:function(v){varslerSet({min:v});}});
+    else if(k==='ekstraMin')openNumPad({mode:'min',value:varsler.ekstraMin,title:'Ekstra varsel … min før',onDone:function(v){varslerSet({ekstraMin:v});}});
+    else if(k==='dagTid')openNumPad({mode:'tid',value:varsler.dagTid,title:'Dagsoversikt kl.',onDone:function(v){varslerSet({dagTid:v});}});
+    else if(k==='ekstra')varslerSet({ekstra:vs.getAttribute('data-v')==='1'});
+    else if(k==='dag')varslerSet({dagOn:vs.getAttribute('data-v')==='1'});
+  }
+  /* ---- PUSH-VARSLER (påminnelse X min før avtale — X fra VARSEL-INNSTILLINGER over) ---- */
   const VAPID_PUBLIC='BNqXFxMvX7bEAp6Pj0OwVrT-U_uTpaCTUO2gKwG9QX0RddehoWmreLDnvx46pI6pFUJulkPVqvyE11sbBSoJ97Y';
   let swReg=null,pushTriedFailed=false;
   function pushSupported(){return ('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);}
@@ -1270,14 +1354,16 @@
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
       await savePushSub(sub);}catch(e){}
   }
-  function pushSectionHtml(){
+  function pushSectionHtml(){ // status for denne enheten + innstillingene (gjelder kontoen, dvs. alle enhetene — kan settes fra Mac også)
     const head='<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Varsler</b></div>';
-    if(!pushSupported())return head+'<div class="cloud-row cloud-muted">Varsler støttes ikke her. På iPad: legg appen til på Hjem-skjerm og åpne den derfra (iOS 16.4+).</div>';
-    const perm=pushPermission();
-    if(perm==='granted')return head+'<div class="cloud-row cloud-muted">På ✓ — du får påminnelse 5 min før en avtale.</div>';
-    if(perm==='denied')return head+'<div class="cloud-row cloud-muted">Varsler er blokkert. Skru på «Varsler» for appen i iPad-innstillinger for å bruke dette.</div>';
-    return head+'<div class="cloud-row cloud-muted">Få en påminnelse 5 min før hver avtale.</div>'
-      +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pushOn">🔔 Slå på varsler</button></div>';
+    let st;
+    if(!pushSupported())st='<div class="cloud-row cloud-muted">Varsler støttes ikke her. På iPad: legg appen til på Hjem-skjerm og åpne den derfra (iOS 16.4+). Innstillingene under gjelder likevel alle enhetene dine.</div>';
+    else{const perm=pushPermission();
+      if(perm==='granted')st='<div class="cloud-row cloud-muted">På ✓ — du får påminnelse før hver avtale.</div>';
+      else if(perm==='denied')st='<div class="cloud-row cloud-muted">Varsler er blokkert. Skru på «Varsler» for appen i iPad-innstillinger for å bruke dette.</div>';
+      else st='<div class="cloud-row cloud-muted">Få en påminnelse før hver avtale.</div>'
+        +'<div class="cloud-row cloud-btns"><button class="btn primary" id="pushOn">🔔 Slå på varsler</button></div>';}
+    return head+st+varslerRowsHtml();
   }
   // ---- VARSEL-PORT: blokkerer hele appen til varsler er på (kun i installert app på Hjem-skjerm) ----
   function isStandalonePWA(){try{return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}catch(e){return false;}}
@@ -1287,12 +1373,12 @@
     const g=$('pushGate');if(!g)return;
     if(pushPermission()==='denied'||pushTriedFailed){
       g.innerHTML='<div class="pg-card"><div class="pg-ico">🔕</div><h2>Varsler er avslått</h2>'
-        +'<p>Appen krever at varsler er på, så du får påminnelse 5 minutter før hver avtale.</p>'
+        +'<p>Appen krever at varsler er på, så du får påminnelse før hver avtale.</p>'
         +'<div class="pg-steps">Slik skrur du på igjen:<br>1) Åpne <b>Innstillinger</b><br>2) Bla helt ned til <b>Apper</b><br>3) Velg <b>Oppfølginger</b> → <b>Varslinger</b><br>4) Slå på <b>Tillat varslinger</b><br>5) Kom tilbake hit og trykk knappen under.</div>'
         +'<button class="pg-btn" id="pgRecheck">Jeg har skrudd på — sjekk på nytt</button></div>';
     }else{
       g.innerHTML='<div class="pg-card"><div class="pg-ico">🔔</div><h2>Slå på varsler</h2>'
-        +'<p>Du får en påminnelse 5 minutter før hver avtale.</p>'
+        +'<p>Du får en påminnelse før hver avtale. Hvor mange minutter før velger du under Min profil.</p>'
         +'<button class="pg-btn" id="pgEnable">Slå på varsler</button></div>';
     }
   }
@@ -1346,9 +1432,9 @@
       const was=!!sbUser;sbUser=session?session.user:null;
       if(was&&!sbUser)setCloudState('login'); // sesjonen forsvant → ikke vis «Synket» lenger
       renderCloudStatus();
-      if(!was&&sbUser){cloudReconcile().then(function(){cloudHeartbeat(true);flushLog();});flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();}
+      if(!was&&sbUser){cloudReconcile().then(function(){cloudHeartbeat(true);flushLog();});flushPendingImgs();purgeExpiredArchive();cloudFetchApiKey();pushRefresh();varslerPull(true);}
       refreshPushGate();});
-    if(sbUser){cloudFetchApiKey();await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();pushRefresh();} else setCloudState('login');
+    if(sbUser){cloudFetchApiKey();await cloudReconcile();cloudHeartbeat(true);flushLog();flushPendingImgs();pushRefresh();varslerPull(true);} else setCloudState('login');
     refreshPushGate();
     purgeExpiredArchive(); // sbUser nå avklart → server-bilder slettes riktig hvis innlogget
     if(/[?&]laering=1/.test(location.search))laeringEksport(); // læringsgjennomgang: appen åpnes slik av laering/kjor-gjennomgang.command
@@ -1463,6 +1549,8 @@
       if(id==='pushOn'){enablePush();return;}
       if(id==='pushOff'){disablePush();return;}
       if(id==='adminLoad'){adminLoadSellers();return;}
+      const vs=e.target.closest&&e.target.closest('[data-vs]'); // varsel-innstillinger (knapper med tekst → closest, ikke e.target.id)
+      if(vs){varslerClick(vs);return;}
       const sb=e.target.closest&&e.target.closest('.admin-seller');
       if(sb){adminEnterView(sb.getAttribute('data-uid'),sb.getAttribute('data-em'));return;}
     });
@@ -2277,8 +2365,58 @@
   $('list').addEventListener('scroll',closeQpop);
 
   // ---------- skjema (ny / rediger) med duplikatvern ----------
-  let editId=null,fDatoVal=null,fHandling=null,fStatusV='',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null,editOrigDato=null,dtSnapshot=null;
+  let editId=null,fDatoVal=null,fHandling=null,fStatusV='',savingLock=false,aiDateMode=false,fChipSel=null,aiRevealId=null,editOrigDato=null,dtSnapshot=null,fVarsel=null;
   function segSet(seg,v){seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+  // ---- tallskjerm: 1-9 / ⌫ 0 OK — minutter (0–999) eller klokkeslett (fire siffer HHMM). Egen modal, så tastaturet på enheten kommer aldri opp ----
+  let npCfg=null,npDigits='';
+  function openNumPad(cfg){npCfg=cfg;npDigits='';$('npTitle').textContent=cfg.title||'';npRender();$('numPad').classList.add('open');}
+  function closeNumPad(){npCfg=null;npDigits='';$('numPad').classList.remove('open');}
+  function npValue(){ // gyldig verdi fra tastene, ellers null (→ OK deaktivert)
+    if(!npCfg)return null;
+    if(npCfg.mode==='tid'){if(npDigits.length!==4)return null;const h=+npDigits.slice(0,2),m=+npDigits.slice(2);return (h<=23&&m<=59)?(npDigits.slice(0,2)+':'+npDigits.slice(2)):null;}
+    return npDigits.length?Math.min(999,+npDigits):null;
+  }
+  function npRender(){
+    const d=$('npDisp');if(!d||!npCfg)return;
+    const empty=!npDigits.length;let txt;
+    if(npCfg.mode==='tid'){const s=(npDigits+'____').slice(0,4);txt=empty?String(npCfg.value||'--:--'):s.slice(0,2)+':'+s.slice(2);}
+    else txt=(empty?String(npCfg.value):npDigits)+' min';
+    d.textContent=txt;d.classList.toggle('empty',empty); // ingen siffer ennå → nåværende verdi dempet
+    $('npOk').disabled=npValue()===null;
+  }
+  $('numPad').addEventListener('click',function(e){
+    if(e.target===$('numPad')){closeNumPad();return;} // bakgrunn = avbryt
+    const b=e.target.closest('[data-k]');if(!b||!npCfg)return;
+    const k=b.dataset.k,max=npCfg.mode==='tid'?4:3;
+    if(k==='bs')npDigits=npDigits.slice(0,-1);
+    else if(k==='ok'){const v=npValue();if(v===null)return;const fn=npCfg.onDone;closeNumPad();if(fn)fn(v);return;}
+    else if(npDigits.length<max)npDigits+=k;
+    npRender();
+  });
+  // ---- varsel pr. kort i skjemaet: fVarsel=null → følg selgerens standard; settes bare når selgeren endrer noe her ----
+  function fVarselEff(){const d=varslerDefaults();return fVarsel?Object.assign({},fVarsel):{min:d.min,ekstra:d.ekstra,ekstraMin:d.ekstraMin};}
+  function fVarselSet(patch){
+    const d=varslerDefaults(),o=Object.assign(fVarselEff(),patch);
+    o.min=vNum(o.min,d.min);o.ekstraMin=vNum(o.ekstraMin,d.ekstraMin);o.ekstra=!!o.ekstra;
+    const lik=o.min===d.min&&o.ekstra===d.ekstra&&(!o.ekstra||o.ekstraMin===d.ekstraMin); // ekstra-minuttene teller bare når ekstra er på
+    fVarsel=lik?null:{min:o.min,ekstra:o.ekstra,ekstraMin:o.ekstraMin}; // lik standard → følg standard (null)
+    varselSync();liveCommit(true);
+  }
+  function varselSync(){
+    const w=$('fVarsel');if(!w)return;
+    w.style.display=fDatoVal?'':'none'; // uten tidspunkt er det ingenting å varsle om
+    const o=fVarselEff();
+    $('fVarselMin').textContent='🔔 '+minLbl(o.min);
+    segSet($('fEkstra'),o.ekstra?'1':'0');
+    const em=$('fEkstraMin');em.style.display=o.ekstra?'':'none';em.textContent=minLbl(o.ekstraMin);
+  }
+  $('fVarsel').addEventListener('click',function(e){
+    const b=e.target.closest('[data-vs]');if(!b)return;
+    const k=b.dataset.vs,o=fVarselEff();
+    if(k==='min')openNumPad({mode:'min',value:o.min,title:'Varsle meg … min før',onDone:function(v){fVarselSet({min:v});}});
+    else if(k==='ekstraMin')openNumPad({mode:'min',value:o.ekstraMin,title:'Ekstra varsel … min før',onDone:function(v){fVarselSet({ekstraMin:v});}});
+    else if(k==='ekstra')fVarselSet({ekstra:b.dataset.v==='1'});
+  });
   // vennlig dato-etikett: «I dag, 12:00» · «I morgen, 14:00» · «Torsdag, 14:00» · «Mandag neste uke, 14:00» · ellers «26. juni 2026, 14:00»
   function friendlyDate(val){
     const d=p(val);if(!d||isNaN(d))return '';
@@ -2301,6 +2439,7 @@
     const lbl=$('fDtLabel');if(lbl){const t=friendlyDate(fDatoVal);lbl.textContent=t||'(ingen tidspunkt)';lbl.classList.toggle('empty',!t);}
     syncDtPicker();
     dtFlagSync();
+    varselSync(); // Varsel-blokka følger om det finnes et tidspunkt
   }
   // viser om AI fant en dato: mint ramme + ✓ når satt, rød ramme + ✗ når tom. Kun i AI-import-skjemaet.
   function dtFlagSync(){
@@ -2406,6 +2545,7 @@
     $('fKom').value=it?it.kommentar:'';
     fStatusV=it?it.status:'';segSet($('fStatus'),fStatusV);
     fHandling=(it&&['send_offer','call','visit','trying_to_reach'].includes(it.nextAction))?it.nextAction:null;segSet($('fKanal'),fHandling);
+    fVarsel=(it&&it.varsel&&typeof it.varsel==='object')?Object.assign({},it.varsel):null; // kortets egen varsel-overstyring (null = standard)
     fDatoVal=it?it.dato:null;fChipSel=null;chipSync();
     savingLock=false;
     $('fAiNote').style.display='none';
@@ -2415,7 +2555,7 @@
   function closeForm(){$('formModal').classList.remove('open');}
   // live-lagring: når en lagret oppfølging redigeres, skriv endringer fortløpende (Lagre/klikk-utenfor blir overflødig)
   function formGather(){return {navn:$('fNavn').value.trim(),alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
-    salgsrunde:$('fRunde').value.trim(),adresse:$('fAdr').value.trim(),status:fStatusV,dato:fDatoVal,kommentar:$('fKom').value.trim()};}
+    salgsrunde:$('fRunde').value.trim(),adresse:$('fAdr').value.trim(),status:fStatusV,dato:fDatoVal,kommentar:$('fKom').value.trim(),varsel:fVarsel};}
   let liveTimer=null;
   // logg foerste gang selgeren endrer AI-foreslaatt dato (iSkjema = mens AI-skjemaet fortsatt var aapent)
   function aiTrack(it,inForm){ // logg selgerens rettelse av AI-datoen: første gang (endret/iSkjema) + siste valg (nyDato)
@@ -2473,7 +2613,7 @@
     if(!navn&&!adr){toast('Skriv inn navn eller adresse');savingLock=false;return;}
     const f={navn:navn,alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
       salgsrunde:$('fRunde').value.trim(),adresse:adr,status:fStatusV,
-      dato:fDatoVal,kommentar:$('fKom').value.trim()};
+      dato:fDatoVal,kommentar:$('fKom').value.trim(),varsel:fVarsel};
     let revealId=null,revealFlashTab=true,revealFrom=null,revealTo;
     if(editId){
       const it=byId(editId);
