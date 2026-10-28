@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-142">
+<meta name="app-build" content="2026-10-28-143">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -2058,7 +2058,15 @@
       if(glow.view==='avtaler'&&glow.sub)sub=glow.sub;
       searchQuery='';const sbx=$('searchBox');if(sbx)sbx.value='';}
     render();
-    setTimeout(function(){glowCards(glow.ids);},80); // vent til kortene er i DOM
+    // kortet finnes ikke lokalt ennå (laget i skyen/på annen enhet)? → hent fra skyen nå i stedet for å vente på neste vekking
+    if(!byId(glow.ids[0])&&sbUser&&!adminView&&cloudState!=='syncing'){clearTimeout(cloudPushTimer);cloudReconcile();}
+    // kortene kan mangle lokalt til sky-hentingen er ferdig → prøv i inntil ~8 s, og lys opp på nytt hvis lista tegnes om igjen etter hentingen (nytt DOM-element)
+    let tries=0,glowed=null;
+    (function tryGlow(){
+      const listEl=$('list'),el=listEl&&listEl.querySelector('.opf-card[data-id="'+glow.ids[0]+'"]');
+      if(el&&el!==glowed){glowCards(glow.ids);glowed=el;}
+      if(++tries<12)setTimeout(tryGlow,700);
+    })();
   }
   function checkNotifGlowURL(){ // kaldstart via openWindow: glow ligger i URL-en
     try{const m=/[?&]glow=([^&]+)/.exec(location.search);if(!m)return;

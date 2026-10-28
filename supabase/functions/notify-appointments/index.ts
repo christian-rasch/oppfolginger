@@ -7,7 +7,9 @@
 //  4) «Må gjøres» fra i går: N stk — valgfritt (varsler.gjoreOn / gjoreTid): send_offer-kort satt i går som fortsatt står. Ikke når N = 0.
 // Et kort med varselMute === dato er dempet fra appen → ingen flere avtale-varsler for den datoen.
 // Kalles hvert minutt av pg_cron. Hemmeligheter hentes fra Edge-secrets (aldri i koden).
-// Test fra terminalen (body): {test:true} = test-varsel, {test:'offers'} = tilbud-påminnelse nå, {test:'daily'} = dagsoversikt nå, {test:'gjore'} = «Må gjøres fra i går» nå.
+// Test fra terminalen (body): {test:true} = test-varsel, {test:'appt'} = avtalevarsel for neste avtale (med glød), {test:'offers'} = tilbud-påminnelse nå,
+// {test:'daily'} = dagsoversikt nå, {test:'gjore'} = «Må gjøres fra i går» nå. Legg til "email":"…" for å sende KUN til den selgeren (ellers alle).
+// "demo":true i et test-kall hopper over selgerens av/på-innstilling (dagOn / gjoreOn) så varselet kan vises uten å endre innstillingene; datoreglene gjelder som ellers.
 // Logg: hver leveranse (ok/feil) skrives til notif_log, og hver kjøring oppdaterer notif_status (hjerteslag)
 // — se supabase/sql/2026-09-10-drift.sql. Dedupe-raden i notif_sent skrives først når det finnes en aktiv enhet å sende til.
 //
@@ -124,6 +126,13 @@ function gjoreDue(items: any[], target: string): any[] {
 function gjorePayload(due: any[], tag: string) {
   return { title: '«Må gjøres» fra i går: ' + due.length + ' stk', tag, url: './', glow: { ids: due.map((d: any) => String(d.id)), view: 'gjore', gsub: 'send_offer' } }
 }
+// test-kall med "email": kun den selgeren (via oppf_snapshots.email); uten → null = alle
+async function testOnly(body: any): Promise<Set<string> | null> {
+  const em = String(body?.email || '').trim().toLowerCase()
+  if (!em) return null
+  const { data } = await sb.from('oppf_snapshots').select('user_id,email')
+  return new Set((data || []).filter((r: any) => String(r.email || '').toLowerCase() === em).map((r: any) => String(r.user_id)))
+}
 
 Deno.serve(async (req) => {
   if (CRON_SECRET && req.headers.get('x-cron-secret') !== CRON_SECRET)
@@ -131,11 +140,28 @@ Deno.serve(async (req) => {
   let body: any = {}
   try { body = await req.json() } catch {}
 
+  const only = body.test ? await testOnly(body) : null // test-kall: evt. bare én selger
+  if (body.test === 'appt') { // test av avtalevarsel (med glød) for selgerens neste kommende avtale
+    const snaps = await loadSnaps()
+    const nowMs = Date.now()
+    let n = 0
+    for (const row of snaps) {
+      if (only && !only.has(String(row.user_id))) continue
+      const items = (Array.isArray(row.data) ? row.data : []).filter((it: any) => it && it.state !== 'fulgt' && typeof it.dato === 'string' && (apptInstant(it.dato, osloOffsetMs(new Date())) ?? 0) > nowMs)
+        .sort((a: any, b: any) => a.dato < b.dato ? -1 : 1)
+      if (!items.length) continue
+      const it = items[0], navn = (it.navn || '').trim()
+      await sendTo(row.user_id, { title: 'Avtale om 5 min' + (navn ? ' — ' + navn : ''), tag: 'appt-test', url: './', glow: { ids: [String(it.id)], view: 'avtaler', sub: 'alle' } }, 'test-appt', String(it.id))
+      n++
+    }
+    return Response.json({ ok: true, test: 'appt', sent: n })
+  }
   if (body.test === 'offers') { // test av daglig tilbud-påminnelse nå (ignorer klokkeslett + dedupe)
     const { data: snaps } = await sb.from('oppf_snapshots').select('user_id,data')
     const { date: today } = osloParts(new Date())
     let n = 0
     for (const row of snaps || []) {
+      if (only && !only.has(String(row.user_id))) continue
       const items = Array.isArray(row.data) ? row.data : []
       const due = items.filter((it: any) =>
         it && it.state !== 'fulgt' && it.nextAction === 'send_offer' &&
@@ -151,7 +177,8 @@ Deno.serve(async (req) => {
     const { date: today } = osloParts(new Date())
     let n = 0
     for (const row of snaps) {
-      if (!obj(row.varsler).dagOn) continue
+      if (only && !only.has(String(row.user_id))) continue
+      if (body.demo !== true && !obj(row.varsler).dagOn) continue
       const due = dueToday(Array.isArray(row.data) ? row.data : [], today)
       if (!due.length) continue
       await sendTo(row.user_id, dailyPayload(due, 'daily-count-test'), 'test-daily', 'daily-count')
@@ -164,7 +191,8 @@ Deno.serve(async (req) => {
     const { date: today } = osloParts(new Date())
     let n = 0
     for (const row of snaps) {
-      if (obj(row.varsler).gjoreOn !== true) continue
+      if (only && !only.has(String(row.user_id))) continue
+      if (body.demo !== true && obj(row.varsler).gjoreOn !== true) continue
       const due = gjoreDue(Array.isArray(row.data) ? row.data : [], prevDate(today))
       if (!due.length) continue
       await sendTo(row.user_id, gjorePayload(due, 'daily-gjore-test'), 'test-gjore', 'daily-gjore')
@@ -174,7 +202,7 @@ Deno.serve(async (req) => {
   }
   if (body.test) {
     const { data } = await sb.from('push_subscriptions').select('user_id').eq('enabled', true)
-    const ids = [...new Set((data || []).map((r: any) => r.user_id))]
+    const ids = [...new Set((data || []).map((r: any) => String(r.user_id)))].filter((id) => !only || only.has(id))
     for (const id of ids) await sendTo(id, { title: 'Test-varsel ✓', url: './' }, 'test', 'test')
     return Response.json({ ok: true, test: true, users: ids.length })
   }
