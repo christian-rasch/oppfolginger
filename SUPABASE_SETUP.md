@@ -170,3 +170,12 @@ Test fra terminalen (samme hoder som før): `-d '{"test":"daily"}'` sender dagso
 (ignorerer klokkeslett og dedupe); `{"test":true}` og `{"test":"offers"}` virker som før.
 Appen skriver innstillingene med `UPDATE` på egen rad (aldri upsert) og holder en lokal kopi i `oppf:varsler`; en endring gjort
 uten nett sendes ved neste synk (`oppf:varsler:dirty`). Triggeren bumper `updated_at` kun når `data` endres, så innstillingene gir aldri «Konflikt».
+
+## Tillegg 2026-10-28 (kveld) — gul glød, demp-knapp og «Må gjøres fra i går»
+- Trykk på et varsel gir nå **gul** glød rundt kortet (grønn glød er fortsatt «nytt/endret kort»).
+- **Demp-knapp** på kortet («🔕 Demp varsel») vises når ett varsel er sendt og ett gjenstår; den setter feltet `varselMute = dato`
+  på kortet, og Edge Function hopper over kortet så lenge datoen er den samme (ny dato = varsel på igjen).
+- Ny valgfri innstilling **«Må gjøres fra i går»** (`varsler.gjoreOn`, standard av, + `gjoreTid`): til valgt klokkeslett dagen etter
+  sendes «Må gjøres» fra i går: N stk for send_offer-kort satt dagen før som fortsatt står. Den faste 21:45-påminnelsen er uendret.
+  Dedupe `daily-gjore`, `notif_log`-kind `gjore` / `test-gjore`, test: `-d '{"test":"gjore"}'`.
+- **Ingen SQL** — kun redeploy av `notify-appointments` + app build 2026-10-28-140.
