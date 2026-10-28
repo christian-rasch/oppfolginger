@@ -42,7 +42,18 @@ personopplysninger. Admin-lista viser «AI median … · skjema median …» pr.
 hvert kort med bilde fra siste 14 dager gjennom samme kall to ganger: A = 1400 px/0,72 (som i dag), B = 1280 px/0,65 (re-kodet fra
 lagret A → dobbel komprimering, dvs. konservativ test). Avvik + 10 tilfeldige kort kjøres en gang til; «ekte» forskjell bare når
 A1==A2 og B1==B2 og A1≠B1, ellers støy; A1-mot-A2 er grunnlinja. **Bytt til 1280/0,65 (`AI_IMG_MAX`/`AI_IMG_Q` i index.html) bare
-hvis ekte = 0 på dag, klokkeslett, handling, navn og alder, og ekte for salgsrunde ≤ grunnlinja.** Resultat: (fylles inn etter kjøring).
+hvis ekte = 0 på dag, klokkeslett, handling, navn og alder, og ekte for salgsrunde ≤ grunnlinja.** **Resultat (kjørt 28.10 kl 06:00–06:05, 85 kort fra 15 selgere, 0 feil, 31 kort kjørt to ganger): RØDT – beholder 1400/0,72.**
+Like A/B av 85: dag 81, klokkeslett 84, handling 84, navn 83, alder 85, salgsrunde 83, status 81, saksnr 84, adresse 82, kommentar 72.
+Ekte forskjeller (A1=A2, B1=B2, A≠B): dag 2, handling 1, navn 2, salgsrunde 1, status 1, saksnr 1, kommentar 7. Grunnlinje (A1≠A2 på de 31):
+dag 2, tid 2, status 2, kommentar 3, adresse 1 – modellen flakker altså like mye av seg selv som A og B skiller seg. Retningen går begge veier:
+«Ring i april» (Nicolai) fikk B årstall 2026 (årstallsvakta i koden retter det til 2027, så kortet blir likt); «Hjemme tirsdag kl 17» (Christians
+testkort) fikk A 20.10 og B 27.10 – men produksjonskjøringen med A-bildet ga også 27.10, så det er støy; «Tlf fredag» fikk A salgsrunde «mai»
+(feil) og B «Vevelstad 1» (riktig); Haakons kort fikk B status HP der A ga tomt. Navn: ukjent hvem som hadde rett (verdiene ble ikke lagret).
+**Fart: ingen gevinst.** Median A 3,1 s (187 KB) mot B 3,1 s (78 KB), ut-tokens 300 mot 301, cache-treff 82 mot 85. Bildet i dag er ~190 KB,
+ikke 566 KB som i 17.10-testen (den brukte et annet bilde) – opplastingen er ikke flaskehalsen på vanlig nett; på svak 4G sparer 110 KB
+kanskje 0,1–0,3 s. Konklusjon: ikke verdt noen som helst risiko for lesingen. `AI_IMG_MAX`/`AI_IMG_Q` blir stående på 1400/0,72; to-versjons-
+`compress()` beholdes (gratis) i tilfelle en senere test med bedre grunnlag. Rådata: laering/data/bilde-ab-2026-10-28.json (gitignored).
+Lærdom for senere fartsarbeid: tiden ligger i modellens svar (~3 s uansett bildestørrelse), ikke i opplastingen – mål `ai.ms` pr. selger først.
 `compress()` tegner allerede to versjoner (kortbildet alltid 1400/0,72; AI-bildet styrt av flagget) – ingen atferdsendring før flagget flippes.
 Etter et bytte: sammenlign treff på nye kort med `bilde.px`=1280 mot 1400 (steg 2b).
 
