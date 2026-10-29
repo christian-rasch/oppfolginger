@@ -202,3 +202,12 @@ admin (`isAdmin()` i adminSectionHtml/openFeed/feedLoad); loggingen hos selgerne
 **«Mine egne» (build 154):** bryter i feed-vinduet, standard AV for admin: av = Christians egne handlinger logges ikke og vises ikke; på = logges og vises som for selgerne. Lagres på enheten (`oppf:feed:egne`).
 **Sjekk:** `select at, email, type, data from public.oppf_hendelser order by id desc limit 50;`
 
+
+## Tillegg 2026-10-29 — rapporter i appen + skyjobb for læring (build 156)
+**Hva:** Min profil → Selgere (admin) → knappen «Rapporter» viser rapportene fra den automatiske læringsgjennomgangen (daglig, ukesrapport
+mandager, signal ved behov) rett i appen. Rapportene skrives av en sky-rutine i Claude Code («Oppfølginger læring», kl. 09:30 norsk tid,
+instruks i `laering/skyjobb-prompt.md`, eksport via `laering/eksport.mjs`). Kodeendringer fra rutinen kommer alltid som egen gren + PR, aldri rett på main.
+**Tabell `oppf_rapporter`** (`supabase/sql/2026-10-29-rapporter.sql`, kjørt 29.10 via Supabase-koblingen): id, type (daglig|uke|signal), dato,
+tittel, innhold (markdown), meta. RLS: bare admin-e-posten kan lese; appen kan ikke skrive (rutinen skriver som databaserolle). Rapportene
+inneholder aldri navn eller nøkler.
+**Sjekk:** `select dato, type, tittel from public.oppf_rapporter order by id desc limit 10;`

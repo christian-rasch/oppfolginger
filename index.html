@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-28-155">
+<meta name="app-build" content="2026-10-29-156">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -490,6 +490,14 @@
   .admin-seller .as-sub{display:block;font-size:11px;color:var(--ink-dim);font-weight:400;margin-top:2px}
   .admin-seller .as-stale{color:var(--gold);font-weight:700}
   .admin-seller .as-stat{color:var(--ink);font-weight:700;margin-top:3px}
+  /* rapporter (admin) */
+  .rap-body{font-size:14px;line-height:1.55}
+  .rap-head{font-weight:800;font-size:17px;margin:12px 0 10px}.rap-meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-faint);font-weight:400;margin-left:8px}
+  .rap-md h2{font-size:16px;margin:16px 0 6px}.rap-md h3{font-size:14px;margin:14px 0 4px;color:var(--mint)}.rap-md h4{font-size:13px;margin:12px 0 4px;color:var(--ink-dim)}
+  .rap-md p{margin:4px 0}.rap-md ul{margin:4px 0 4px 18px;padding:0}.rap-md li{margin:2px 0}.rap-md code{font-family:"JetBrains Mono",monospace;font-size:12px;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:5px}
+  .rap-md .rap-tab{font-family:"JetBrains Mono",monospace;font-size:11.5px;overflow:auto;background:rgba(255,255,255,.04);border:1px solid var(--hair-2);border-radius:10px;padding:10px;margin:8px 0;white-space:pre}
+  .rap-md .rap-gap{height:6px}
+  .rap-row .as-em{white-space:normal}
   /* live feed (admin) */
   .feed-card{width:min(1100px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;padding:16px 18px}
   .feed-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--hair)}
@@ -711,6 +719,13 @@
       <div class="m-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span>Min profil</span><span style="display:flex;align-items:center;gap:9px"><button class="btn primary" id="btnNy" style="padding:9px 13px;font-size:12.5px">+ Ny manuell</button><button class="ghost-btn cloud-ind" id="cloudInd" title="Sky-synk (lagring på tvers av enheter)" data-cs="off">Lokal</button><button class="ghost-btn" id="btnReload" title="Hent nyeste versjon" style="padding:9px 11px;font-size:13px">↻</button></span></div>
       <div id="profileBody"></div>
       <div class="m-foot"><button class="btn" id="profileClose">Lukk</button></div>
+    </div>
+  </div>
+  <!-- RAPPORTER (admin): læringsgjennomgang og ukesrapport fra skyjobben, kun admin -->
+  <div class="modal" id="rapModal">
+    <div class="m-card feed-card">
+      <div class="feed-head"><span class="m-title" style="margin:0">Rapporter</span><button class="btn" id="rapClose" style="margin-left:auto">✕</button></div>
+      <div id="rapBody" class="feed-body rap-body"></div>
     </div>
   </div>
   <!-- LIVE FEED (admin): alt selgerne gjør, nyeste først. Kun lesing. Fylles av feedRender() i script-blokk 2 -->
@@ -1548,6 +1563,45 @@
     const el=document.querySelector('.feed-qv .fq-img[data-fimg="'+r.id+'"]');
     if(el){if(d){el.style.backgroundImage="url('"+d+"')";el.classList.add('has');}else{el.classList.add('no-img');el.innerHTML='<span class="thumb-lbl">Bilde ikke funnet</span>';}}
   }
+  // ---- RAPPORTER (admin): læringsgjennomgang + ukesrapport fra skyjobben, lest fra oppf_rapporter (kun admin, RLS). Enkel Markdown → HTML ----
+  const rapSt={rows:[],open:null};
+  function rapMd(md){ // minimal Markdown: overskrifter, punktlister, fet, kode, tabeller som forhåndsformatert tekst, avsnitt
+    const lines=String(md||'').split('\n');let h='',inList=false,inPre=false;
+    const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+    lines.forEach(function(l){
+      if(/^\s*\|/.test(l)){if(inList){h+='</ul>';inList=false;}if(!inPre){h+='<pre class="rap-tab">';inPre=true;}h+=esc(l)+'\n';return;}
+      if(inPre){h+='</pre>';inPre=false;}
+      const m=/^(#{1,3})\s+(.*)$/.exec(l);
+      if(m){if(inList){h+='</ul>';inList=false;}h+='<h'+(m[1].length+1)+'>'+inline(m[2])+'</h'+(m[1].length+1)+'>';return;}
+      if(/^\s*[-*]\s+/.test(l)){if(!inList){h+='<ul>';inList=true;}h+='<li>'+inline(l.replace(/^\s*[-*]\s+/,''))+'</li>';return;}
+      if(inList){h+='</ul>';inList=false;}
+      if(!l.trim()){h+='<div class="rap-gap"></div>';return;}
+      h+='<p>'+inline(l)+'</p>';
+    });
+    if(inList)h+='</ul>';if(inPre)h+='</pre>';return h;
+  }
+  function rapRender(){
+    const body=$('rapBody');if(!body)return;
+    if(!rapSt.rows.length){body.innerHTML='<div class="empty">Ingen rapporter ennå. Skyjobben legger inn den første når den har kjørt.</div>';return;}
+    const r=rapSt.rows.find(function(x){return x.id===rapSt.open;});
+    if(r){body.innerHTML='<button class="btn" id="rapBack">‹ Alle rapporter</button><div class="rap-head">'+esc(r.tittel)+' <span class="rap-meta">'+esc(r.dato)+' · '+esc(r.type==='uke'?'ukesrapport':(r.type==='daglig'?'læringsgjennomgang':r.type))+'</span></div><div class="rap-md">'+rapMd(r.innhold)+'</div>';return;}
+    body.innerHTML=rapSt.rows.map(function(x){return '<button class="btn admin-seller rap-row" data-rid="'+x.id+'"><span class="as-top"><span class="as-em">'+esc(x.tittel)+'</span><span class="as-at">'+esc(x.dato)+'</span></span><span class="as-sub">'+esc(x.type==='uke'?'Ukesrapport':(x.type==='daglig'?'Læringsgjennomgang':x.type))+(x.meta&&x.meta.linje1?' · '+esc(String(x.meta.linje1).slice(0,120)):'')+'</span></button>';}).join('');
+  }
+  async function openRapporter(){
+    if(!isAdmin())return;closeProfileModal();
+    const m=$('rapModal');if(!m)return;m.classList.add('open');rapSt.open=null;
+    const body=$('rapBody');if(body)body.innerHTML='<div class="cloud-row cloud-muted">Henter rapporter…</div>';
+    try{const c=getSupabaseClient();const q=await c.from('oppf_rapporter').select('id,type,dato,tittel,innhold,meta').order('id',{ascending:false}).limit(60);if(q.error)throw q.error;rapSt.rows=q.data||[];}
+    catch(e){rapSt.rows=[];if(body)body.innerHTML='<div class="empty">Kunne ikke hente rapporter: '+esc(String(e&&e.message||e).slice(0,100))+'</div>';return;}
+    rapRender();
+  }
+  (function(){const m=$('rapModal');if(!m)return;
+    m.addEventListener('click',function(e){
+      if(e.target===m||e.target.id==='rapClose'){m.classList.remove('open');return;}
+      if(e.target.id==='rapBack'){rapSt.open=null;rapRender();return;}
+      const row=e.target.closest('.rap-row');if(row){rapSt.open=+row.dataset.rid;rapRender();$('rapBody').scrollTop=0;}
+    });
+  })();
   function openFeed(){
     if(!isAdmin())return;closeProfileModal();
     const m=$('feedModal');if(!m)return;m.classList.add('open');
@@ -1896,7 +1950,7 @@
     var btnTxt=adminLoading?'Henter…':(adminSellersCache?'Oppdater':'Hent selgere');
     return '<div class="cloud-row" style="margin-top:16px;border-top:1px solid var(--hair);padding-top:13px"><b>Selgere (admin)</b></div>'
       +'<div class="cloud-row cloud-muted">Velg en selger for å se og endre oppfølgingene deres. Din egen liste er trygg imens.</div>'
-      +'<div class="cloud-row cloud-btns"><button class="btn" id="adminLoad"'+(adminLoading?' disabled':'')+'>'+btnTxt+'</button><button class="btn" id="adminFeed">Live feed</button></div>'
+      +'<div class="cloud-row cloud-btns"><button class="btn" id="adminLoad"'+(adminLoading?' disabled':'')+'>'+btnTxt+'</button><button class="btn" id="adminFeed">Live feed</button><button class="btn" id="adminRap">Rapporter</button></div>'
       +mineOld+'<div>'+lst+'</div>';
   }
   let feedProfilAt=0;
@@ -1917,6 +1971,7 @@
       if(id==='pushOff'){disablePush();return;}
       if(id==='adminLoad'){adminLoadSellers();return;}
       if(id==='adminFeed'){openFeed();return;}
+      if(id==='adminRap'){openRapporter();return;}
       const vs=e.target.closest&&e.target.closest('[data-vs]'); // varsel-innstillinger (knapper med tekst → closest, ikke e.target.id)
       if(vs){varslerClick(vs);return;}
       const sb=e.target.closest&&e.target.closest('.admin-seller');
