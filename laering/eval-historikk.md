@@ -56,3 +56,5 @@ Rader 29.10.2026 (skyjobben, første kjøring; 187 kort = 163 fra før + 30 nye 
 build 156 (nye 22/24: Herman «betaler 1149» → falsk dato kl 11:49, og Christians «Komme tilbake midt oppe i noe» der fasiten var feil merket);
 19:37 = build 157 (pris foran firesifret tall er ikke klokkeslett) → falsk dato 2 → 1; 19:39 = samme build etter at fasiten for «Komme tilbake»
 ble rettet til instruksens regel (i dag, nå + 2 t). Endringen beholdt. Se funn.md.
+| 2026-10-29 19:43 | claude-sonnet-5-5 | medium | 187 | 97% | 99% | 97% (72) | 0 | 0 | 24/24 | 2236 ms | 44273/47261 | 97% |
+Etter sammenslåing med main (overmorgen-regelen, build 157 på main) → build 158: kontrollkjøring ga samme tall (nye 24/24, kjede dag 99 %, falsk dato 0).

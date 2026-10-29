@@ -1,4 +1,4 @@
-ENDRINGER KLARE – si «push» til Claude for å publisere (build 2026-10-29-157, ligger på grenen laering/2026-10-29).
+ENDRINGER KLARE – si «push» til Claude for å publisere (build 2026-10-29-158, ligger på grenen laering/2026-10-29).
 Gjennomgang 29.10.2026 – første kjøring i skyen. Utløser: 18 nye AI-kort og 6 rettelser siden 27.10.
 
 Treff på NYE kort (30 merket blindt, 24 brukbare): før 22/24 → etter 24/24.

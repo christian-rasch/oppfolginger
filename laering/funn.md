@@ -1,6 +1,6 @@
 # Funn fra gjennomganger
 
-## 29.10.2026 (build 157) – første skyjobb: pris lest som klokkeslett
+## 29.10.2026 (build 158) – første skyjobb: pris lest som klokkeslett
 **Utløser:** skyjobben (laering/skyjobb-prompt.md), første kjøring. Ingen rad i `oppf_rapporter` → fallback 14 dager, men «nye kort» er regnet
 fra forrige faktiske gjennomgang 27.10 kl 09:38 (eval-historikk), så tallene er sammenlignbare. Signal: 18 nye AI-kort (alle umerket), 6 rettet,
 0 stille feil blant nye, 0 uten dato m/tidsord. Data hentet via Supabase (15 selgere, 375 kort, 240 med AI, 1 feilrad i client_log).
