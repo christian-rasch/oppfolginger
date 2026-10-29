@@ -1,6 +1,6 @@
 {
  "versjon": 1,
- "oppdatert": "2026-10-28",
+ "oppdatert": "2026-10-29",
  "beskrivelse": "Fasit for datotolkning: hva selgeren mente da notatet ble skrevet (bokstavelig lesing). tidFri=true: notatet sier ingen tid, bare dagen teller. usikker=true: telles ikke. naa=UTC (norsk tid = +1/+2 t), slik eksporten skriver det. test=true: Christians testkort – telles ikke. laStaa=true: kort på feil dag som Christian har sagt skal stå – ikke i rapporten.",
  "kort": [
   {
@@ -2927,6 +2927,338 @@
    "usikker": false,
    "kilde": "Claude-gjennomgang 27.10.2026",
    "merknad": "«ringe I sept 2027» = måned med årstall → 1. sep 2027; selger satte kl 15 (tidsvalg). «Akkuratt bundet seg opp» er bakgrunn, ikke dato"
+  },
+  {
+   "id": "christian.rasch|2026-10-28T00:41|d41d8cd98f",
+   "who": "christian.rasch",
+   "naa": "2026-10-28T00:41",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "tomt notat fra Christian = test",
+   "test": true
+  },
+  {
+   "id": "christian.rasch|2026-10-28T02:43|d41d8cd98f",
+   "who": "christian.rasch",
+   "naa": "2026-10-28T02:43",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "tomt notat fra Christian = test",
+   "test": true
+  },
+  {
+   "id": "christian.rasch|2026-10-28T05:49|44592c0ed0",
+   "who": "christian.rasch",
+   "naa": "2026-10-28T05:49",
+   "notat": "Komme tilbake midt oppe i noe",
+   "gull": "2026-10-28T09:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Komme tilbake» uten tid = i dag, nå + 2 t (instruksens regel); skrevet 06:49"
+  },
+  {
+   "id": "haakon.f|2026-10-28T19:19|582a7b9062",
+   "who": "haakon.f",
+   "naa": "2026-10-28T19:19",
+   "notat": "[tlf] dama Ringe fredag kl 1300 Klink salg, var ikke hjemme vurdert å bytte 75 linje og riks",
+   "gull": "2026-10-30T13:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ringe fredag kl 1300» skrevet onsdag"
+  },
+  {
+   "id": "haakon.f|2026-10-29T18:04|1cc975187a",
+   "who": "haakon.f",
+   "naa": "2026-10-29T18:04",
+   "notat": "Ring opp imorgen, Nxgt og riks talkmore",
+   "gull": "2026-10-30T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring opp imorgen» skrevet torsdag kveld"
+  },
+  {
+   "id": "herman.m|2026-10-27T16:15|55b7b33ae6",
+   "who": "herman.m",
+   "naa": "2026-10-27T16:15",
+   "notat": "[tlf] Ring i morgen på dagtid",
+   "gull": "2026-10-28T10:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«i morgen på dagtid» → dagtid = kl 10 (tidsordregel)"
+  },
+  {
+   "id": "herman.m|2026-10-27T16:39|b43d856623",
+   "who": "herman.m",
+   "naa": "2026-10-27T16:39",
+   "notat": "Etter klokken [tlf]62. Sebastian.",
+   "gull": null,
+   "tidFri": true,
+   "usikker": true,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Etter klokken» + tall som er maskert som telefonnummer – kan ikke leses"
+  },
+  {
+   "id": "herman.m|2026-10-28T12:42|512b54ad24",
+   "who": "herman.m",
+   "naa": "2026-10-28T12:42",
+   "notat": "Ville snakke med sin kone, som er på reise. Ringe om en uke. Har 75 linje til 779 + Netflix til [tlf]. Sebastian.",
+   "gull": "2026-11-04T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ringe om en uke» skrevet onsdag 28.10"
+  },
+  {
+   "id": "herman.m|2026-10-28T12:54|19148d7b4d",
+   "who": "herman.m",
+   "naa": "2026-10-28T12:54",
+   "notat": "[tlf] Ring i morgen skal sjekke binding",
+   "gull": "2026-10-29T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring i morgen» skrevet onsdag"
+  },
+  {
+   "id": "herman.m|2026-10-29T16:18|d2ea004030",
+   "who": "herman.m",
+   "naa": "2026-10-29T16:18",
+   "notat": "[tlf]. Arne interessert i mobilabonnement",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "ingen tidsangivelse"
+  },
+  {
+   "id": "herman.m|2026-10-29T16:52|d41d8cd98f",
+   "who": "herman.m",
+   "naa": "2026-10-29T16:52",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "tomt notat"
+  },
+  {
+   "id": "herman.m|2026-10-29T18:03|227f995b55",
+   "who": "herman.m",
+   "naa": "2026-10-29T18:03",
+   "notat": "Interessert betaler 1149 + Viaplay og tv2",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "ingen tidsangivelse"
+  },
+  {
+   "id": "herman.m|2026-10-29T18:29|baf07aa291",
+   "who": "herman.m",
+   "naa": "2026-10-29T18:29",
+   "notat": "Ring i morgen etter jobb tid. Har nextgentel. Ikke tv men strømmer.",
+   "gull": "2026-10-30T17:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring i morgen etter jobb tid» → etter jobb = kl 17; notatet utvidet etter import"
+  },
+  {
+   "id": "jacob.l|2026-10-06T16:48|e31b5f128c",
+   "who": "jacob.l",
+   "naa": "2026-10-06T16:48",
+   "notat": "Talkmore [tlf]Arild ring kunde neste uke mannen styrer. Sendt ut tilbud på nett og tv. Jeg ringer opp igjen fredag angående mobil abb til kona Svarte ikke oppfølingstelefonen jeg forsøkte",
+   "gull": "2026-10-12T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«ring kunde neste uke» (det AI så) → mandag neste uke; resten skrevet etter import"
+  },
+  {
+   "id": "jacob.l|2026-10-28T13:53|d41d8cd98f",
+   "who": "jacob.l",
+   "naa": "2026-10-28T13:53",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "tomt notat"
+  },
+  {
+   "id": "john.k|2026-10-27T21:08|c078d2ddd2",
+   "who": "john.k",
+   "naa": "2026-10-27T21:08",
+   "notat": "Kom tilbake innen torsdag",
+   "gull": "2026-10-29T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Kom tilbake innen torsdag» skrevet tirsdag kveld → torsdag (fristen)"
+  },
+  {
+   "id": "john.k|2026-10-29T17:02|cff0a186fb",
+   "who": "john.k",
+   "naa": "2026-10-29T17:02",
+   "notat": "Kom tilbake kl 13:00 fredag",
+   "gull": "2026-10-30T13:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Kom tilbake kl 13:00 fredag» skrevet torsdag"
+  },
+  {
+   "id": "john.k|2026-10-29T17:03|47d30dad70",
+   "who": "john.k",
+   "naa": "2026-10-29T17:03",
+   "notat": "[tlf] ring å send ut kontrakt på 3 Play. Kl 13:00",
+   "gull": "2026-10-30T13:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "bare «Kl 13:00», skrevet 19:03 (passert) → i morgen kl 13"
+  },
+  {
+   "id": "john.k|2026-10-29T18:04|d0362f0f94",
+   "who": "john.k",
+   "naa": "2026-10-29T18:04",
+   "notat": "Kom tilbake kl 16:00 fredag.",
+   "gull": "2026-10-30T16:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Kom tilbake kl 16:00 fredag» skrevet torsdag"
+  },
+  {
+   "id": "joshua.i|2026-10-27T18:38|282ea81ba4",
+   "who": "joshua.i",
+   "naa": "2026-10-27T18:38",
+   "notat": "Komme tilbake 18;00 imrg",
+   "gull": "2026-10-28T18:00",
+   "tidFri": false,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«18;00 imrg» (semikolon = kolon)"
+  },
+  {
+   "id": "joshua.i|2026-10-27T19:39|64bc24499a",
+   "who": "joshua.i",
+   "naa": "2026-10-27T19:39",
+   "notat": "Svar Imrg vis ikke ring",
+   "gull": "2026-10-28T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Svar Imrg vis ikke ring» = kunden svarer i morgen, hvis ikke ring → i morgen"
+  },
+  {
+   "id": "joshua.i|2026-10-27T19:45|2bd8253a56",
+   "who": "joshua.i",
+   "naa": "2026-10-27T19:45",
+   "notat": "Komme tilbake imr",
+   "gull": "2026-10-28T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«imr» = i morgen"
+  },
+  {
+   "id": "joshua.i|2026-10-27T23:05|d41d8cd98f",
+   "who": "joshua.i",
+   "naa": "2026-10-27T23:05",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "tomt notat"
+  },
+  {
+   "id": "joshua.i|2026-10-27T23:05|d41d8cd98f",
+   "who": "joshua.i",
+   "naa": "2026-10-27T23:05",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "tomt notat"
+  },
+  {
+   "id": "joshua.i|2026-10-28T19:50|d41d8cd98f",
+   "who": "joshua.i",
+   "naa": "2026-10-28T19:50",
+   "notat": "",
+   "gull": null,
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "tomt notat"
+  },
+  {
+   "id": "nicolai.b|2026-10-28T17:06|2a2be93e19",
+   "who": "nicolai.b",
+   "naa": "2026-10-28T17:06",
+   "notat": "Ring om 16 dager",
+   "gull": "2026-11-13T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring om 16 dager» skrevet 28.10"
+  },
+  {
+   "id": "nicolai.b|2026-10-28T17:24|4884ee39e7",
+   "who": "nicolai.b",
+   "naa": "2026-10-28T17:24",
+   "notat": "Ring om 3 dager, i teams møte",
+   "gull": "2026-10-31T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring om 3 dager» skrevet 28.10 (lørdag, bokstavelig)"
+  },
+  {
+   "id": "nicolai.b|2026-10-28T18:49|8b4dc83ff7",
+   "who": "nicolai.b",
+   "naa": "2026-10-28T18:49",
+   "notat": "Ring om 2 dager",
+   "gull": "2026-10-30T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring om 2 dager» skrevet 28.10"
+  },
+  {
+   "id": "nicolai.b|2026-10-28T20:05|6293a7a1b0",
+   "who": "nicolai.b",
+   "naa": "2026-10-28T20:05",
+   "notat": "Ring om 5 dager, gitt tilbud 1097",
+   "gull": "2026-11-02T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring om 5 dager» skrevet 28.10"
+  },
+  {
+   "id": "nicolai.b|2026-10-29T13:42|8b4dc83ff7",
+   "who": "nicolai.b",
+   "naa": "2026-10-29T13:42",
+   "notat": "Ring om 2 dager",
+   "gull": "2026-10-31T12:00",
+   "tidFri": true,
+   "usikker": false,
+   "kilde": "Claude-gjennomgang 29.10.2026",
+   "merknad": "«Ring om 2 dager» skrevet torsdag 29.10 (lørdag, bokstavelig)"
   }
  ]
 }

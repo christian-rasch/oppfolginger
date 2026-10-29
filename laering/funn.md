@@ -1,5 +1,35 @@
 # Funn fra gjennomganger
 
+## 29.10.2026 (build 158) – første skyjobb: pris lest som klokkeslett
+**Utløser:** skyjobben (laering/skyjobb-prompt.md), første kjøring. Ingen rad i `oppf_rapporter` → fallback 14 dager, men «nye kort» er regnet
+fra forrige faktiske gjennomgang 27.10 kl 09:38 (eval-historikk), så tallene er sammenlignbare. Signal: 18 nye AI-kort (alle umerket), 6 rettet,
+0 stille feil blant nye, 0 uten dato m/tidsord. Data hentet via Supabase (15 selgere, 375 kort, 240 med AI, 1 feilrad i client_log).
+NB for skyjobben: telefonmaskering må gjøres i eksport.mjs (JS), ikke i SQL – Postgres-regex matcher annerledes («12345678 Telenor» → «[tlf]Telenor»
+uten mellomrom) og da endres md5-ID-en, så gamle fasitkort ser umerkede ut.
+
+**Tall:** 30 kort merket blindt (2 test, 1 usikker: Hermans «Etter klokken …» der tallet er maskert som telefonnummer). Lært time: 13 kort, 3 rettet
+bort (23 %, under 30 %). Promptstørrelse uendret (16 625 tegn). Eval (Sonnet 5.5 medium, 187 kort): NYE kort 22/24 → 24/24; kjede dag 98 % → 99 %,
+eksakt 97 % (70/72) uendret, ingen-dato-feil 0, falsk dato 2 → 0. Median 2,3 s.
+
+**Mønster med bevis – pris tolket som klokkeslett:** `timeFromText` leste firesifrede priser som hhmm: Herman «Interessert betaler 1149 + Viaplay»
+(AI: ingen dato, riktig) → sikkerhetsnettet ga i morgen kl 11:49. Samme mønster i Haakons kort fra august («totalt 1700 med Netflix», «for 2100»,
+«Betalte over 1000»), der det kan dra 12:00-etterjusteringen til feil time. **Endring:** ett nytt `continue` i hhmm-løkka når tallet står rett etter
+betal-/totalt/pris/tilbud/sendt/spar-/for/over. «til» er bevisst ikke med («hjemme til 1800» kan være tid). 7 nye tester (6 feilet før). 235/235 OK.
+
+**Fasit rettet:** Christians «Komme tilbake midt oppe i noe» ble først blindt merket «ingen dato», men instruksen sier «komme tilbake» uten tid = i dag
+nå + 2 t → fasit 28.10 kl 09:00.
+
+**Selgerrettelser (6 nye):** alle beholdt dagen, bare klokkeslett: Herman 5 (10/12 → 13–15, personlig tid; learnedHour tar det når han har ≥3
+rettelser fra 12:00), Haakon 1 (lært 21 → 13), Joshua 1 («imr» 12 → 19). Ingen tolkningsfeil.
+
+**Fart (nye 18 kort):** AI median 3,3 s (høyere enn 2,3–2,4 s i eval, som er tekst uten bilde), skjematid median 15 s, 1 svar med prosa (5,5 s),
+ingen kalde starter/flere forsøk. Herman skiller seg ut: AI 4,6 s og skjema 21 s (6 kort, retter klokkeslett på nesten alle).
+
+**Bevisst ikke gjort:** modellsjekk (36 nye kort siden 24.10 < 40); ingen instruksendring (modellen traff alle nye kort); ingen regel for «innen torsdag»
+(1 kort, spørsmål til Christian); ingen rydding i instruksen (ingen regel har vært ubrukt i 3 gjennomganger som kan måles her).
+
+**Trend (nye kort):** 24.10 19/19 → 27.10 7/7 → 29.10 24/24 (etter endring).
+
 
 ## 28.10.2026 (build 148) – Christians svar, fart-måling, salgsrunde, A/B-plan for mindre bilde
 **Svar fra Christian 28.10** (gjelder som regler, ikke spør igjen):
