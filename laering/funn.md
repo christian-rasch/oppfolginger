@@ -519,3 +519,8 @@ Ikke endret (vurdering):
 
 Neste gjennomgang: se om «Uten tidspunkt»-lista krymper hos Haakon/Joshua, og om de lærte
 klokkeslettene stemmer (se etter kort der selger retter *bort fra* den lærte timen).
+
+### Svar fra Christian 29.10 (gjelder som regel)
+- «overmorgen», «overimorgen», «i overmorgen», «over i morgen» = dagen ETTER i morgen (+2 dager), aldri i morgen.
+  Lagt inn i build 157: AI-instruksen, `OVERMORGEN_RE` + `daysAheadFromText` (= 2) i LAER-blokka, og en vakt i normaliserDato
+  som flytter kortet til +2 dager (med klokkeslettet) hvis AI-en likevel svarte i dag/i morgen. 12 nye tester.
