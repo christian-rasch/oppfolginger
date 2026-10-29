@@ -1,23 +1,22 @@
-ENDRINGER KLARE – si «push» til Claude for å publisere (build 2026-10-27-137, committet lokalt).
-Gjennomgang 27.10.2026. Fjerde automatiske kjøring. Utløser: 4 rettelser (6 nye kort).
+ENDRINGER KLARE – si «push» til Claude for å publisere (build 2026-10-29-157, ligger på grenen laering/2026-10-29).
+Gjennomgang 29.10.2026 – første kjøring i skyen. Utløser: 18 nye AI-kort og 6 rettelser siden 27.10.
 
-Treff på NYE kort (9 merket blindt, 7 brukbare: 1 er ditt tomme testkort, 1 er Eskils notat som ble endret etter import): appen selv 7/7 → eval før 7/7 → etter 7/7.
-Totalt (163 kort med fasit, dine testkort holdt utenfor): riktig dag 163/163, riktig klokkeslett 67/67, kort uten dato som skulle hatt: 0, falske datoer: 0. Stille feil: 0.
-De 4 rettelsene er bare klokkeslett (Joshua og Eskil 12 → 17, Haakon 12 → 13:45 og 15) på notater uten tid. Ingen tolkningsfeil. Eskil har nå rettet til 17 tre ganger, så appen lærer 17:00 for ham av seg selv.
-Lært klokkeslett: brukt 12 ganger (Haakon kl 21), 2 rettet bort (17 %, grensen er 30 %). Instruksen er uendret (15 837 tegn).
+Treff på NYE kort (30 merket blindt, 24 brukbare): før 22/24 → etter 24/24.
+Totalt (187 kort med fasit, dine testkort holdt utenfor): riktig dag 98 % → 99 %, riktig klokkeslett 70/72, kort uten dato som skulle hatt: 0, falske datoer: 2 → 0.
+Feilen som ble funnet: en pris ble lest som klokkeslett. Herman skrev «Interessert betaler 1149 + Viaplay» uten noen tid – appen ga likevel i morgen kl 11:49. Haakon har samme mønster («totalt 1700», «for 2100»).
+De 6 rettelsene er bare klokkeslett (Herman 5, Haakon 1, Joshua 1 – samme dag, egen foretrukket tid). Ingen tolkningsfeil på dag.
+Lært klokkeslett: brukt 13 ganger, 3 rettet bort (23 %, grensen er 30 %). Instruksen er uendret (16 625 tegn).
 
-Hva som er endret (git diff --stat: index.html +4/−2, fasit.json +9 kort, tester.js +15 linjer, eval-historikk.md, funn.md, rapport):
-- index.html: sikkerhetsnettet forstår nå «ring opp mandag 15» / «ring opp imorgen 15» som kl 15 (Haakon skrev det to ganger; AI traff, men koden ville gitt kl 12 hvis AI hadde bommet). «Ring mandag 7 juli» er fortsatt en dato, ikke kl 19.
-- fasit.json: 9 nye kort fått fasit (1 usikker, 1 test).
-- tester.js: 22 nye tester fra ekte kort. 184 tester OK, syntaks OK. Måling før/etter helt lik (163/163), så endringen er trygg.
-- Ikke committet: AGENTS.md og HJELP-forslag.md (ligger fortsatt utenfor, som før).
+Hva som er endret (git diff --stat: index.html +2/−1, sw.js 1 linje, fasit.json +30 kort, tester.js +5 linjer, eval-historikk.md, funn.md, rapport):
+- index.html: et firesifret tall rett etter «betaler/totalt/pris/tilbud/sendt/spart/for/over» er en pris, ikke et klokkeslett. «Ringe i morgen 1430» virker som før.
+- fasit.json: 30 nye kort har fått fasit (2 testkort, 1 usikker). tester.js: 7 nye tester, 235 OK, syntaks OK.
 
-Kort som bør rettes manuelt: ingen.
+Fart: AI-svar median 3,3 s på nye kort, skjematid median 15 s. Herman er tregest (AI 4,6 s, skjema 21 s) – han retter klokkeslett på nesten hvert kort.
 
-Spørsmål til Christian (svar i neste økt):
-1. Ubesvart fra 24.10: «Ringe neste mandag» skrevet torsdag – mandag i neste uke (26.10, som Haakon beholdt) eller mandagen etter (2.11, som instruksen sier)?
-2. Ubesvart fra 24.10: skal setningen «samme ukedag + klokkeslett = i dag» fjernes fra instruksen uten måling? (Koden gjør +7 uansett, ufarlig.)
-3. Ubesvart fra 24.10: skal «januar» alene bety første virkedag (7. jan) i stedet for 1. januar?
-4. Nytt: Haakons lærte klokkeslett (21) henger på nøyaktig 3 gamle rettelser. Sletter han ett av dem, forsvinner kl 21 for ham. Skal appen også telle kort der han GODTOK kl 21 (9 stk)? Da blir det mer robust, men tregere å avlære.
+Kort som bør rettes manuelt:
+- Nicolai: «Ring Mai 2027» står på lørdag 1. mai 2027 – riktig er mandag 3. mai 2027 kl 12 (din regel fra 28.10).
 
-Sjekkliste: [x] 2 signaler/stille feil  [x] 3 blind merking (9 kort, 1 usikker, 1 test)  [x] 4 nullpunkt (100 %)  [x] 5 mønstre med bevis (1 fikk regel)  [x] 6 tester + syntaks OK  [x] 7 mål på nytt (likt, beholdt)  [ ] 8 modellsjekk (26 nye kort siden 21.10 < 40, ikke kjørt)
+Spørsmål til Christian:
+1. John: «Kom tilbake innen torsdag» (skrevet tirsdag kveld). Skal det bety torsdag, eller dagen før (onsdag) så han rekker fristen? Jeg har satt torsdag.
+
+Sjekkliste: [x] 2 signaler  [x] 2b fart  [x] 3 blind merking  [x] 4 nullpunkt  [x] 5 mønstre  [x] 6 endring + tester  [x] 7 mål på nytt (beholdt)  [ ] 8 modellsjekk (36 nye < 40)

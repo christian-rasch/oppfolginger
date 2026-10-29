@@ -163,6 +163,11 @@ N('«ringe august» AI tom → mandag 2. aug 2027',{dato:null},'ringe august','2
 N('«ringe desember» AI tom → tirsdag 1. des 2026 (virkedag alt)',{dato:null},'ringe desember','2026-10-21T15:23','2026-12-01T12:00');
 N('«mandag 1. februar» AI eksakt → beholdes (ukedag i notatet)',{dato:'2027-02-01T12:00',eksaktDato:true},'ring mandag 1. februar','2026-10-21T15:23','2027-02-01T12:00');
 N('«binding til mai» alene → fortsatt uken foer den 1. (24. april)',{dato:null},'Telenor 500, binding til mai','2026-10-20T15:00','2027-04-24T12:00');
+// --- 29.10.2026: pris tolket som klokkeslett («betaler 1149» → 11:49, falsk dato; Herman). Haakon har samme mønster («totalt 1700», «for 2100», «Betalte over 1000») ---
+T('Interessert betaler 1149 + Viaplay og tv2',null);T('Nexgt og riks for totalt 1700 med Netflix',null);T('nexgt 30l for 2100. Ga',null);T('gitt tilbud 1097',null);
+T('Ringe i morgen 1430, betaler 1149',14,30);T('Ringe 1230 fredag, måtte sjekke hva han betaler',12,30);T('Snakke mandag 1530. Intressert',15,30);
+N('«betaler 1149» uten tidsord, AI tom → ingen dato (Herman)',{dato:null},'Interessert betaler 1149 + Viaplay og tv2','2026-10-29T19:03',null);
+N('«totalt 1700» + lørdag, AI lørdag 12 → 12 beholdes',{dato:'2026-08-29T12:00',eksaktDato:false},'Skal svare ja. Nexgt og riks for totalt 1700 med Netflix. Må ringe lørdag','2026-08-27T18:00','2026-08-29T12:00');
 const FV=(y,m,want)=>ok('første virkedag: '+y+'-'+(m+1),api.foersteVirkedag(y,m).toISOString().slice(0,10),want);
 FV(2027,0,'2027-01-04');FV(2027,4,'2027-05-03');FV(2026,11,'2026-12-01');FV(2027,7,'2027-08-02');FV(2026,4,'2026-05-04');FV(2027,1,'2027-02-01');FV(2027,11,'2027-12-01');
 const S=(inn,want)=>ok('salgsrunde: '+JSON.stringify(inn),api.salgsrundeFraLinje(inn),want);

@@ -48,3 +48,11 @@ var Nicolais ustabile «Ring ila neste uke»; 09:46 = kontroll på originalen (t
 
 Rader 27.10.2026 (163 kort = 156 med fasit fra før + 7 nye blindt merkede; 46 gamle fasit-kort er slettet av selgerne og finnes ikke lenger i eksporten):
 09:35 = nullpunkt build 136; 09:38 = build 137 («ring opp <dagord> N» i sikkerhetsnettet). Likt resultat, endringen beholdt. Se funn.md.
+| 2026-10-29 19:34 | claude-sonnet-5-5 | medium | 187 | 97% | 98% | 97% (72) | 0 | 2 | 22/24 | 2245 ms | 44273/47868 | 97% |
+| 2026-10-29 19:37 | claude-sonnet-5-5 | medium | 187 | 97% | 98% | 97% (72) | 0 | 1 | 23/24 | 2313 ms | 44273/48267 | 97% |
+| 2026-10-29 19:39 | claude-sonnet-5-5 | medium | 187 | 97% | 99% | 97% (72) | 0 | 0 | 24/24 | 2271 ms | 44273/47893 | 97% |
+
+Rader 29.10.2026 (skyjobben, første kjøring; 187 kort = 163 fra før + 30 nye blindt merkede minus testkort/endrede notater/slettede): 19:34 = nullpunkt
+build 156 (nye 22/24: Herman «betaler 1149» → falsk dato kl 11:49, og Christians «Komme tilbake midt oppe i noe» der fasiten var feil merket);
+19:37 = build 157 (pris foran firesifret tall er ikke klokkeslett) → falsk dato 2 → 1; 19:39 = samme build etter at fasiten for «Komme tilbake»
+ble rettet til instruksens regel (i dag, nå + 2 t). Endringen beholdt. Se funn.md.

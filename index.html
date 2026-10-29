@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-29-156">
+<meta name="app-build" content="2026-10-29-157">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -830,6 +830,7 @@
     {const re=/(?:^|[^\d,.])(?!1000\b|2000\b)([01]\d|2[0-3])([0-5]\d)(?![\d]|[-/.]\d|\s*(?:kr|,-|linj|mb|gig|fiber|linje))/gi;let mm;
       while((mm=re.exec(k))){const foran=k.slice(Math.max(0,mm.index-14),mm.index+1),tall=mm[1]+mm[2];
         if(/(?:fiber|telenor|linje|linja|hastighet)\s*$/i.test(foran))continue; // hastighet
+        if(/(?:betal\w*|totalt|pris\w*|tilbud\w*|sendt|spar\w*|\bfor|\bover)\s*$/i.test(foran))continue; // pris («betaler 1149», «totalt 1700», «for 2100»), ikke klokkeslett (Herman/Haakon okt. 2026)
         const erAar=/^20[2-3]\d$/.test(tall)&&(/(?:jan|feb|mar|apr|mai|jun|jul|aug|sep|okt|nov|des)\w*\.?\s*$|\d{1,2}[./]\s*$|\b(?:i|til|fra|før|etter|innen)\s+$/i.test(foran)&&!/\b(?:kl|klokka|etter|før|rundt|ca|innen)\s*$/i.test(foran)||(/^202[4-9]$/.test(tall)&&!/\b(?:kl|klokka|etter|før|rundt|ca|ring\w*|innen|til)\s*$/i.test(foran)));
         if(erAar)continue; // aarstall («25. mars 2026», «til 2027»), ikke 20:26
         return {hh:+mm[1],mm:+mm[2],src:'hhmm'};}}
