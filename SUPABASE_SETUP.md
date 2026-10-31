@@ -217,3 +217,8 @@ Min profil → Selgere viser pr. selger hvor mange enheter som har push-varsler 
 **SQL:** `supabase/sql/2026-10-31-push-admin.sql` (kjørt 31.10 via Supabase-koblingen): ny select-policy `push_admin_read` på `push_subscriptions`
 for admin-e-posten. Selgernes egen policy er uendret; admin kan ikke skrive. Appen teller bare rader med `enabled=true`.
 Enhetstype (iPad/iPhone) lagres ikke i abonnementet, så lista viser antall, ikke hvilken enhet.
+
+## Tillegg 2026-10-31 (b): kolonnen `app_host` – hvilken adresse selgeren bruker
+`supabase/sql/2026-10-31-app-host.sql` legger til `app_host` på `oppf_snapshots`. Hjerteslaget (ved åpning / hver 30. min) sender
+`location.hostname`; admin-lista viser «🌐 Ny adresse (oppfolginger.snodriv.no)» eller «🌐 Gammel adresse (github.io)» pr. selger
+(siste hjerteslag vinner – bruker en selger begge ikonene, veksler visningen). Build 2026-10-31-160.

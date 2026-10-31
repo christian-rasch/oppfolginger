@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-10-29-159">
+<meta name="app-build" content="2026-10-31-160">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1213,7 +1213,7 @@
     cloudHbAt=Date.now();
     try{
       const bld=(document.querySelector('meta[name="app-build"]')||{}).content||null;
-      const {error}=await c.from(CLOUD_SYNC_CONFIG.table).update({last_seen_at:new Date().toISOString(),app_build:bld}).eq('user_id',sbUser.id);
+      const {error}=await c.from(CLOUD_SYNC_CONFIG.table).update({last_seen_at:new Date().toISOString(),app_build:bld,app_host:location.hostname}).eq('user_id',sbUser.id);
       if(error&&!/(last_seen_at|column|schema cache)/i.test(error.message||''))logEvent('sync','heartbeat: '+error.message);
     }catch(e){}
   }
@@ -1271,14 +1271,14 @@
     const c=getSupabaseClient();if(!c||!isAdmin())return;
     adminLoading=true;renderProfileBody(); // umiddelbar «Henter…»-tilbakemelding
     try{
-      let sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at,app_build,last_seen_at');
+      let sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at,app_build,last_seen_at,app_host');
       if(sel.error&&/(last_seen_at|column|schema cache)/i.test(sel.error.message||'')) // last_seen_at mangler (SQL ikke kjørt) → hent uten
         sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at,app_build');
       if(sel.error&&/(app_build|column|schema cache)/i.test(sel.error.message||'')) // app_build mangler → hent uten
         sel=await c.from(CLOUD_SYNC_CONFIG.table).select('user_id,email,updated_at');
       if(sel.error)throw sel.error;
       adminSellersCache=(sel.data||[]).filter(function(r){return r.user_id!==sbUser.id;})
-        .map(function(r){return {userId:r.user_id,email:r.email||'(uten e-post)',at:r.last_seen_at||r.updated_at,build:r.app_build||null,stats:null,push:null};}) // sist ÅPNET (hjerteslag) foran sist endret
+        .map(function(r){return {userId:r.user_id,email:r.email||'(uten e-post)',at:r.last_seen_at||r.updated_at,build:r.app_build||null,host:r.app_host||null,stats:null,push:null};}) // sist ÅPNET (hjerteslag) foran sist endret
         .sort(function(a,b){var ta=a.at?+new Date(a.at):0,tb=b.at?+new Date(b.at):0;
           return (tb-ta)||(a.email||'').localeCompare(b.email||'');}); // sist aktiv øverst; aldri synket nederst
       adminLoading=false;renderProfileBody(); // lista vises straks (uten nøkkeltall)
@@ -1956,6 +1956,7 @@
           +'<span class="as-sub'+(s.stats?' as-stat':'')+'">'+esc(statLine)+'</span>'
           +(fart?'<span class="as-sub">'+esc(fart)+'</span>':'')
           +(s.push==null?'':'<span class="as-sub'+(s.push?'':' as-stale')+'">'+(s.push?'🔔 Push på '+s.push+(s.push===1?' enhet':' enheter'):'⚠ Ingen enhet med push-varsler')+'</span>')
+          +(s.host?'<span class="as-sub">'+esc(s.host==='oppfolginger.snodriv.no'?'🌐 Ny adresse (oppfolginger.snodriv.no)':/github\.io$/.test(s.host)?'🌐 Gammel adresse (github.io)':'🌐 '+s.host)+'</span>':'')
           +'<span class="as-sub'+(stale?' as-stale':'')+'">'+esc(ver)+'</span></button>';
       }).join('');}
     var mineOld=(adminSellersCache&&adminSellersCache.some(function(x){return x.build&&x.build>curB;}))?'<div class="cloud-row cloud-muted">Denne enheten kjører en eldre versjon ('+esc(curB)+') — den oppdaterer seg selv om litt.</div>':'';
