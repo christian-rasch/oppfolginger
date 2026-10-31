@@ -20,10 +20,13 @@ og nøktern: det du endrer treffer 14 selgere, og en dårlig regel er verre enn 
   (`testkort`). Lag aldri regler av testkort alene; de kan bare bekrefte et mønster som finnes hos selgerne.
 - **Svar Christian alt har gitt** står i funn.md under «Svar fra Christian». De gjelder som regler. Still ikke samme
   spørsmål igjen. Kort med `laStaa: true` i fasit har han sagt skal stå – de skal ikke listes som «bør rettes».
+- **Kundenotater havner aldri i repoet (det er offentlig).** fasit.json, funn.md, eval-historikk.md og rapport-siste.md ligger i
+  `laering/data/` (gitignored) og i databasen (`node laering/sky.mjs hent` før, `lagre` etter). I tester.js, som er offentlig, brukes
+  bare tidsuttrykket fra notatet – aldri navn, adresser, telefonnumre, priser med navn eller andre kundeopplysninger.
 
 ## 1. Les
-laering/README.md, laering/funn.md (forrige gjennomganger – hva ble prøvd, hva ble bevisst ikke gjort),
-laering/eval-historikk.md, laering/fasit.json og den NYESTE fila i laering/data/.
+laering/README.md, laering/data/funn.md (forrige gjennomganger – hva ble prøvd, hva ble bevisst ikke gjort),
+laering/data/eval-historikk.md, laering/data/fasit.json og den NYESTE laering/data/laering-*.json.
 
 ## 2. Signaler og stille feil (uten API)
 `node laering/eval.mjs --bare-data --json > laering/data/stille.json`. Les: signal (nye kort siden sist, rettet,
@@ -47,7 +50,7 @@ behold bare om treffet ikke blir dårligere). Skriv tallene i rapporten under «
 
 ## 3. Merk nye kort i fasiten (blind, se 0)
 For HVERT AI-kort uten fasit (umerket): gull «ÅÅÅÅ-MM-DDTHH:MM» eller null; tidFri; usikker; merknad.
-Legg inn i laering/fasit.json (id = who|opprettet|md5(kommentar)[0:10], se eval.mjs), kilde «Claude-gjennomgang
+Legg inn i laering/data/fasit.json (id = who|opprettet|md5(kommentar)[0:10], se eval.mjs), kilde «Claude-gjennomgang
 <dato>», oppdater «oppdatert».
 
 ## 4. Mål nullpunktet
@@ -62,7 +65,7 @@ Tell forekomster. Bare mønstre med bevis (se 0) går videre.
 ## 6. Forbedre – minste mulige endring
 AI-instruksen (aiPromptStatic: 'Datoregler — FOERSTE PRIORITET' / 'DAG:' / 'TID:') og/eller koden mellom
 [[LAER-START]] og [[LAER-END]]. Behold stilen. Ikke rør noe utenfor uten svært god grunn. Vurder rydding (se 0).
-Legg ekte eksempler i laering/tester.js (enkelttester + pipeline-tester med normaliserDato).
+Legg eksempler i laering/tester.js (enkelttester + pipeline-tester med normaliserDato) – bare tidsuttrykket, ingen kundeopplysninger (se 0).
 `node laering/tester.js` — ALT må være OK. Syntakssjekk: script-blokk nr. 2 → `new Function(src)` i node.
 
 ## 7. Mål på nytt – behold bare forbedringer
@@ -76,16 +79,17 @@ igjen (maks 3 forsøk). Blir det ikke bedre: behold originalen, skriv i funn.md 
 
 ## 9. Dokumenter og lever
 - Øk app-build (<meta name="app-build">, ÅÅÅÅ-MM-DD-NNN) hvis index.html er endret.
-- Ny seksjon ØVERST i funn.md: utløser, tall (nye kort, merket, rettet, stille feil, lært time, eval før/etter på
+- Ny seksjon ØVERST i laering/data/funn.md: utløser, tall (nye kort, merket, rettet, stille feil, lært time, eval før/etter på
   nye og totalt, promptstørrelse), mønstre med forekomster, endringer, hva som bevisst ikke ble gjort, trend
   (siste 3 målinger fra eval-historikk).
-- laering/rapport-siste.md (maks 25 linjer, enkelt språk):
+- laering/data/rapport-siste.md (maks 25 linjer, enkelt språk):
   linje 1: «ENDRINGER KLARE – si «push» til Claude for å publisere» eller «INGEN ENDRINGER NØDVENDIG»
   deretter: treff på nye kort (før → etter), totalt, hva som er endret (én linje per endring, `git diff --stat`),
   «Fart» (én–to linjer: medianer fra steg 2b, og hva som evt. skiller seg ut pr. selger),
   «Kort som bør rettes manuelt» (selger, notat, riktig dato; ikke kort med `laStaa: true`), «Spørsmål til Christian» (usikre notater, maks 5 –
   han svarer i neste økt), og en sjekkliste over steg 2–8 med [x]/[ ].
-- `git add -A && git commit` med kort norsk melding som slutter med «(build …)» og linja
+- `node laering/sky.mjs lagre` (de fire læringsfilene tilbake til databasen; gamle versjoner arkiveres der), så
+  `git add index.html sw.js laering/tester.js && git commit` (bare kode – `git status` skal ikke vise læringsfiler) med kort norsk melding som slutter med «(build …)» og linja
   «Co-Authored-By: Claude <noreply@anthropic.com>». IKKE push — Christian publiserer selv.
 
-Mangler datafila, eller feiler eval.mjs på API-nøkkel: skriv det i rapport-siste.md, commit ingenting, og stopp.
+Mangler datafila, eller feiler eval.mjs på API-nøkkel: skriv det i laering/data/rapport-siste.md, commit ingenting, og stopp.

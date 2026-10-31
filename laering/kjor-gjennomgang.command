@@ -7,6 +7,8 @@
 #  launchd starter IKKE dette skriptet direkte: macOS nekter zsh fra launchd å lese Skrivebord/Nedlastinger (TCC,
 #  «Operation not permitted», feilkode 127). Derfor starter launchd appen ~/Applications/Oppfolginger-laering.app
 #  (laget med osacompile), som kjører skriptet. Appen må få tilgang til Skrivebord, Nedlastinger og Chrome én gang.
+#  Fra 31.10.2026: data og læringsfiler (fasit/funn/eval-historikk/rapport) hentes rett fra databasen med laering/sky.mjs
+#  (token i laering/data/.token) og lagres tilbake etter gjennomgangen – Chrome trengs ikke, og ingen kundenotater havner i repoet.
 cd "$HOME/Desktop/Claude Prosjekt 1/oppfolginger-github-pakke" || exit 1
 setopt null_glob   # tomme jokertegn gir tom liste, ikke feil
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -20,17 +22,12 @@ if [[ -f "$LAAS" ]] && (( NAA - $(cat "$LAAS") < 3*3600 )); then exit 0; fi
 echo "$NAA" > "$LAAS"; trap 'rm -f "$LAAS"' EXIT
 curl -s --max-time 10 https://christian-rasch.github.io/oppfolginger/ >/dev/null 2>&1 || exit 0  # ikke på nett → i morgen
 
-# ---- 1) daglig datahenting via appen (innlogget Chrome) ----
-rm -f "$HOME"/Downloads/oppf-laering-*.json 2>/dev/null
-open -g -a "Google Chrome" "https://christian-rasch.github.io/oppfolginger/?laering=1&_v=$NAA"
-nyfil(){ local f=("$HOME"/Downloads/oppf-laering-*.json(Nom)); print -r -- "${f[1]}"; }   # (Nom): ingen treff = tom streng, nyeste først. «ls -t» uten treff listet prosjektmappa og ga «laering» 17.10 → ventet ikke på nedlastingen
-VENTET=0; while [[ -z "$(nyfil)" && $VENTET -lt 90 ]]; do sleep 3; VENTET=$((VENTET+3)); done
-osascript -e 'tell application "Google Chrome" to close (every tab of every window whose URL contains "laering=1")' >/dev/null 2>&1
-if [[ -z "$(nyfil)" ]]; then
-  echo "$DAG: fikk ingen datafil (ikke innlogget i Chrome?)" >> "$LOGG"; varsle "Fikk ikke hentet data – er du innlogget i appen i Chrome?"; exit 1
-fi
-F=$(nyfil); [[ -f "$F" ]] || { echo "$DAG: datafila er borte ($F)" >> "$LOGG"; exit 1; }
-mv "$F" "laering/data/laering-$DAG.json"
+# ---- 1) daglig datahenting rett fra databasen + læringsfilene (fra 31.10.2026: laering/sky.mjs, ingen Chrome) ----
+[[ -f laering/data/.token ]] || { echo "$DAG: mangler laering/data/.token" >> "$LOGG"; varsle "Mangler laering/data/.token – be Claude hente den fra databasen"; exit 1; }
+node laering/sky.mjs hent >>"$LOGG" 2>&1 || { echo "$DAG: sky.mjs hent feilet" >> "$LOGG"; varsle "Fikk ikke hentet læringsfilene fra databasen"; exit 1; }
+{ node laering/sky.mjs eksport && node laering/eksport.mjs laering/data/raa.json "laering/data/laering-$DAG.json"; } >>"$LOGG" 2>&1 \
+  || { rm -f laering/data/raa.json; echo "$DAG: eksport feilet" >> "$LOGG"; varsle "Fikk ikke hentet data fra databasen"; exit 1; }
+rm -f laering/data/raa.json   # inneholder API-nøkkelen
 ls -t laering/data/laering-*.json 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null   # behold de 10 siste
 
 # ---- 2) tell læringssignaler (uten Claude) ----
@@ -41,7 +38,7 @@ SIST=0; [[ -f "$STEMPEL" ]] && SIST=$(cat "$STEMPEL"); DAGER_SIDEN=$(( (NAA - SI
 echo "$DAG: nye=$NYE rettet=$RETTET stille=$STILLE utenDato=$UTEN dagerSiden=$DAGER_SIDEN" >> "$LOGG"
 # ---- 2b) ukesrapport hver mandag (uten Claude): aktivitet, fart, rettelser pr. felt, AI-feil, forfalte, versjoner (fra build 149, 28.10) ----
 if [[ "$(date +%u)" == "1" ]]; then
-  if node laering/eval.mjs --ukesrapport > laering/ukesrapport.md 2>>"$LOGG"; then varsle "Ukesrapport klar (laering/ukesrapport.md): $(sed -n 2p laering/ukesrapport.md | cut -c1-80)"; else echo "$DAG: ukesrapport feilet" >> "$LOGG"; fi
+  if node laering/eval.mjs --ukesrapport > laering/data/ukesrapport.md 2>>"$LOGG"; then varsle "Ukesrapport klar (laering/data/ukesrapport.md): $(sed -n 2p laering/data/ukesrapport.md | cut -c1-80)"; else echo "$DAG: ukesrapport feilet" >> "$LOGG"; fi
 fi
 GRUNN=""
 (( NYE >= 12 )) && GRUNN="$NYE nye kort"
@@ -54,7 +51,7 @@ if [[ -z "$GRUNN" ]] || (( DAGER_SIDEN < 3 )); then exit 0; fi   # ingenting å 
 
 # ---- 3) full gjennomgang med Claude ----
 echo "===== $(date '+%Y-%m-%d %H:%M') gjennomgang starter ($GRUNN)" >> "$LOGG"
-cp laering/rapport-siste.md laering/.rapport-forrige.md 2>/dev/null
+cp laering/data/rapport-siste.md laering/.rapport-forrige.md 2>/dev/null
 claude -p "$(cat laering/gjennomgang-prompt.md)
 
 Utløst av: $GRUNN. Forrige gjennomgang: $( [[ $SIST -gt 0 ]] && date -r "$SIST" '+%Y-%m-%d' || echo 'aldri' )." \
@@ -68,9 +65,10 @@ CPID=$!
 wait "$CPID"; EXIT=$?; pkill -P "$VAKT" 2>/dev/null; kill "$VAKT" 2>/dev/null
 echo "===== $(date '+%Y-%m-%d %H:%M') ferdig (exit $EXIT)" >> "$LOGG"
 # vellykket = exit 0 OG rapporten er skrevet i dag
-if (( EXIT == 0 )) && [[ -f laering/rapport-siste.md ]] && [[ "$(date -r laering/rapport-siste.md +%Y-%m-%d)" == "$DAG" ]]; then
+if (( EXIT == 0 )) && [[ -f laering/data/rapport-siste.md ]] && [[ "$(date -r laering/data/rapport-siste.md +%Y-%m-%d)" == "$DAG" ]]; then
   echo "$NAA" > "$STEMPEL"; rm -f "$FORSOK"
-  varsle "$(head -1 laering/rapport-siste.md)"
+  node laering/sky.mjs lagre mac >>"$LOGG" 2>&1 || varsle "Læringsfilene ble IKKE lagret i databasen – se laering/gjennomgang.log"
+  varsle "$(head -1 laering/data/rapport-siste.md)"
 else
   N=$(( $(cat "$FORSOK" 2>/dev/null || echo 0) + 1 )); echo "$N" > "$FORSOK"
   if (( N >= 3 )); then echo "$NAA" > "$STEMPEL"; rm -f "$FORSOK"; varsle "Gjennomgangen feilet 3 ganger – se laering/gjennomgang.log"; else varsle "Gjennomgangen ble ikke fullført (forsøk $N av 3) – prøver igjen i morgen"; fi

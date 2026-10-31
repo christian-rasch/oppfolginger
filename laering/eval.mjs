@@ -1,4 +1,4 @@
-// Måler datotolkningen i index.html mot FASITEN (laering/fasit.json = hva selgeren mente, vurdert av Claude),
+// Måler datotolkningen i index.html mot FASITEN (laering/data/fasit.json = hva selgeren mente, vurdert av Claude),
 // både modellen alene (rå svar) og hele kjeden (modell + normaliserDato = det selgeren faktisk får).
 // Testen er tekstbasert: notatet sendes som tekst med samme instruks og samme «Naa» som da kortet ble laget.
 //
@@ -37,7 +37,7 @@ const dataDir=join(HERE,'data');
 const dataFile=arg('data',(()=>{if(!existsSync(dataDir))return null;const f=readdirSync(dataDir).filter(x=>/^laering-.*\.json$/.test(x)).sort().pop();return f?join(dataDir,f):null;})());
 if(!dataFile||!existsSync(dataFile)){console.error('Ingen datafil. Kjør eksporten først (laering/README.md).');process.exit(2);}
 const data=JSON.parse(readFileSync(dataFile,'utf8'));
-const fasitFil=join(HERE,'fasit.json');
+const fasitFil=join(HERE,'data','fasit.json'); // læringsfilene ligger i laering/data/ (gitignored) og databasen – aldri i repoet (31.10.2026)
 const fasit=existsSync(fasitFil)?JSON.parse(readFileSync(fasitFil,'utf8')):{kort:[]};
 const F=new Map(fasit.kort.map(e=>[e.id,e]));
 const idOf=k=>k.who+'|'+k.opprettet+'|'+createHash('md5').update(k.kommentar||'').digest('hex').slice(0,10);
@@ -190,8 +190,8 @@ const resultater=[];
 for(const [m,e] of kandidater){process.stderr.write('Tester '+m+' ('+e+') på '+sett.length+' kort… ');const r=await kjor(m,e);resultater.push(r);
   process.stderr.write('rå: '+r.raa.dagPct+'% dag · kjede: '+r.pipe.dagPct+'% dag, '+r.pipe.eksaktPct+'% eksakt ('+r.pipe.eksaktAv+'), ingen-dato-feil '+r.pipe.ingenDatoFeil+' · NYE kort: '+(r.nye.dagPct==null?'ingen':r.nye.dag+'/'+r.nye.n+' = '+r.nye.dagPct+'%')+', median '+r.medianMs+' ms, cache '+Math.round(100*r.cacheLest/Math.max(1,r.tokInn+r.cacheLest))+'%\n');}
 const stamp=new Date().toLocaleString('sv-SE',{timeZone:'Europe/Oslo'}).slice(0,16); // norsk tid (var UTC før 17.10)
-const hist=join(HERE,'eval-historikk.md');
-if(!existsSync(hist)||!readFileSync(hist,'utf8').includes('| Nye kort: dag |'))writeFileSync(hist,(existsSync(hist)?readFileSync(hist,'utf8')+'\n':'# Eval-historikk (datotolkning på ekte notater)\n\n')+'## Mot fasit (laering/fasit.json), fra 15.10.2026\n\n| Når | Modell | Innsats | Kort | Rå: dag | Kjede: dag | Kjede: eksakt | Ingen-dato-feil | Falsk dato | Nye kort: dag | Median | Tokens inn/ut | Cache-treff |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n');
+const hist=join(HERE,'data','eval-historikk.md');
+if(!existsSync(hist)||!readFileSync(hist,'utf8').includes('| Nye kort: dag |'))writeFileSync(hist,(existsSync(hist)?readFileSync(hist,'utf8')+'\n':'# Eval-historikk (datotolkning på ekte notater)\n\n')+'## Mot fasit (laering/data/fasit.json), fra 15.10.2026\n\n| Når | Modell | Innsats | Kort | Rå: dag | Kjede: dag | Kjede: eksakt | Ingen-dato-feil | Falsk dato | Nye kort: dag | Median | Tokens inn/ut | Cache-treff |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n');
 appendFileSync(hist,resultater.map(r=>'| '+stamp+' | '+r.model+' | '+r.effort+' | '+r.n+' | '+r.raa.dagPct+'% | '+r.pipe.dagPct+'% | '+r.pipe.eksaktPct+'% ('+r.pipe.eksaktAv+') | '+r.pipe.ingenDatoFeil+' | '+r.pipe.falskDato+' | '+(r.nye.dagPct==null?'–':r.nye.dag+'/'+r.nye.n)+' | '+r.medianMs+' ms | '+r.tokInn+'/'+r.tokUt+' | '+Math.round(100*r.cacheLest/Math.max(1,r.tokInn+r.cacheLest))+'% |').join('\n')+'\n');
 if(flag('json'))console.log(JSON.stringify({data:dataFile.split('/').pop(),kort:sett.length,umerket,notatEndretEtterImport:endret,testkort,signal:nyeSignal,laertTime:{kort:laert.length,selgerRettetTid:laertRettet},promptTegn:STATIC.length,stilleFeil:stille,resultater},null,1));
 else{

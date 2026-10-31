@@ -19,11 +19,11 @@ const T=(k,hh,mm)=>{const r=api.timeFromText(k);ok('tid: '+JSON.stringify(k),r?[
 // --- klokkeslett (fra ekte notater) ---
 T('Ringe imorgen 1430',14,30);T('ringe mandag kl 1700',17,0);T('ring imorgen 2100',21,0);T('Ringe 1300, intressert',13,0);T('Ringe i morgen 1200',12,0);
 T('KI 19',19,0);T('kl 8',20,0);T('kl 09',9,0);T('kl19',19,0);T('16.20',16,20);T('Komme tilbake 17.00 Imorgen',17,0);
-T('Ring 21 om ikke svart',21,0);T('Ringe 9, Anders',21,0);T('ring 13',13,0);T('Ringe 1830, Talkmore',18,30);
+T('Ring 21 om ikke svart',21,0);T('Ringe 9, Ola',21,0);T('ring 13',13,0);T('Ringe 1830, Talkmore',18,30);
 T('Telenor 1000 og T-We',null);T('100 linje på ene 500 på andre',null);T('sendt 1197',null);T('Sendt 1497, bør svare ja',null);T('fiber 500',null);
 T('Ringe mannen',null);T('Send melding 25. mars 2026',null);T('Ring februar 2027',null);T('binding til 31.12.2027',null);T('Cancelled 2026-08-22. Within',null);T('Følge opp tirsdag, etter 2030',20,30);T('Kontakt i 17/18 tiden tirsdag',17,0);T('i 19-tiden',19,0);T('onsdag på ettermiddag. Rundt 13-15',13,0);T('I morgen etter 18',18,0);T('etter 3 dager',null);T('ring om 2 dager',null);T('Talkmore 2 ubegrensa voksen + 1 14 år 5gig',null);
 // --- 17.10.2026: semikolon = kolon; dd.mm (punktum + maaned) er dato, ikke klokkeslett ---
-T('[tlf] Ice Snakka med Anders (komme tilbake 19;00',19,0);T('M1 06.10 M1 08. Hilde 5 abbonomenter fra ice. Kontakt tirsdag neste uke',null);T('Binding frem til 05.12.2026 Kontaktes mandag',null);T('Kom tilbake lørdag 11.07.26 klokka 11:30.',11,30);T('19:00 08.09',19,0);T('Ring Onsdag 16 september kl 13.00',13,0);T('kl 10.10',10,10);
+T('[tlf] Ice Snakka med Ola (komme tilbake 19;00',19,0);T('M1 06.10 M1 08. Kari 5 abbonomenter fra ice. Kontakt tirsdag neste uke',null);T('Binding frem til 05.12.2026 Kontaktes mandag',null);T('Kom tilbake lørdag 11.07.26 klokka 11:30.',11,30);T('19:00 08.09',19,0);T('Ring Onsdag 16 september kl 13.00',13,0);T('kl 10.10',10,10);
 // --- 27.10.2026: «ring opp <dagord> N» = klokkeslett (Haakon «ring opp imorgen 15» 19.10, «ring opp mandag 15» 24.10); dag i maaneden med maanedsnavn bak er IKKE tid ---
 T('Skal svare ja ring opp mandag 15',15,0);T('Skal svare ja ring opp imorgen 15',15,0);T('ring opp fredag 9',21,0);T('ringe imrg 18',18,0);
 T('Ring mandag 7 juli [tlf]',null);T('ring lørdag 4 juli, [tlf]',null);T('kontakt kunden mandag 26 oktober',null);T('1197 ringe mandag 50',null);T('Kom tilbake fredag 00',null);T('ring mandag 7. om ikke',null);T('ring tirsdag 2 voksen 1 barn',null);
@@ -104,8 +104,8 @@ N('ukedag neste uke, AI tom (mandag) → ikke i morgen',{dato:null},'Ringe tirsd
 N('ukedag neste uke med klokkeslett beholdes',{dato:'2026-10-21T16:00',eksaktDato:false},'Må tenke følges opp onsdag neste uke etter 16:00','2026-10-14T12:19','2026-10-21T16:00');
 N('ukedag neste uke, AI tok +7 med tid → dag rettes, tid beholdes',{dato:'2026-10-28T16:00',eksaktDato:false},'følges opp onsdag neste uke etter 16:00','2026-10-14T12:19','2026-10-21T16:00');
 N('neste fredag (onsdag) = uka etter, uendret',{dato:null},'Spørre dama om hun fikk snakka med mannen om tilbudet neste fredag','2026-08-26T16:18','2026-09-04T12:00');
-N('dd.mm i notatet er dato, ikke 06:10',{dato:'2026-10-13T12:00',eksaktDato:false},'M1 06.10 M1 08.[tlf]Hilde 5 abbonomenter fra ice. Kontakt tirsdag neste uke','2026-10-08T18:15','2026-10-13T12:00');
-N('semikolon-klokkeslett, AI tom → i dag 19:00',{dato:null},'[tlf] Ice Snakka med Anders (komme tilbake 19;00','2026-10-15T14:56','2026-10-15T19:00');
+N('dd.mm i notatet er dato, ikke 06:10',{dato:'2026-10-13T12:00',eksaktDato:false},'M1 06.10 M1 08.[tlf]Kari 5 abbonomenter fra ice. Kontakt tirsdag neste uke','2026-10-08T18:15','2026-10-13T12:00');
+N('semikolon-klokkeslett, AI tom → i dag 19:00',{dato:null},'[tlf] Ice Snakka med Ola (komme tilbake 19;00','2026-10-15T14:56','2026-10-15T19:00');
 // --- 17.10.2026 (Christian): «Ring oå» = «Ring opp» uten dag/tid = ring tilbake, ingen dato ---
 N('Ring oå (=opp) uten dag → ingen dato',{dato:null},'Ring oå','2026-10-15T14:10',null);N('Ring opp uten dag → ingen dato',{dato:null},'Ring opp','2026-10-15T14:10',null);N('Ring opp lørdag → lørdag',{dato:null},'Sendt 1497. Ring opp lørdag.','2026-10-15T14:49','2026-10-17T12:00');
 // --- 21.10.2026 (ekte kort): dagens ukedag + klokkeslett som ikke er passert, men AI satte +7 → i dag ---
@@ -176,6 +176,11 @@ N('«ringe august» AI tom → mandag 2. aug 2027',{dato:null},'ringe august','2
 N('«ringe desember» AI tom → tirsdag 1. des 2026 (virkedag alt)',{dato:null},'ringe desember','2026-10-21T15:23','2026-12-01T12:00');
 N('«mandag 1. februar» AI eksakt → beholdes (ukedag i notatet)',{dato:'2027-02-01T12:00',eksaktDato:true},'ring mandag 1. februar','2026-10-21T15:23','2027-02-01T12:00');
 N('«binding til mai» alene → fortsatt uken foer den 1. (24. april)',{dato:null},'Telenor 500, binding til mai','2026-10-20T15:00','2027-04-24T12:00');
+// --- 29.10.2026: pris tolket som klokkeslett («betaler 1149» → 11:49, falsk dato; Herman). Haakon har samme mønster («totalt 1700», «for 2100», «Betalte over 1000») ---
+T('Interessert betaler 1149 + Viaplay og tv2',null);T('Nexgt og riks for totalt 1700 med Netflix',null);T('nexgt 30l for 2100. Ga',null);T('gitt tilbud 1097',null);
+T('Ringe i morgen 1430, betaler 1149',14,30);T('Ringe 1230 fredag, måtte sjekke hva han betaler',12,30);T('Snakke mandag 1530. Intressert',15,30);
+N('«betaler 1149» uten tidsord, AI tom → ingen dato (Herman)',{dato:null},'Interessert betaler 1149 + Viaplay og tv2','2026-10-29T19:03',null);
+N('«totalt 1700» + lørdag, AI lørdag 12 → 12 beholdes',{dato:'2026-08-29T12:00',eksaktDato:false},'Skal svare ja. Nexgt og riks for totalt 1700 med Netflix. Må ringe lørdag','2026-08-27T18:00','2026-08-29T12:00');
 const FV=(y,m,want)=>ok('første virkedag: '+y+'-'+(m+1),api.foersteVirkedag(y,m).toISOString().slice(0,10),want);
 FV(2027,0,'2027-01-04');FV(2027,4,'2027-05-03');FV(2026,11,'2026-12-01');FV(2027,7,'2027-08-02');FV(2026,4,'2026-05-04');FV(2027,1,'2027-02-01');FV(2027,11,'2027-12-01');
 const S=(inn,want)=>ok('salgsrunde: '+JSON.stringify(inn),api.salgsrundeFraLinje(inn),want);

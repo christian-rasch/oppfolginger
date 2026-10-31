@@ -34,6 +34,12 @@ AI-feil, forfalte/uten tid, versjon, tregeste kort, tokens.
 `skyjobb-prompt.md`, data via `eksport.mjs`, rapport i appen under Min profil → Rapporter, kode som gren + PR). Mac-jobben
 under er skrudd av (`launchctl disable` + `bootout`, 29.10.2026) og beholdes bare som reserve.
 
+**Fra 31.10.2026 ligger læringsfilene i databasen, ikke i repoet.** Repoet er offentlig, og fasit.json med ekte kundenotater lå åpent på
+GitHub Pages 15.–31.10.2026. Nå: tabell `oppf_laering_filer` (+ `oppf_laering_filer_historikk` med alle gamle versjoner), hentes/lagres med
+`node laering/sky.mjs hent | lagre [av] | liste | eksport` og en hemmelig token (`oppf_laering_noekkel`, leses bare via Supabase-koblingen;
+lokalt i `laering/data/.token`). Rådata hentes samme vei (`sky.mjs eksport` → `eksport.mjs`), så verken skyjobben eller Mac-skriptet trenger
+Chrome. `laering/data/` er gitignored, og `.gitignore` sperrer de fire filnavnene. SQL: `supabase/sql/2026-10-31-laering-filer.sql`.
+
 Gammelt oppsett: `kjor-gjennomgang.command` startes hver dag 09:30 av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
 – ikke direkte, men via den lille appen `~/Applications/Oppfolginger-laering.app`. Grunn: macOS nekter zsh startet av
 launchd å lese Skrivebord og Nedlastinger (feilkode 127, ingenting i loggen), mens en app kan få den tillatelsen.
@@ -43,7 +49,7 @@ Appen er laget slik (gjenskap ved behov, og signer på nytt etter endring i Info
 `plutil -replace LSUIElement -bool true .../Contents/Info.plist` og `codesign --force --sign - <app>`.
 Krever at Macen er på og at Christian er innlogget i appen i Chrome. Test uten Claude: `touch laering/.bare-signal`
 og `launchctl kickstart gui/$(id -u)/no.snodriv.oppf-laering` (slett flagget etterpå).
-1. **Daglig, uten Claude:** åpner appen i Chrome med `?laering=1` → appen (admin) laster ned en anonymisert fil
+1. **Daglig, uten Claude:** henter data fra databasen (`sky.mjs eksport` → `eksport.mjs`; før 31.10.2026: appen i Chrome med `?laering=1`) → en anonymisert fil
    (notat, datoer, AI-forslag, teksten AI leste, lært-time-flagg, API-nøkkel). Skriptet flytter fila til
    `laering/data/` (10 siste beholdes) og teller læringssignaler med `eval.mjs --bare-data`: nye AI-kort siden
    forrige gjennomgang, selgerrettelser, stille feil, kort uten dato med tidsord.
@@ -55,7 +61,7 @@ og `launchctl kickstart gui/$(id -u)/no.snodriv.oppf-laering` (slett flagget ett
 3. Robusthet: lås mot dobbeltkjøring, vakthund (maks 90 min), stempel settes bare ved vellykket kjøring (ellers
    nytt forsøk neste dag, maks 3), varsel på Macen med rapportens første linje. Christian sier «push».
 
-## fasit.json – «Claudes øyne»
+## fasit.json – «Claudes øyne» (ligger i `laering/data/` og databasen, ikke i repoet)
 Datoen som står på et kort er ikke nødvendigvis riktig: selgeren kan ha godtatt en feil uten å se den, eller
 flyttet dagen av personlige grunner. Derfor har hvert AI-kort en egen fasit: hva selgeren MENTE da notatet ble
 skrevet, lest bokstavelig (gull), om klokkeslettet er fritt (tidFri) og om notatet er tvetydig (usikker).
@@ -71,7 +77,7 @@ som da kortet ble laget. NB: `opprettet`/`ai.ts` i eksporten (og `naa` i fasit.j
 senere. eval.mjs legger på «Z» før det regner (rettet 21.10.2026; før det var «Naa» 2 timer for tidlig). Måler både modellen alene (rå) og hele kjeden (modell + normaliserDato = det selgeren
 får). Tall: riktig dag, eksakt tid (bare der notatet sier tid), ingen-dato-feil, falsk dato.
 `--modeller` tester Sonnet/Haiku/Opus 5.5 og lav innsats. `--bare-data` gir stille feil uten API-kall.
-Alle kjøringer logges i `eval-historikk.md`. Nøkkel: `ANTHROPIC_API_KEY`, `laering/.apikey` eller feltet
+Alle kjøringer logges i `data/eval-historikk.md`. Nøkkel: `ANTHROPIC_API_KEY`, `laering/.apikey` eller feltet
 `apikey` i datafila.
 
 ## Koden som kan testes utenfor appen
@@ -89,11 +95,12 @@ tester.js laster blokken direkte, så en endring i appen testes 1:1.
 
 ## Filer
 - `tester.js` – regresjonstester: klokkeslett, «i morgen», ukedager, måneder, «om N dager» + hele kjeden (normaliserDato).
-- `fasit.json` – hva selgeren mente, per AI-kort (gull/tidFri/usikker/merknad).
+- `data/fasit.json` (databasen) – hva selgeren mente, per AI-kort (gull/tidFri/usikker/merknad).
+- `sky.mjs` – hent/lagre læringsfilene og rådata fra databasen (token i `data/.token`).
 - `eval.mjs` – måling mot fasiten, modellsammenligning, stille feil.
 - `gjennomgang-prompt.md` – instruksen den automatiske gjennomgangen følger.
 - `kjor-gjennomgang.command` – jobben launchd starter.
 - `analyse-i-nettleser.js` – uthenting + anonymisering i den innloggede fanen.
-- `funn.md` – logg over hva som ble funnet og endret, per gjennomgang.
+- `data/funn.md` (databasen) – logg over hva som ble funnet og endret, per gjennomgang.
 - `bilde-ab.js` – A/B-test av bildestørrelse til AI-en (kjøres i innlogget admin-fane; resultat i funn.md).
-- `ukesrapport.md` – siste ukesrapport (lages automatisk mandager av `eval.mjs --ukesrapport`).
+- `data/ukesrapport.md` – siste ukesrapport (lages automatisk mandager av `eval.mjs --ukesrapport`).
