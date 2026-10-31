@@ -8,9 +8,12 @@
 // Token: miljøvariabelen LAERING_TOKEN, ellers fila laering/data/.token. Hentes med
 //   select token from public.oppf_laering_noekkel where id = 1;   (bare via Supabase-koblingen – aldri i repo, logg, rapport eller svar)
 // URL og anon-nøkkel leses fra index.html (CLOUD_SYNC_CONFIG). Sikkerheten ligger i tokenen: RPC-funksjonene avviser alt annet.
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+// I skyen: trafikken går via sandkassens proxy (curl brukes automatisk når HTTPS_PROXY er satt), og miljøet må tillate *.supabase.co.
+import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 const HERE = dirname(fileURLToPath(import.meta.url)), DATA = join(HERE, 'data');
 const FILER = ['fasit.json', 'funn.md', 'eval-historikk.md', 'rapport-siste.md'];
 const html = readFileSync(join(HERE, '..', 'index.html'), 'utf8');
@@ -19,10 +22,27 @@ if (!URL_ || !ANON) { console.error('fant ikke supabaseUrl/supabaseAnonKey i ind
 const tokenFil = join(DATA, '.token');
 const TOKEN = (process.env.LAERING_TOKEN || (existsSync(tokenFil) ? readFileSync(tokenFil, 'utf8') : '')).trim();
 if (!TOKEN) { console.error('Mangler token: sett LAERING_TOKEN eller skriv den til laering/data/.token (select token from oppf_laering_noekkel where id = 1)'); process.exit(2); }
+// I skyen (Claude Code-sandkassen) går all trafikk gjennom en proxy (HTTPS_PROXY) som Node sin fetch ikke bruker av seg selv;
+// curl gjør det. Derfor: curl når HTTPS_PROXY er satt (eller SKY_CURL=1), ellers fetch. Domenet må i tillegg stå på miljøets
+// liste over tillatte adresser (Network access → Custom → Allowed domains: *.supabase.co), ellers svarer proxyen 403.
+const BRUK_CURL = !!(process.env.HTTPS_PROXY || process.env.https_proxy || process.env.SKY_CURL);
+function rpcCurl(fn, body) {
+  const tmp = join(tmpdir(), 'sky-' + process.pid + '-' + Date.now() + '.json'); writeFileSync(tmp, body);
+  try {
+    const r = spawnSync('curl', ['-sS', '--max-time', '120', '-w', '\n%{http_code}', '-X', 'POST', URL_ + '/rest/v1/rpc/' + fn,
+      '-H', 'apikey: ' + ANON, '-H', 'Authorization: Bearer ' + ANON, '-H', 'Content-Type: application/json', '--data-binary', '@' + tmp],
+      { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    if (r.status !== 0) throw new Error(fn + ' → curl feilet: ' + (r.stderr || '').trim().slice(0, 300));
+    const out = r.stdout, i = out.lastIndexOf('\n'), code = +out.slice(i + 1), t = out.slice(0, i);
+    if (code < 200 || code >= 300) throw new Error(fn + ' → HTTP ' + code + ': ' + t.slice(0, 300));
+    return t ? JSON.parse(t) : null;
+  } finally { try { unlinkSync(tmp); } catch {} }
+}
 async function rpc(fn, args) {
+  const body = JSON.stringify({ p_token: TOKEN, ...args });
+  if (BRUK_CURL) return rpcCurl(fn, body);
   const r = await fetch(URL_ + '/rest/v1/rpc/' + fn, { method: 'POST',
-    headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ p_token: TOKEN, ...args }) });
+    headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' }, body });
   const t = await r.text();
   if (!r.ok) throw new Error(fn + ' → HTTP ' + r.status + ': ' + t.slice(0, 300));
   return t ? JSON.parse(t) : null;
