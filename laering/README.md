@@ -30,7 +30,11 @@ skriver til `laering/ukesrapport.md` hver mandag (varsel på Macen): kort pr. se
 AI-feil, forfalte/uten tid, versjon, tregeste kort, tokens.
 
 ## Automatikken: lærer når det finnes noe å lære av
-`kjor-gjennomgang.command` startes hver dag 09:30 av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
+**Fra 29.10.2026 kjører gjennomgangen i skyen** (Claude Code-rutine «Oppfølginger læring», kl. 09:30 norsk tid, instruks i
+`skyjobb-prompt.md`, data via `eksport.mjs`, rapport i appen under Min profil → Rapporter, kode som gren + PR). Mac-jobben
+under er skrudd av (`launchctl disable` + `bootout`, 29.10.2026) og beholdes bare som reserve.
+
+Gammelt oppsett: `kjor-gjennomgang.command` startes hver dag 09:30 av launchd (`~/Library/LaunchAgents/no.snodriv.oppf-laering.plist`)
 – ikke direkte, men via den lille appen `~/Applications/Oppfolginger-laering.app`. Grunn: macOS nekter zsh startet av
 launchd å lese Skrivebord og Nedlastinger (feilkode 127, ingenting i loggen), mens en app kan få den tillatelsen.
 Appen er laget slik (gjenskap ved behov, og signer på nytt etter endring i Info.plist):

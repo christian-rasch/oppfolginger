@@ -1,0 +1,51 @@
+# Speil: ved hver push til main kopieres KUN app-filene (index.html, sw.js, apple-touch-icon.png) til repoet
+# Snodriv/oppfolginger-app, som GitHub Pages viser under https://oppfolginger.snodriv.no/.
+# Gammel adresse (christian-rasch.github.io/oppfolginger/) rulles ut av Pages selv, uavhengig av denne jobben.
+# Feiler jobben: rødt kryss + e-post fra GitHub → ny adresse henger etter til neste vellykkede kjøring.
+# Kjør på nytt manuelt: GitHub → Actions → «Speil til oppfolginger.snodriv.no» → Run workflow.
+name: Speil til oppfolginger.snodriv.no
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: speil
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  speil:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Samle app-filene (aldri laering/, supabase/ eller md-filer)
+        run: |
+          mkdir ut
+          cp index.html sw.js apple-touch-icon.png ut/
+          printf '%s\n' '# Oppfølginger – speil' '' 'Dette repoet fylles automatisk fra christian-rasch/oppfolginger ved hver push til main.' 'Ikke rediger her – alt overskrives. Appen: https://oppfolginger.snodriv.no/' > ut/README.md
+          echo "build: $(grep -o 'app-build" content="[^"]*' ut/index.html | cut -d'"' -f3)"
+
+      - name: Publiser til speil-repoet
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0 – låst til commit, ikke flyttbar tag
+        with:
+          deploy_key: ${{ secrets.SPEIL_DEPLOY_KEY }}
+          external_repository: Snodriv/oppfolginger-app
+          publish_branch: main
+          publish_dir: ./ut
+          cname: oppfolginger.snodriv.no
+          force_orphan: true
+          commit_message: 'speil av ${{ github.sha }}'
+
+      - name: Vent til ny adresse viser samme build (inntil 12 min, Pages-bygg + CDN-cache)
+        run: |
+          VIL=$(grep -o 'app-build" content="[^"]*' index.html | cut -d'"' -f3)
+          echo "forventer app-build $VIL"
+          for n in $(seq 1 24); do
+            sleep 30
+            FIKK=$(curl -s --max-time 20 "https://oppfolginger.snodriv.no/?_v=${{ github.run_id }}-$n" | grep -o 'app-build" content="[^"]*' | cut -d'"' -f3 || true)
+            echo "forsøk $n: ${FIKK:-ingen svar}"
+            if [ "$FIKK" = "$VIL" ]; then echo "oppfolginger.snodriv.no viser $VIL ✓"; exit 0; fi
+          done
+          echo "::error::oppfolginger.snodriv.no viser fortsatt ikke build $VIL etter 12 min – sjekk speil-repoet (Pages, domene) og kjør jobben på nytt"
+          exit 1

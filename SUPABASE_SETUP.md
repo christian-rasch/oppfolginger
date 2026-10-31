@@ -76,7 +76,7 @@ grant select, insert, update on public.oppf_snapshots to authenticated;
 ## Steg 5 — Whiteliste URL-en din (ellers feiler innlogging)
 - **Authentication → URL Configuration**:
   - **Site URL**: din GitHub Pages-adresse (f.eks. `https://christian-rasch.github.io/oppfolginger/` — bekreft eksakt URL).
-  - **Redirect URLs**: legg til **nøyaktig samme** URL.
+  - **Redirect URLs**: legg til **nøyaktig samme** URL. Fra 31.10.2026 også `https://oppfolginger.snodriv.no/*` (ny adresse, samme app – trengs bare for e-postlenker som passord-nullstilling; vanlig passordinnlogging bruker ingen redirect).
 
 ## Steg 6 — Lim inn nøklene i appen
 I `index.html` (grenen `cloud-sync`), nær toppen av hovedscriptet:
@@ -130,7 +130,7 @@ under selgerens mappe (`<uid>/innboks-<id>.jpg`), så eksisterende storage-polic
 ved åpning/fokus, kjører samme analyse som LIM INN og sletter fil + rad. Nøkkel lages i appen: Min profil → Snarvei «Skjermbilde».
 Snarveien på iPad: Åpne URL `webapp://driv.app.snodriv.no/` → Vent 1 s → Ta skjermbilde → Endre størrelse (1400) → Konverter (JPEG)
 → Hent innhold på URL (POST til `/functions/v1/skjermbilde`, hode `x-oppf-nokkel`, kropp = fil) → Kopier til utklipp (reserve)
-→ Åpne URL `webapp://christian-rasch.github.io/oppfolginger/`.
+→ Åpne URL `webapp://christian-rasch.github.io/oppfolginger/` (selgere på ny adresse: `webapp://oppfolginger.snodriv.no/` – egen variant av snarveien).
 
 ## Tillegg 2026-10-20 — snarveien v2: appen åpnes før bildet er lastet opp
 
@@ -211,3 +211,9 @@ instruks i `laering/skyjobb-prompt.md`, eksport via `laering/eksport.mjs`). Kode
 tittel, innhold (markdown), meta. RLS: bare admin-e-posten kan lese; appen kan ikke skrive (rutinen skriver som databaserolle). Rapportene
 inneholder aldri navn eller nøkler.
 **Sjekk:** `select dato, type, tittel from public.oppf_rapporter order by id desc limit 10;`
+
+## Tillegg 2026-10-31 — «Push på N enheter» pr. selger (build 159)
+Min profil → Selgere viser pr. selger hvor mange enheter som har push-varsler på (🔔 Push på 2 enheter / ⚠ Ingen enhet med push-varsler).
+**SQL:** `supabase/sql/2026-10-31-push-admin.sql` (kjørt 31.10 via Supabase-koblingen): ny select-policy `push_admin_read` på `push_subscriptions`
+for admin-e-posten. Selgernes egen policy er uendret; admin kan ikke skrive. Appen teller bare rader med `enabled=true`.
+Enhetstype (iPad/iPhone) lagres ikke i abonnementet, så lista viser antall, ikke hvilken enhet.

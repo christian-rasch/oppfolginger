@@ -49,4 +49,8 @@ values ('uke', current_date, $t$Ukesrapport uke <ukenummer>$t$, $rap$<innholdet 
 Ikke commit ukesrapport.md alene (den endres ved hver kjøring); den er med i grenen bare når det også er en gjennomgang.
 
 ## 6. Til slutt
+Speil-sjekk (hver kjøring, uten API): hent `<meta name="app-build" content="…">` fra
+`https://christian-rasch.github.io/oppfolginger/?_v=<tilfeldig>` og `https://oppfolginger.snodriv.no/?_v=<tilfeldig>` (curl).
+Er stemplene ulike, eller svarer ny adresse ikke: insert i `public.oppf_rapporter` (type 'signal', dato i dag,
+tittel '⚠ Ny adresse henger etter', innhold: begge stemplene + «Si fra til Claude: kjør workflow «Speil» på nytt»). Like stempler: ingenting.
 Skriv én kort oppsummering i svaret ditt: hva som ble hentet (antall kort), om gjennomgang ble kjørt, resultat, og PR-lenke hvis noen.

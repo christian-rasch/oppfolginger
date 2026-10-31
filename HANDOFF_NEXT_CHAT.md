@@ -90,7 +90,7 @@ der kun «N d.» er rød. Klikk på check-boksen oppdaterer `waitingSince` til n
 
 ## F. Git- og valideringsstatus (oppdatert 2026-06-17)
 - **Branch:** `main`. Alt UI-arbeid + sky-synk er **committet og pushet** til GitHub. Siste commit: `74b9d1f` (passord-innlogging for selvstendig synk i hjemskjerm-appen).
-- **Live:** `https://christian-rasch.github.io/oppfolginger/` — pushet, rullet ut på GitHub Pages.
+- **Live:** `https://christian-rasch.github.io/oppfolginger/` — pushet, rullet ut på GitHub Pages. Fra 31.10.2026 også `https://oppfolginger.snodriv.no/` (speil-repo Snodriv/oppfolginger-app, fylles av `.github/workflows/speil.yml`; se OPPSKRIFT.md «Adresser og speil»).
 - **Sky-synk via Supabase er LIVE og bekreftet fungerende** på iPad + Mac (se seksjon E + `SUPABASE_SETUP.md`).
 - **Passord-innlogging:** lagt til så iPad-hjemskjerm-appen kan synke uten Safari/e-postlenke. **Bekreftet fungerende på iPad (2026-06-17)** — innlogging med e-post + passord i hjemskjerm-appen synker selvstendig. Forutsetter at **Email-provider med passord er på** i Supabase (Authentication → Sign In / Providers → Email).
 - Push gjøres fortsatt kun når Christian sier eksplisitt ifra.

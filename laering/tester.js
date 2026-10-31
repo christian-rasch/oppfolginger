@@ -65,6 +65,11 @@ N('AI sa i morgen ved overimorgen → +2',{dato:'2026-10-30T12:00',eksaktDato:fa
 N('AI sa i morgen 17 ved overmorgen → +2 kl 17',{dato:'2026-10-30T17:00',eksaktDato:false},'Ring overmorgen 17','2026-10-29T18:40','2026-10-31T17:00');
 N('AI riktig overmorgen → uroert',{dato:'2026-10-31T12:00',eksaktDato:false},'Ring i overmorgen','2026-10-29T18:40','2026-10-31T12:00');
 N('imorgen uroert av overmorgen-vakt',{dato:'2026-10-30T12:00',eksaktDato:false},'Ring imorgen','2026-10-29T18:40','2026-10-30T12:00');
+// --- 29.10.2026 (Christian): «innen <ukedag>» = den ukedagen kl 15:00 ---
+ok('tidord innen torsdag',(api.timeWordFromText('Kom tilbake innen torsdag')||{}).hh,15);ok('innen uten ukedag',api.timeWordFromText('innen uka'),null);
+N('innen torsdag → torsdag 15 (John)',{dato:'2026-10-29T12:00',eksaktDato:false},'Kom tilbake innen torsdag','2026-10-27T18:28','2026-10-29T15:00');
+N('innen torsdag kveld → 21',{dato:'2026-10-29T12:00',eksaktDato:false},'Kom tilbake innen torsdag kveld','2026-10-27T18:28','2026-10-29T21:00');
+N('AI tom + innen fredag → fredag 15',{dato:null},'Ring innen fredag','2026-10-27T18:28','2026-10-30T15:00');
 N('AI tom + februar i oktober',{dato:null},'Ringe februar. Binding til mai','2026-10-09T16:20','2027-02-01T12:00');
 N('AI tom + ukedag',{dato:null},'Måtte se over. Ringe onsdag','2026-09-14T18:05','2026-09-16T12:00');
 N('AI feil år 2020 relativt',{dato:'2020-09-17T12:00',eksaktDato:false},'Ringe i morgen','2026-09-16T16:02','2026-09-17T12:00');
