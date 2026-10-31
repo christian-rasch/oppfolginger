@@ -6,3 +6,8 @@ gjennomgang.log
 .laas
 .forsok
 .rapport-forrige.md
+# Læringsdata med kundenotater skal ALDRI inn i repoet (offentlig). Lagres lokalt i data/ og i Supabase.
+fasit.json
+funn.md
+eval-historikk.md
+rapport-siste.md
