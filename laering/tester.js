@@ -181,6 +181,9 @@ T('Interessert betaler 1149 + Viaplay og tv2',null);T('Nexgt og riks for totalt 
 T('Ringe i morgen 1430, betaler 1149',14,30);T('Ringe 1230 fredag, måtte sjekke hva han betaler',12,30);T('Snakke mandag 1530. Intressert',15,30);
 N('«betaler 1149» uten tidsord, AI tom → ingen dato (Herman)',{dato:null},'Interessert betaler 1149 + Viaplay og tv2','2026-10-29T19:03',null);
 N('«totalt 1700» + lørdag, AI lørdag 12 → 12 beholdes',{dato:'2026-08-29T12:00',eksaktDato:false},'Skal svare ja. Nexgt og riks for totalt 1700 med Netflix. Må ringe lørdag','2026-08-27T18:00','2026-08-29T12:00');
+// --- 04.11.2026: «komme tilbake en annen dag» er IKKE i dag (Joshua, 2 kort; modellen ga i dag 21:15 i eval) → i morgen ---
+N('«Komme tilbake en annen dag», AI i morgen → urørt',{dato:'2026-11-04T12:00',eksaktDato:false},'Telia Komme tilbake en annen dag','2026-11-03T20:49','2026-11-04T12:00');
+N('«Komme tilbake en annen dag», AI tom → ingen dato fra sikkerhetsnettet',{dato:null},'Komme tilbake en annen dag','2026-11-03T18:01',null);
 const FV=(y,m,want)=>ok('første virkedag: '+y+'-'+(m+1),api.foersteVirkedag(y,m).toISOString().slice(0,10),want);
 FV(2027,0,'2027-01-04');FV(2027,4,'2027-05-03');FV(2026,11,'2026-12-01');FV(2027,7,'2027-08-02');FV(2026,4,'2026-05-04');FV(2027,1,'2027-02-01');FV(2027,11,'2027-12-01');
 const S=(inn,want)=>ok('salgsrunde: '+JSON.stringify(inn),api.salgsrundeFraLinje(inn),want);
