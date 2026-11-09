@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-09-163">
+<meta name="app-build" content="2026-11-09-164">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -541,6 +541,8 @@
   #pushGate .pg-steps{font-size:13.5px;color:var(--ink-dim);background:rgba(255,255,255,.04);border:1px solid var(--hair);border-radius:12px;padding:12px 14px;text-align:left}
   #pushGate .pg-btn{margin-top:6px;width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--mint),#19c79a);color:#06120e;font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:800;cursor:pointer}
   #pushGate .pg-btn:active{opacity:.85}
+  .pw-forgot{background:none;border:0;padding:2px 0;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ink-dim);text-decoration:underline;text-underline-offset:3px;cursor:pointer} /* «Glemt passord?» under innloggingen */
+  .pw-forgot:hover{color:var(--mint)}
   /* ===== KART (09.11.2026): alle oppfølginger på kart — Leaflet med mørke fliser, pulserende neon-prikker ===== */
   .kart-btn{color:var(--mint);background:rgba(61,245,197,.08);border-color:rgba(61,245,197,.3)}
   .kart-btn:hover{background:rgba(61,245,197,.16);border-color:rgba(61,245,197,.5)}
@@ -1559,7 +1561,7 @@
   const FEED_TYPE={'kort.ny':'la til kort manuelt','kort.ai':'leste kort med AI','kort.ai-skjema':'AI-skjema','kort.endret':'endret','kort.fjernet':'fjernet kort','kort.angret':'angret','kort.slettet':'slettet kort',
     'knapp.salesforce':'kopierte besøksnr (Salesforce)','knapp.naviger':'trykket Naviger','knapp.bilde':'åpnet kartbildet','knapp.demp':'demp 2. varsel','knapp.ny':'trykket + Ny manuell','knapp.oppdater':'lastet appen på nytt','knapp.rydd':'Rydd eldre forfalte','knapp.kart':'åpnet kartet','knapp.kart-filter':'byttet kartfilter','knapp.kart-kort':'åpnet kort fra kartet',
     'lim-inn.start':'trykket Lim inn','lim-inn.feil':'AI-lesing feilet','sok':'søkte','fane':'byttet fane',
-    'profil.apnet':'åpnet Min profil','profil.lukket':'lukket Min profil','profil.varsel':'varselinnstilling','profil.passord':'endret passord','profil.login':'logget inn','profil.logout':'logget ut','profil.push':'varsler','profil.pushgate':'varsel-sperre','profil.nokkel':'API-nøkkel',
+    'profil.apnet':'åpnet Min profil','profil.lukket':'lukket Min profil','profil.varsel':'varselinnstilling','profil.passord':'endret passord','profil.glemt':'ba om passord-nullstilling (e-post)','profil.login':'logget inn','profil.logout':'logget ut','profil.push':'varsler','profil.pushgate':'varsel-sperre','profil.nokkel':'API-nøkkel',
     'synk.konflikt':'synk-konflikt','synk.na':'trykket Synk nå'};
   const FEED_VIEW={avtaler:'Avtaler',uten:'Uten tidspunkt',gjore:'Må gjøres',alle:'Alle',forfalte:'Forfalte',send_offer:'Må gjøres',waiting_reply:'Tilbud sendt'};
   const FEED_VS={min:'Varsel (min før)',ekstra:'Ekstra varsel',ekstraMin:'Ekstra varsel (min før)',dagOn:'Dagsoversikt',dagTid:'Dagsoversikt kl.',gjoreOn:'Ugjorte fra i går',gjoreTid:'Ugjorte fra i går kl.'};
@@ -1950,6 +1952,19 @@
       if(error)throw error;feed('innstilling','profil.passord');toast('Passord lagret – bruk e-post + passord på hjemskjerm-appen');renderCloudModalBody();renderProfileBody();closeProfileModal();}
     catch(e){toast('Kunne ikke lagre passord: '+(e&&e.message||''));}
   }
+  // Glemt passord (utlogget): Supabase sender e-post med lenke → lenken åpner appen innlogget (type=recovery) → Min profil åpnes med «nytt passord». (Christian 09.11.2026)
+  async function cloudResetPassword(email){
+    const c=getSupabaseClient();if(!c){toast('Sky-synk ikke konfigurert');return;}
+    email=String(email||'').trim();if(!email||email.indexOf('@')<0){toast('Skriv e-posten din først, så trykker du «Glemt passord?»');return;}
+    try{const {error}=await c.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+      if(error)throw error;feed('innstilling','profil.glemt');
+      toast('Sjekk e-posten din. Lenken åpner appen i Safari – velg nytt passord der, og logg så inn her med e-post + nytt passord.');}
+    catch(e){toast('Fikk ikke sendt e-post: '+(e&&e.message||''));}
+  }
+  function cloudRecoveryStart(){ // kom inn via nullstillingslenke → rett til passordfeltet
+    openProfileModal();toast('Velg et nytt passord og trykk «Lagre nytt passord»');
+    setTimeout(function(){try{$('pfNewPw').focus();}catch(e){}},250);
+  }
   async function cloudSignOut(){
     feed('innstilling','profil.logout');try{await Promise.race([feedFlush(),sleep(1500)]);}catch(e){} // send køen FØR utlogging (etterpå avvises radene)
     const c=getSupabaseClient();if(c){try{await c.auth.signOut();}catch(e){}}
@@ -1963,9 +1978,13 @@
     if(!ok){setCloudState('unconfigured');return;} // CDN lastet ikke → app fungerer lokalt
     const c=getSupabaseClient();if(!c){setCloudState('unconfigured');return;}
     try{const {data:{session}}=await c.auth.getSession();sbUser=session?session.user:null;}catch(e){sbUser=null;}
+    const recovery=/type=recovery/.test(location.hash||''); // kom via «Glemt passord»-lenke
     if(location.hash&&/access_token|refresh_token|[?&]code=|type=/.test(location.hash)){
       try{history.replaceState(null,'',location.origin+location.pathname+location.search);}catch(e){}}
+    let recoveryShown=false;
+    if(recovery&&sbUser){recoveryShown=true;setTimeout(cloudRecoveryStart,400);}
     c.auth.onAuthStateChange(function(_evt,session){
+      if(_evt==='PASSWORD_RECOVERY'&&!recoveryShown){recoveryShown=true;setTimeout(cloudRecoveryStart,400);}
       const was=!!sbUser;sbUser=session?session.user:null;
       if(was&&!sbUser)setCloudState('login'); // sesjonen forsvant → ikke vis «Synket» lenger
       renderCloudStatus();
@@ -2026,6 +2045,7 @@
         +'<div class="cloud-row"><input id="cloudEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="din@epost.no"></div>'
         +'<div class="cloud-row"><input id="cloudPw" type="password" autocomplete="current-password" placeholder="passord"></div>'
         +'<div class="cloud-row"><button class="btn primary" id="cloudLoginPw">Logg inn</button></div>'
+        +'<div class="cloud-row"><button type="button" class="pw-forgot" id="cloudForgot" data-email="cloudEmail">Glemt passord?</button></div>'
         +'<div class="cloud-row cloud-status-line">Status: '+(CLOUD_LBL[cloudState]||'')+'</div>';
     }
   }
@@ -2047,7 +2067,8 @@
       b.innerHTML='<div class="cloud-row cloud-muted">Logg inn for å kunne bytte passord.</div>'
         +'<div class="cloud-row"><input id="pfEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="din@epost.no"></div>'
         +'<div class="cloud-row"><input id="pfPw" type="password" autocomplete="current-password" placeholder="passord"></div>'
-        +'<div class="cloud-row"><button class="btn primary" id="pfLogin">Logg inn</button></div>';
+        +'<div class="cloud-row"><button class="btn primary" id="pfLogin">Logg inn</button></div>'
+        +'<div class="cloud-row"><button type="button" class="pw-forgot" id="pfForgot" data-email="pfEmail">Glemt passord?</button></div>';
     }
   }
   function adminSectionHtml(){
@@ -2093,6 +2114,7 @@
       const id=e.target.id;
       if(id==='profileClose'){closeProfileModal();return;}
       if(id==='pfLogin'){const em=($('pfEmail')&&$('pfEmail').value||'').trim();const pw=($('pfPw')&&$('pfPw').value||'');cloudSignInPassword(em,pw);return;}
+      if(id==='pfForgot'){cloudResetPassword($('pfEmail')&&$('pfEmail').value);return;}
       if(id==='pfSavePw'){const pw=($('pfNewPw')&&$('pfNewPw').value||'');cloudSetPassword(pw);return;}
       if(id==='pfLogout'){cloudSignOut().then(renderProfileBody);return;}
       if(id==='pushOn'){enablePush();return;}
@@ -2129,6 +2151,7 @@
       const id=e.target.id;
       if(id==='cloudClose'){closeCloudModal();return;}
       if(id==='cloudLoginPw'){const em=($('cloudEmail')&&$('cloudEmail').value||'').trim();const pw=($('cloudPw')&&$('cloudPw').value||'');cloudSignInPassword(em,pw);return;}
+      if(id==='cloudForgot'){cloudResetPassword($('cloudEmail')&&$('cloudEmail').value);return;}
       if(id==='cloudSavePw'){const pw=($('cloudNewPw')&&$('cloudNewPw').value||'');cloudSetPassword(pw);return;}
       if(id==='cloudSyncNow'){feed('innstilling','synk.na');cloudReconcile();return;}
       if(id==='cloudLogout'){cloudSignOut().then(renderCloudModalBody);return;}
