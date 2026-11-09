@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-09-164">
+<meta name="app-build" content="2026-11-09-165">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -548,10 +548,19 @@
   .kart-btn:hover{background:rgba(61,245,197,.16);border-color:rgba(61,245,197,.5)}
   #kartModal{z-index:175} /* under de andre modalene (180): «Åpne kortet» fra kartet legger redigeringsskjemaet OVER kartet */
   .kart-card{width:min(1280px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px}
-  .kart-head{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding-bottom:10px;border-bottom:1px solid var(--hair)}
+  .kart-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--hair)}
   .kart-head .seg{flex:none} .kart-head .seg button{padding:7px 9px;letter-spacing:.02em}
+  .kart-head .cnt{margin-left:5px;opacity:.75;font-weight:800} .kart-head .cnt:empty{display:none} /* antall pr. knapp, skjult ved 0 */
+  /* rad 2: «Vis også»-brytere — ser bevisst annerledes ut enn rad 1 (pille med fargeprikk som i forklaringen, ikke mint-fylt) */
+  .kart-head-row2{flex:1 0 100%;display:flex;align-items:center;gap:8px;min-width:0}
+  .kart-head-row2.is-moot .kart-tgl{opacity:.35;pointer-events:none} /* Alle: alt vises uansett */
+  .kart-vis-lbl{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .kart-tgl{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-faint);background:rgba(255,255,255,.03);border:1px solid var(--hair-2);border-radius:999px;padding:6px 11px 6px 9px;cursor:pointer;--c:var(--ink-faint)}
+  .kart-tgl.forf{--c:var(--red)} .kart-tgl.uten{--c:#8b93a8}
+  .kart-tgl i{width:9px;height:9px;border-radius:50%;border:2px solid var(--c);background:transparent;flex:none}
+  .kart-tgl.on{color:var(--ink);border-color:var(--c);background:rgba(255,255,255,.06)} .kart-tgl.on i{background:var(--c);box-shadow:0 0 8px var(--c)}
   .kart-head .seg button[data-v="idag"]{color:var(--mint)} .kart-head .seg button.on{color:#06120e} /* «I dag» = ett trykk, derfor uthevet */
-  .kart-head #kartStatus{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kart-head #kartStatus{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
   .kart-meg-btn{position:absolute;left:12px;top:82px;z-index:6;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#4aa3ff;background:#0d1019;border:1px solid var(--hair);border-radius:4px;cursor:pointer;box-shadow:0 10px 30px -14px rgba(0,0,0,.9)}
   .kart-meg-btn:hover{background:#171b28}
   .kart-sat-btn{top:118px;color:var(--ink-dim);font-size:15px} .kart-sat-btn.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a);border-color:transparent}
@@ -815,17 +824,23 @@
   <div class="modal" id="kartModal">
     <div class="m-card kart-card">
       <div class="kart-head"><span class="m-title" style="margin:0">Kart</span>
+        <!-- rad 1 = NÅR (ett valg om gangen). rad 2 = VIS OGSÅ (brytere som legges oppå, huskes på enheten). Tallene fylles av kartTell() -->
         <div class="seg" id="kartFilt">
-          <button type="button" data-v="idag">I dag</button>
-          <button type="button" data-v="2uker" class="on">I dag + 2 uker</button>
-          <button type="button" data-v="uka">Denne uka</button>
-          <button type="button" data-v="igar">I går</button>
-          <button type="button" data-v="7d">Siste 7 dager</button>
-          <button type="button" data-v="forfalt">Forfalte</button>
-          <button type="button" data-v="alle">Alle</button>
+          <button type="button" data-v="rundt" class="on" title="I går (det ugjorte), i dag og i morgen">I går–i morgen<span class="cnt"></span></button>
+          <button type="button" data-v="igar">I går<span class="cnt"></span></button>
+          <button type="button" data-v="idag" title="Dagens avtaler, også de som alt er forfalt i dag">I dag<span class="cnt"></span></button>
+          <button type="button" data-v="imorgen">I morgen<span class="cnt"></span></button>
+          <button type="button" data-v="neste7" title="I dag + 7 dager fram">Neste 7 d<span class="cnt"></span></button>
+          <button type="button" data-v="siste7" title="7 dager bakover + i dag">Siste 7 d<span class="cnt"></span></button>
+          <button type="button" data-v="alle" title="Alle oppfølginger med adresse, uansett dato">Alle<span class="cnt"></span></button>
         </div>
-        <span id="kartStatus" class="feed-status"></span>
         <button class="btn" id="kartClose" style="margin-left:auto;flex:none">✕</button>
+        <div class="kart-head-row2" id="kartRow2">
+          <span class="kart-vis-lbl">Vis også</span>
+          <button type="button" class="kart-tgl forf" id="kartVisForf" data-vis="forf" title="Legg alle forfalte (røde) oppå det du ser"><i></i>Forfalte<span class="cnt"></span></button>
+          <button type="button" class="kart-tgl uten" id="kartVisUten" data-vis="uten" title="Legg kunder uten tidspunkt (grå) oppå det du ser"><i></i>Uten tidspunkt<span class="cnt"></span></button>
+          <span id="kartStatus" class="feed-status"></span>
+        </div>
       </div>
       <div class="kart-wrap">
         <div id="kartMap"></div>
@@ -3799,9 +3814,13 @@
   // Standardfilter: i dag (også forfalt i dag) + 14 dager fram. «I dag» = ett trykk. Prikkene pulserer i kortets farge.
   const KART_GEO_KEY='oppf:geo',KART_LEG_KEY='oppf:kartLegend',KART_MEG_KEY='oppf:kartMeg',KART_SAT_KEY='oppf:kartSat';
   let kartLagKart=null,kartLagSat=null,kartSatOn=false; // grunnkart: Kartverket (mørkt) eller flyfoto (Esri World Imagery) — valget huskes
+  const KART_VIS_KEY='oppf:kartVis';
+  let kartVis={forf:false,uten:false}; // «Vis også»-bryterne (rad 2): legges oppå perioden, huskes på enheten. Perioden (rad 1) starter alltid på «rundt»
+  function kartVisLoad(){try{const v=JSON.parse(localStorage.getItem(KART_VIS_KEY)||'{}')||{};kartVis={forf:!!v.forf,uten:!!v.uten};}catch(e){kartVis={forf:false,uten:false};}}
+  function kartVisSave(){try{localStorage.setItem(KART_VIS_KEY,JSON.stringify(kartVis));}catch(e){}}
   const KART_LIB='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min';
   var kartOpenFlag=false; // var (ikke let): render() spør etter denne og kan kjøre før blokka her er nådd
-  let kartMap=null,kartLayer=null,kartMe=null,kartFilt='2uker',kartLibP=null,kartGeo=null,kartQ=[],kartInFlight={},kartBusy=0,kartWatch=null,kartSig='',kartDrawT=null,
+  let kartMap=null,kartLayer=null,kartMe=null,kartFilt='rundt',kartLibP=null,kartGeo=null,kartQ=[],kartInFlight={},kartBusy=0,kartWatch=null,kartSig='',kartDrawT=null,
       kartUserMoved=false,kartProg=false,kartFirstFit=true,kartOpenedAt=0,kartNett=false,kartMarkers={},kartUtenOpen=false,kartGeoT=null;
   function kartGeoLoad(){if(!kartGeo){try{kartGeo=JSON.parse(localStorage.getItem(KART_GEO_KEY)||'{}')||{};}catch(e){kartGeo={};}}return kartGeo;}
   function kartGeoSave(){clearTimeout(kartGeoT);kartGeoT=setTimeout(function(){try{localStorage.setItem(KART_GEO_KEY,JSON.stringify(kartGeo));}catch(e){}},500);}
@@ -3858,27 +3877,58 @@
     kartStatus();
   }
   function kartAktive(){return items.filter(function(i){return i.state!=='fulgt'&&i.adresse;});}
-  function kartFilterItems(){
-    const n=now(),td0=startOfDay(n),tm=+td0+864e5,P=function(i){return p(i.dato);},act=kartAktive();
-    switch(kartFilt){
-      case 'idag':return act.filter(function(i){return i.dato&&sameDay(P(i),n);});                                   // alt datert i dag, også forfalt i dag
-      case 'uka':{const w0=+startOfWeek(n),w1=w0+7*864e5;return act.filter(function(i){return i.dato&&+P(i)>=w0&&+P(i)<w1;});}
-      case 'igar':{const y=new Date(+td0-864e5);return act.filter(function(i){return i.dato&&sameDay(P(i),y);});}
-      case '7d':{const f=+td0-7*864e5;return act.filter(function(i){return i.dato&&+P(i)>=f&&+P(i)<tm;});}        // siste 7 dager t.o.m. i dag
-      case 'forfalt':return act.filter(function(i){return i.dato&&P(i)<n;});
+  // Grunnsettet for en periode (rad 1), uten påslag — brukes av både visningen og tellerne. dag(k) = lokal midnatt k dager fra i dag (tåler sommertid)
+  function kartGrunn(filt,act,n){
+    const dag=function(k){const x=new Date(n);x.setHours(0,0,0,0);x.setDate(x.getDate()+k);return +x;};
+    const mellom=function(a,b){return act.filter(function(i){if(!i.dato)return false;const t=+p(i.dato);return t>=a&&t<b;});};
+    switch(filt){
+      case 'igar':return mellom(dag(-1),dag(0));
+      case 'idag':return mellom(dag(0),dag(1));        // dagens avtaler, også forfalt i dag
+      case 'imorgen':return mellom(dag(1),dag(2));
+      case 'neste7':return mellom(dag(0),dag(8));      // i dag + 7 dager fram (dagens plan forsvinner aldri)
+      case 'siste7':return mellom(dag(-7),dag(1));     // 7 dager bakover + i dag
       case 'alle':return act;
-      default:{const e=+td0+15*864e5;return act.filter(function(i){return i.dato&&+P(i)>=+td0&&+P(i)<e;});}        // standard: i dag (også forfalt i dag) + 14 dager fram
+      default:return mellom(dag(-1),dag(2));           // «rundt» (standard): i går (det ugjorte) + i dag + i morgen (Christian 09.11.2026)
     }
   }
+  function kartFilterItems(){ // grunnsett + «Vis også»-påslag (ikke ved Alle — da vises alt uansett), uten duplikater
+    const n=now(),act=kartAktive(),m=new Map();
+    kartGrunn(kartFilt,act,n).forEach(function(i){m.set(i.id,i);});
+    if(kartFilt!=='alle'){
+      if(kartVis.forf)act.forEach(function(i){if(i.dato&&p(i.dato)<n)m.set(i.id,i);});
+      if(kartVis.uten)act.forEach(function(i){if(!i.dato)m.set(i.id,i);});
+    }
+    return Array.from(m.values());
+  }
+  function kartTell(){ // tall på knappene: grunnsett pr. periode (uten påslag), forfalte totalt, uten tidspunkt totalt. Tomt ved 0 (CSS skjuler)
+    const n=now(),act=kartAktive();
+    document.querySelectorAll('#kartFilt button[data-v]').forEach(function(b){const c=b.querySelector('.cnt');if(c)c.textContent=kartGrunn(b.dataset.v,act,n).length||'';});
+    const f=act.filter(function(i){return i.dato&&p(i.dato)<n;}).length,u=act.filter(function(i){return !i.dato;}).length;
+    const cf=$('kartVisForf').querySelector('.cnt'),cu=$('kartVisUten').querySelector('.cnt');if(cf)cf.textContent=f||'';if(cu)cu.textContent=u||'';
+  }
   function kartKlasse(it,n){if(!it.dato)return 'uten';const d=p(it.dato);if(d<n)return 'forfalt';if(sameDay(d,n))return 'idag';return 'snart';}
-  function kartTipTekst(it,n){ // tekst over prikken: klokkeslett (dato hvis ikke i dag) + besøkskommentaren (ellers navn/adresse)
-    const d=it.dato?p(it.dato):null,t=d?(sameDay(d,n)?hhmm(d):d.getDate()+'. '+MO[d.getMonth()]+' '+hhmm(d)):'';
+  // Relativ dag slik en selger sier det (Christian 09.11.2026): «I dag», «I morgen», «I går», «2 d. siden», «Onsdag» (senere denne uka),
+  // «Neste uke (ons)», «Om 9 d»; mer enn 30 dager unna → datoen («4. des»)
+  const KART_WD=['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
+  function kartRelDag(d,n){
+    const dd=Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()))/864e5);
+    if(dd===0)return 'I dag';if(dd===1)return 'I morgen';if(dd===-1)return 'I går';
+    const dato=d.getDate()+'. '+MO[d.getMonth()];
+    if(dd<0)return dd>=-30?(-dd)+' d. siden':dato;
+    const w0=+startOfWeek(n),t=+startOfDay(d);
+    if(t<w0+7*864e5)return KART_WD[d.getDay()];
+    if(t<w0+14*864e5)return 'Neste uke ('+WDU[d.getDay()].toLowerCase()+')';
+    return dd<=30?'Om '+dd+' d':dato;
+  }
+  function kartTipTekst(it,n){ // tekst over prikken: relativ dag + klokkeslett + besøkskommentaren (ellers navn/adresse)
+    const d=it.dato?p(it.dato):null,t=d?kartRelDag(d,n)+' '+hhmm(d):'';
     let k=String(it.kommentar||'').replace(/\s+/g,' ').trim();if(!k)k=it.navn||addrShort(it.adresse);if(k.length>46)k=k.slice(0,44)+'…';
     return (t?'<span class="kt-t">'+esc(t)+'</span>':'')+esc(k);
   }
   function kartPopup(it,n){
     const d=it.dato?p(it.dato):null,kl=kartKlasse(it,n);
-    const naar=d?esc(dayLabel(d))+' · '+hhmm(d)+(kl==='forfalt'?' · <span class="kp-forf">forfalt</span>':''):'Uten tidspunkt';
+    const rel=d?kartRelDag(d,n):'';
+    const naar=d?(/^\d/.test(rel)?'':esc(rel)+' · ')+esc(dayLabel(d))+' · '+hhmm(d)+(kl==='forfalt'?' · <span class="kp-forf">forfalt</span>':''):'Uten tidspunkt';
     const na=it.nextAction&&NA_META[it.nextAction]?NA_META[it.nextAction].label:'';
     const tags=[it.status,na,it.salgsrunde].filter(Boolean).map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join('');
     return '<div class="kpop">'+(it.navn?'<div class="kp-n">'+esc(it.navn)+(it.alder?' <span class="kp-age">'+esc(it.alder)+'</span>':'')+'</div>':'')
@@ -3916,7 +3966,7 @@
         kartProg=true;if(med.length===1&&!kartMe)kartMap.setView(b.getCenter(),16);else kartMap.fitBounds(b,{padding:[48,48],maxZoom:16});setTimeout(function(){kartProg=false;},700);
       }
     }
-    kartUtenRender(uten);kartStatus(med.length,uten.filter(function(x){return !kartTrenger(x[0].adresse);}).length);
+    kartTell();kartUtenRender(uten);kartStatus(med.length,uten.filter(function(x){return !kartTrenger(x[0].adresse);}).length);
   }
   function kartUtenRender(uten){ // adresser Kartverket ikke fant (eller uten husnummer) — de som ligger i køen telles ikke ennå
     const ferdige=uten.filter(function(x){return !kartTrenger(x[0].adresse);}),btn=$('kartUtenBtn'),box=$('kartUten');
@@ -3929,7 +3979,11 @@
   }
   function kartLegendSet(on){try{localStorage.setItem(KART_LEG_KEY,on?'1':'0');}catch(e){}kartLegendSync();}
   function kartLegendSync(){let on=true;try{on=localStorage.getItem(KART_LEG_KEY)!=='0';}catch(e){}$('kartLegend').style.display=on?'':'none';$('kartInfo').style.display=on?'none':'';}
-  function kartFiltSync(){document.querySelectorAll('#kartFilt button').forEach(function(b){b.classList.toggle('on',b.dataset.v===kartFilt);});}
+  function kartFiltSync(){
+    document.querySelectorAll('#kartFilt button').forEach(function(b){b.classList.toggle('on',b.dataset.v===kartFilt);});
+    $('kartVisForf').classList.toggle('on',kartVis.forf);$('kartVisUten').classList.toggle('on',kartVis.uten);
+    $('kartRow2').classList.toggle('is-moot',kartFilt==='alle'); // Alle viser alt uansett → bryterne dempes
+  }
   function kartLoadLib(){ // Leaflet-CSS legges FØR appens <style>, så appens mørke overstyringer vinner
     if(window.L)return Promise.resolve();if(kartLibP)return kartLibP;
     kartLibP=new Promise(function(res,rej){
@@ -3977,7 +4031,7 @@
   }
   async function kartOpen(){
     kartOpenFlag=true;kartOpenedAt=Date.now();kartUserMoved=false;kartFirstFit=true;kartSig='';kartNett=false;kartUtenOpen=false;
-    kartFilt='2uker';kartFiltSync();kartLegendSync();
+    kartFilt='rundt';kartVisLoad();kartFiltSync();kartLegendSync(); // perioden starter alltid på i går–i morgen; bryterne som sist
     $('kartModal').classList.add('open');$('kartMsg').style.display='';$('kartMsg').textContent='Laster kart …';kartStatus();
     feed('kort','knapp.kart',{n:kartFilterItems().length,adresser:kartAktive().length});
     try{await kartLoadLib();}catch(e){$('kartMsg').textContent='Kartet trenger nettilgang — fikk ikke lastet kartbiblioteket. Prøv igjen når du har dekning.';return;}
@@ -4000,8 +4054,10 @@
   $('kartMeg').addEventListener('click',function(){kartUserMoved=true;kartVisMeg(true);});
   $('kartSat').addEventListener('click',function(){kartSatSet(!kartSatOn);feed('kort','knapp.kart-filter',{satellitt:kartSatOn?'på':'av'});});
   $('kartFilt').addEventListener('click',function(e){const b=e.target.closest('button[data-v]');if(!b||b.dataset.v===kartFilt)return;
-    kartFilt=b.dataset.v;kartFiltSync();kartUserMoved=false;kartFirstFit=true;kartUtenOpen=false;feed('kort','knapp.kart-filter',{filter:kartFilt});kartEnqueue(kartFilterItems(),true);kartDraw(true);});
-  $('kartModal').addEventListener('click',function(e){ // bokser utenfor selve kartet (forklaring, «uten plassering»)
+    kartFilt=b.dataset.v;kartFiltSync();kartUserMoved=false;kartFirstFit=true;kartUtenOpen=false;feed('kort','knapp.kart-filter',{filter:kartFilt,forf:kartVis.forf,uten:kartVis.uten});kartEnqueue(kartFilterItems(),true);kartDraw(true);});
+  $('kartModal').addEventListener('click',function(e){ // bokser utenfor selve kartet (brytere, forklaring, «uten plassering»)
+    const tg=e.target.closest('.kart-tgl');if(tg){const k=tg.dataset.vis;kartVis[k]=!kartVis[k];kartVisSave();kartFiltSync(); // «Vis også» av/på — kartutsnittet beholdes
+      feed('kort','knapp.kart-filter',{filter:kartFilt,forf:kartVis.forf,uten:kartVis.uten});kartEnqueue(kartFilterItems(),true);kartDraw(true);return;}
     const o=e.target.closest('[data-kart-open]');if(o&&!e.target.closest('#kartMap')){const it=byId(o.dataset.kartOpen);if(it){feedK(it.id,'knapp.kart-kort');openForm(it);}return;}
     if(e.target.closest('[data-kart-uten-close]')){kartUtenOpen=false;kartDraw(true);return;}
     if(e.target.closest('#kartUtenBtn')){kartUtenOpen=true;kartDraw(true);return;}
