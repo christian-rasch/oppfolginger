@@ -149,6 +149,17 @@ N('«etter 19» AI i dag 19, nå 19:30 → i dag 20:00',{dato:'2026-11-04T19:00'
 N('«Kom innom 16.20» uten «etter», nå 16:40 → i morgen (som før)',{dato:'2026-10-14T16:20',eksaktDato:false},'Kom innom 16.20','2026-10-14T16:40','2026-10-15T16:20');
 N('«etter kl 22» nå 23:05 (for sent paa kvelden) → i morgen 22:00',{dato:'2026-11-04T22:00',eksaktDato:false},'Kom etter kl 22','2026-11-04T23:05','2026-11-05T22:00');
 N('«Kontakt mandag etter kl 18» ukedag, nå mandag 18:03 → neste mandag (ukedagsregel, ikke rørt)',{dato:'2026-11-09T18:00',eksaktDato:false},'Kontakt mandag etter kl 18','2026-11-09T18:03','2026-11-16T18:00');
+// --- 09.11.2026: «komme tilbake en annen dag»/«en annen gang» = om 2 VIRKEDAGER kl 15 (Christian; justert fra skyjobbens PR #2 «i morgen 12»). Joshua skrev det to ganger ---
+N('«Komme tilbake en annen dag» tor 20:49, AI tom → mandag 15:00',{dato:null},'Telia Komme tilbake en annen dag','2026-11-05T20:49','2026-11-09T15:00');
+N('«en annen dag», AI i morgen 12 → mandag 15:00',{dato:'2026-11-06T12:00',eksaktDato:false},'Telia Komme tilbake en annen dag','2026-11-05T20:49','2026-11-09T15:00');
+N('«en annen dag», AI i dag 21:15 → mandag 15:00',{dato:'2026-11-05T21:15',eksaktDato:false},'Komme tilbake en annen dag','2026-11-05T18:01','2026-11-09T15:00');
+N('«en annen gang» fredag → tirsdag 15:00',{dato:null},'Prøv en annen gang','2026-11-06T17:00','2026-11-10T15:00');
+N('«en annen dag» lørdag → tirsdag 15:00',{dato:null},'kom tilbake en annen dag','2026-11-07T13:00','2026-11-10T15:00');
+N('«en annen dag» mandag → onsdag 15:00',{dato:null},'kom tilbake en annen dag','2026-11-09T10:00','2026-11-11T15:00');
+N('«en annen dag» ons 23.12 → man 28.12 (jul = fri)',{dato:null},'kom tilbake en annen dag','2026-12-23T12:00','2026-12-28T15:00');
+N('«en annen dag, helst fredag» → fredag vinner',{dato:'2026-11-06T12:00',eksaktDato:false},'kom tilbake en annen dag, helst fredag','2026-11-05T20:49','2026-11-06T12:00');
+N('«en annen dag etter 18» → om 2 virkedager kl 18',{dato:null},'kom tilbake en annen dag etter 18','2026-11-05T20:49','2026-11-09T18:00');
+N('«Komme tilbake» uten «annen dag», AI i dag → urørt (som før)',{dato:'2026-11-05T21:00',eksaktDato:false},'Komme tilbake','2026-11-05T19:00','2026-11-05T21:00');
 N('«Ring på fredag kl 11:00» onsdag → fredag 11:00',{dato:'2026-10-23T11:00',eksaktDato:false},'Ring på fredag kl 11:00','2026-10-21T11:40','2026-10-23T11:00');
 N('«mandag 1600» torsdag, AI tom → mandag 16:00 («var ikke hjemme» etter ukedagen er ikke fortid)',{dato:null},'Komme tilbake mandag 1600. Mannen var ikke hjemme.','2026-10-22T19:28','2026-10-26T16:00');
 N('«lørdag midt i brann kamp» → lørdag 12:00 (ingen tid i notatet)',{dato:null},'Ring opp lørdag midt i brann kamp','2026-10-22T19:09','2026-10-24T12:00');
