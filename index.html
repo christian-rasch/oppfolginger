@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-09-167">
+<meta name="app-build" content="2026-11-09-168">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -877,14 +877,6 @@
     </div>
   </div>
 
-  <div class="modal" id="cloudConflictModal">
-    <div class="m-card cloud-card">
-      <div class="m-title">Synk-konflikt</div>
-      <div class="cloud-muted">Både denne enheten og skyen har endringer siden sist synk. Velg hvilken du vil beholde — ingenting slettes før du velger.</div>
-      <div id="cloudConflictInfo" class="cloud-conflict-info"></div>
-      <div class="m-foot"><button class="btn" id="cfgCancel">Avbryt</button><button class="btn" id="cfgCloud">Bruk skydata</button><button class="btn primary" id="cfgLocal">Bruk denne enheten</button></div>
-    </div>
-  </div>
 
   <div class="toast" id="toast"><span id="toastMsg"></span><button class="t-undo" id="toastUndo" style="display:none">Angre</button></div>
 
@@ -1205,8 +1197,23 @@
   const KEY='oppf:index';
   let items=[];
   const byId=id=>items.find(i=>i.id===id);
+  // Endringstidspunkt pr. kort (`endret`, ms) — brukes når to enheter har endret lista samtidig (cloudMerge: nyeste endring vinner). Settes ved lagring
+  // for kort som faktisk er endret siden forrige lagring; feltet selv og ai.endret holdes utenfor sammenlikningen. Nye kort: opprettet-tidspunktet.
+  let saveSnap=new Map();
+  const utenEndret=function(k,v){return k==='endret'?undefined:v;};
+  function saveSnapReset(){saveSnap=new Map();items.forEach(function(it){saveSnap.set(it.id,JSON.stringify(it,utenEndret));});} // skyhenting/adminbytte = ikke brukerendring
+  function stampEndret(){
+    try{const now=Date.now(),seen=new Set();
+      items.forEach(function(it){const s=JSON.stringify(it,utenEndret);seen.add(it.id);
+        if(saveSnap.has(it.id)){if(saveSnap.get(it.id)!==s)it.endret=now;}
+        else if(!it.endret)it.endret=+it.opprettet||now;
+        saveSnap.set(it.id,s);});
+      saveSnap.forEach(function(v,k){if(!seen.has(k))saveSnap.delete(k);});
+    }catch(e){}
+  }
   function save(){
     feedDiff(); // live feed: kortendringer felt for felt (feed() logger ingenting i admin-visning)
+    stampEndret();
     if(adminView){adminOnEdit();return;} // admin: endringer går til selgerens rad, din lokale data røres ikke
     store.set(KEY,JSON.stringify(items));cloudOnLocalSave();
   }
@@ -1225,7 +1232,7 @@
   // Bruk ALDRI service_role-nøkkel her.
   const CKEY={dev:'oppf:cloud:deviceId',hash:'oppf:cloud:lastHash',srv:'oppf:cloud:lastServerAt',pull:'oppf:cloud:lastPullAt'};
   const CLOUD_LBL={off:'Lokal',unconfigured:'Sky av',login:'Logg inn',syncing:'Synker…',synced:'Synket',dirty:'Ikke synket',conflict:'Konflikt',error:'Feil'};
-  let sbClient=null,sbUser=null,cloudState='off',cloudPushTimer=null,conflictData=null,cloudStaleTimer=null;
+  let sbClient=null,sbUser=null,cloudState='off',cloudPushTimer=null,cloudStaleTimer=null;
   // ---- admin: se/endre andre selgeres oppfølginger ----
   const ADMIN_EMAILS=['christian.rasch@snodriv.no']; // kun disse e-postene får admin-tilgang
   let adminView=null,adminPushTimer=null,adminSellersCache=null,adminLoading=false; // adminView={userId,email,stash} når du ser på en annen selger
@@ -1278,7 +1285,7 @@
 
   // skriv skydata til lokal cache UTEN å trigge ny push (ingen ekko)
   function setLocalFollowupsFromCloud(data,serverAt){
-    items=(Array.isArray(data)?data:[]).map(migrate);feedSnapReset(); // skyhenting er ikke en brukerendring
+    items=(Array.isArray(data)?data:[]).map(migrate);feedSnapReset();saveSnapReset(); // skyhenting er ikke en brukerendring
     store.set(KEY,JSON.stringify(items));
     setCmeta(CKEY.hash,stableFollowupHash(items));
     if(serverAt)setCmeta(CKEY.srv,serverAt);
@@ -1327,8 +1334,29 @@
     const localChanged=(localHash!==lastHash);
     if(!localData.length){ setLocalFollowupsFromCloud(cloudData,row.updated_at);setCloudState('synced');return; }
     if(!localChanged){ if(serverChanged)setLocalFollowupsFromCloud(cloudData,row.updated_at); setCloudState('synced'); return; }
-    if(serverChanged){ setCloudState('conflict'); showCloudConflict(localData,cloudData,row.updated_at); return; }
+    if(serverChanged){ // endret både her og i skyen siden sist → flett (ingen dialog; Christian 09.11.2026)
+      const m=cloudMerge(localData,cloudData);
+      items=m.items.map(migrate);feedSnapReset();saveSnapReset();store.set(KEY,JSON.stringify(items));render();
+      feed('innstilling','synk.flettet',m.stat);logEvent('sync','flettet: '+JSON.stringify(m.stat));
+      toast('Slått sammen endringer fra to enheter ('+items.length+' kort)');
+      await cloudPush();return;
+    }
     await cloudPush(); // kun lokal endret
+  }
+  // Fletting av to lister med samme kort-id-er: kort som bare finnes én plass beholdes; samme kort endret begge steder → nyeste `endret` vinner
+  // (likt eller ukjent → denne enheten). Ingen kort går tapt. Før 09.11.2026 fikk selgeren en dialog («Bruk skydata / Bruk denne enheten») og Joshua mistet et kort.
+  function cloudMerge(localData,cloudData){
+    const byId=new Map();(Array.isArray(cloudData)?cloudData:[]).forEach(function(c){if(c&&c.id)byId.set(c.id,{sky:c});});
+    (Array.isArray(localData)?localData:[]).forEach(function(l){if(!l||!l.id)return;const e=byId.get(l.id);if(e)e.lok=l;else byId.set(l.id,{lok:l});});
+    const out=[];let skyVant=0,lokVant=0,bareSky=0,bareLok=0;
+    byId.forEach(function(e){
+      if(e.lok&&e.sky){
+        if(JSON.stringify(e.lok,utenEndret)===JSON.stringify(e.sky,utenEndret)){out.push(e.lok);return;}
+        const tl=+e.lok.endret||+e.lok.opprettet||0,ts=+e.sky.endret||+e.sky.opprettet||0;
+        if(ts>tl){out.push(e.sky);skyVant++;}else{out.push(e.lok);lokVant++;}
+      }else if(e.lok){out.push(e.lok);bareLok++;}else{out.push(e.sky);bareSky++;}
+    });
+    return {items:out,stat:{lokalt:(localData||[]).length,sky:(cloudData||[]).length,resultat:out.length,bareLok:bareLok,bareSky:bareSky,skyVant:skyVant,lokVant:lokVant}};
   }
   // kalt fra save(): debounced trygg synk
   function cloudOnLocalSave(){
@@ -1464,7 +1492,7 @@
     catch(e){toast('Kunne ikke hente selgerens data');return;}
     const stash=adminView?adminView.stash:items; // ved bytte mellom selgere: behold ORIGINAL egen liste
     adminView={userId:userId,email:email,stash:stash,varsler:varslerNorm(row&&row.varsler)}; // selgerens varsel-standard → skjemaet viser riktig utgangspunkt
-    items=(row&&Array.isArray(row.data)?row.data:[]).map(migrate);feedSnapReset();
+    items=(row&&Array.isArray(row.data)?row.data:[]).map(migrate);feedSnapReset();saveSnapReset();
     closeProfileModal();
     renderAdminBar();
     render();
@@ -1479,7 +1507,7 @@
     renderAdminBar();
     let mine=null;
     try{const raw=await store.get(KEY);if(raw)mine=JSON.parse(raw);}catch(e){}
-    items=(Array.isArray(mine)?mine:(Array.isArray(stash)?stash:[])).map(migrate);feedSnapReset();
+    items=(Array.isArray(mine)?mine:(Array.isArray(stash)?stash:[])).map(migrate);feedSnapReset();saveSnapReset();
     render();
   }
   function adminOnEdit(){
@@ -1558,7 +1586,7 @@
     feedK(id,pd.angre?'kort.angret':'kort.endret',{diff:diff,angre:pd.angre||undefined});}
   function feedDiff(){ // kalles først i save()
     try{
-      if(!feedSnap){feedSnapReset();return;}
+      if(!feedSnap){feedSnapReset();saveSnapReset();return;}
       const seen={},grp={},formOpen=$('formModal').classList.contains('open');
       items.forEach(function(it){
         seen[it.id]=1;const cur=feedTrk(it),old=feedSnap.get(it.id);
@@ -1602,7 +1630,7 @@
     'knapp.salesforce':'kopierte besøksnr (Salesforce)','knapp.naviger':'trykket Naviger','knapp.bilde':'åpnet kartbildet','knapp.demp':'demp 2. varsel','knapp.ny':'trykket + Ny manuell','knapp.oppdater':'lastet appen på nytt','knapp.rydd':'Rydd eldre forfalte','knapp.kart':'åpnet kartet','knapp.kart-filter':'byttet kartfilter','knapp.kart-kort':'åpnet kort fra kartet',
     'lim-inn.start':'trykket Lim inn','lim-inn.feil':'AI-lesing feilet','sok':'søkte','fane':'byttet fane',
     'profil.apnet':'åpnet Min profil','profil.lukket':'lukket Min profil','profil.varsel':'varselinnstilling','profil.passord':'endret passord','profil.glemt':'ba om passord-nullstilling (e-post)','profil.login':'logget inn','profil.logout':'logget ut','profil.push':'varsler','profil.pushgate':'varsel-sperre','profil.nokkel':'API-nøkkel',
-    'synk.konflikt':'synk-konflikt','synk.na':'trykket Synk nå'};
+    'synk.konflikt':'synk-konflikt','synk.flettet':'slo sammen endringer fra to enheter','synk.na':'trykket Synk nå'};
   const FEED_VIEW={avtaler:'Avtaler',uten:'Uten tidspunkt',gjore:'Må gjøres',alle:'Alle',forfalte:'Forfalte',send_offer:'Må gjøres',waiting_reply:'Tilbud sendt'};
   const FEED_VS={min:'Varsel (min før)',ekstra:'Ekstra varsel',ekstraMin:'Ekstra varsel (min før)',dagOn:'Dagsoversikt',dagTid:'Dagsoversikt kl.',gjoreOn:'Ugjorte fra i går',gjoreTid:'Ugjorte fra i går kl.'};
   function feedVal(f,v,max){ // verdi → lesbar tekst
@@ -1625,6 +1653,7 @@
   function feedSek(ms){return ms==null?'':' ('+(ms/1000).toFixed(ms<10000?1:0).replace('.',',')+' s)';}
   function feedWho(em){return esc(String(em||'').split('@')[0]);}
   function feedWhoRow(r){const s=feedSt.sellers.find(function(x){return x.user_id===r.user_id;});return feedWho((s&&s.email)||r.email);} // selger ut fra user_id (RLS-sikret), e-posten i raden bare som reserve
+  function feedVarighet(sek){sek=Math.max(0,Math.round(+sek||0));if(sek<60)return sek+' s';const m=Math.round(sek/60);if(m<60)return m+' min';return Math.floor(m/60)+' t '+(m%60)+' min';} // «8858 s» → «2 t 28 min» (Christian 09.11)
   function feedTekst(r){
     const d=r.data||{},ty=r.type||'';
     const lbl=FEED_TYPE[ty]||ty,k=(r._naa&&r._naa.kort)||d.kort||{},navn=k.navn?esc(shortName(k.navn)):(k.adresse?esc(addrShort(k.adresse)):'');
@@ -1639,14 +1668,15 @@
       case 'knapp.rydd':t=lbl+': '+(d.avbrutt?'avbrutt':'fjernet')+' '+(d.n||0)+' kort';break;
       case 'sok':t='søkte «'+esc(d.tekst||'')+'»'+(d.treff!=null?' ('+d.treff+' treff)':'');break;
       case 'fane':t='byttet til '+(FEED_VIEW[d.view]||d.view||'')+(d.sub&&d.sub!=='alle'?' › '+(FEED_VIEW[d.sub]||d.sub):'');break;
-      case 'profil.varsel':t=(FEED_VS[d.felt]||d.felt)+': '+esc(feedVal('',d.fra))+' → '+esc(feedVal('',d.til));break;
-      case 'profil.lukket':t=lbl+(d.sek!=null?' etter '+d.sek+' s':'');break;
+      case 'profil.varsel':t=(FEED_VS[d.felt]||d.felt)+': '+esc(feedVal('',d.fra))+' → '+esc(feedVal('',d.til))+(d.min!=null?' ('+esc(d.min)+' min før)':'')+(d.tid?' (kl. '+esc(d.tid)+')':'');break; // påslaget: hva bryteren gjelder (Christian 09.11)
+      case 'profil.lukket':t=lbl+(d.sek!=null?' etter '+feedVarighet(d.sek):'');break;
       case 'profil.push':t='varsler '+(d.til||'')+(d.ok===false?' (mislyktes'+(d.grunn?': '+esc(d.grunn):'')+')':'');break;
       case 'profil.pushgate':t=d.knapp?'varsel-sperre: trykket «sjekk igjen»':'fikk varsel-sperren (varsler er slått av på enheten)';break;
       case 'profil.nokkel':t='API-nøkkel '+(d.til||'');break;
       case 'profil.login':t=d.feil?'innlogging feilet: '+esc(d.feil):'logget inn';break;
       case 'lim-inn.feil':t='AI-lesing feilet'+(d.varig?' (varig)':'')+(d.feil?': '+esc(d.feil):'');break;
       case 'synk.konflikt':t=d.valg?'synk-konflikt: valgte '+esc(d.valg):'synk-konflikt vist ('+(d.lokalt||0)+' på enheten / '+(d.sky||0)+' i skyen)';break;
+      case 'synk.flettet':t='slo sammen to enheter: '+(d.lokalt||0)+' her + '+(d.sky||0)+' i skyen → '+(d.resultat||0)+' kort'+((d.skyVant||d.lokVant)?' ('+(d.skyVant||0)+' nyere fra skyen, '+(d.lokVant||0)+' nyere her)':'');break;
       default:t=lbl+(navn?' «'+navn+'»':'')+(FEED_TYPE[ty]?'':' '+esc(JSON.stringify(d).slice(0,160)));
     }
     return t;
@@ -1823,7 +1853,9 @@
   function varslerSet(patch){
     const prev=varsler;
     varsler=varslerNorm(Object.assign({},varsler,patch));
-    try{Object.keys(patch||{}).forEach(function(k){if(prev&&prev[k]!==varsler[k])feed('innstilling','profil.varsel',{felt:k,fra:prev[k],til:varsler[k]});});}catch(e){} // live feed
+    try{Object.keys(patch||{}).forEach(function(k){if(prev&&prev[k]!==varsler[k]){const ev={felt:k,fra:prev[k],til:varsler[k]}; // live feed; bryter PÅ tar med verdien den gjelder (Christian 09.11)
+      if(k==='ekstra'&&varsler.ekstra)ev.min=varsler.ekstraMin;if(k==='dagOn'&&varsler.dagOn)ev.tid=varsler.dagTid;if(k==='gjoreOn'&&varsler.gjoreOn)ev.tid=varsler.gjoreTid;
+      feed('innstilling','profil.varsel',ev);}});}catch(e){}
     setCmeta(VKEY,JSON.stringify(varsler));setCmeta(VDIRTY,'1');
     varslerPush();varslerRerender();
   }
@@ -2176,13 +2208,6 @@
     document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshPushGate();}); // hver gang appen åpnes igjen
     window.addEventListener('focus',refreshPushGate);
   }
-  function showCloudConflict(localData,cloudData,serverAt){
-    conflictData={cloud:cloudData,serverAt:serverAt};
-    const info=$('cloudConflictInfo');
-    if(info)info.textContent='Denne enheten: '+localData.length+' oppfølginger · Sky: '+(Array.isArray(cloudData)?cloudData.length:0)+' oppfølginger.';
-    $('cloudConflictModal').classList.add('open');
-    feed('innstilling','synk.konflikt',{vist:true,lokalt:localData.length,sky:Array.isArray(cloudData)?cloudData.length:0});
-  }
   function wireCloudUI(){
     const ind=$('cloudInd');if(ind)ind.addEventListener('click',function(){closeProfileModal();openCloudModal();});
     const m=$('cloudModal');
@@ -2196,14 +2221,6 @@
       if(id==='cloudSyncNow'){feed('innstilling','synk.na');cloudReconcile();return;}
       if(id==='cloudLogout'){cloudSignOut().then(renderCloudModalBody);return;}
     });
-    const cf=$('cloudConflictModal');
-    if(cf){
-      const close=function(){cf.classList.remove('open');};
-      const lo=$('cfgLocal'),cl=$('cfgCloud'),ca=$('cfgCancel');
-      if(lo)lo.addEventListener('click',function(){feed('innstilling','synk.konflikt',{valg:'enhet'});close();cloudPush();});
-      if(cl)cl.addEventListener('click',function(){feed('innstilling','synk.konflikt',{valg:'sky'});if(conflictData)setLocalFollowupsFromCloud(conflictData.cloud,conflictData.serverAt);close();setCloudState('synced');});
-      if(ca)ca.addEventListener('click',function(){feed('innstilling','synk.konflikt',{valg:'avbryt'});close();setCloudState('dirty');});
-    }
   }
 
   // ---------- datamodell + migrering (brukes ved innlasting OG import) ----------
