@@ -138,6 +138,17 @@ N('binding + imorgen → imorgen vinner',{dato:null},'Xx ringe imorgen hadde alt
 // --- 24.10.2026 (ekte kort fra gjennomgangen, ingen kodeendring – dokumenterer dagens oppfoersel) ---
 N('«Ring etter 12» kl 15:55 (passert), AI i morgen → urørt',{dato:'2026-10-22T12:00',eksaktDato:false},'[tlf] Ice [tlf] Shushan Ring etter 12','2026-10-21T15:55','2026-10-22T12:00');
 N('«Ring etter 12» kl 15:55, AI tom → i morgen kl 12',{dato:null},'Ring etter 12','2026-10-21T15:55','2026-10-22T12:00');
+// --- 09.11.2026: «etter kl X» lest inn INNEN en time etter X → i dag, neste hele time (Hans Petter «Kom tilbake etter kl18» kl 18:03 ble i morgen 18, han rettet selv til i dag 19) ---
+N('«etter kl18» AI i dag 18, nå 18:03 → i dag 19:00',{dato:'2026-11-04T18:00',eksaktDato:false},'Kom tilbake etter kl18','2026-11-04T18:03','2026-11-04T19:00');
+N('«etter kl18» AI i dag 18, nå 18:45 → i dag 19:00',{dato:'2026-11-04T18:00',eksaktDato:false},'Kom tilbake etter kl18','2026-11-04T18:45','2026-11-04T19:00');
+N('«etter kl18» AI i dag 18, nå 19:10 (over en time) → i morgen 18:00',{dato:'2026-11-04T18:00',eksaktDato:false},'Kom tilbake etter kl18','2026-11-04T19:10','2026-11-05T18:00');
+N('«etter kl18» AI i morgen 18, nå 18:03 → i dag 19:00',{dato:'2026-11-05T18:00',eksaktDato:false},'Kom tilbake etter kl18','2026-11-04T18:03','2026-11-04T19:00');
+N('«etter kl18» AI i morgen 18, nå 17:30 (ikke passert) → urørt',{dato:'2026-11-05T18:00',eksaktDato:false},'Kom tilbake etter kl18','2026-11-04T17:30','2026-11-05T18:00');
+N('«etter kl 18» AI tom, nå 18:03 → i dag 19:00',{dato:null},'Kom tilbake etter kl 18','2026-11-04T18:03','2026-11-04T19:00');
+N('«etter 19» AI i dag 19, nå 19:30 → i dag 20:00',{dato:'2026-11-04T19:00',eksaktDato:false},'ring etter 19','2026-11-04T19:30','2026-11-04T20:00');
+N('«Kom innom 16.20» uten «etter», nå 16:40 → i morgen (som før)',{dato:'2026-10-14T16:20',eksaktDato:false},'Kom innom 16.20','2026-10-14T16:40','2026-10-15T16:20');
+N('«etter kl 22» nå 23:05 (for sent paa kvelden) → i morgen 22:00',{dato:'2026-11-04T22:00',eksaktDato:false},'Kom etter kl 22','2026-11-04T23:05','2026-11-05T22:00');
+N('«Kontakt mandag etter kl 18» ukedag, nå mandag 18:03 → neste mandag (ukedagsregel, ikke rørt)',{dato:'2026-11-09T18:00',eksaktDato:false},'Kontakt mandag etter kl 18','2026-11-09T18:03','2026-11-16T18:00');
 N('«Ring på fredag kl 11:00» onsdag → fredag 11:00',{dato:'2026-10-23T11:00',eksaktDato:false},'Ring på fredag kl 11:00','2026-10-21T11:40','2026-10-23T11:00');
 N('«mandag 1600» torsdag, AI tom → mandag 16:00 («var ikke hjemme» etter ukedagen er ikke fortid)',{dato:null},'Komme tilbake mandag 1600. Mannen var ikke hjemme.','2026-10-22T19:28','2026-10-26T16:00');
 N('«lørdag midt i brann kamp» → lørdag 12:00 (ingen tid i notatet)',{dato:null},'Ring opp lørdag midt i brann kamp','2026-10-22T19:09','2026-10-24T12:00');
