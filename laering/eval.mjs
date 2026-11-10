@@ -14,6 +14,9 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
+// Selgerne og appen er i Norge: «Naa», «passert klokkeslett», ukedager og dagsgrenser regnes i norsk tid. Skyjobben kjører i UTC – uten dette ble
+// «Naa» 1–2 timer for tidlig (f.eks. «Klokken 1800» lest 18:39 → «ikke passert» → i dag). Rettet 10.11.2026; tall før dette fra skyjobben er litt for lave.
+process.env.TZ='Europe/Oslo';
 const HERE=dirname(fileURLToPath(import.meta.url));
 const require=createRequire(import.meta.url);
 const {laerApi}=require('./tester.js');
