@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-09-168">
+<meta name="app-build" content="2026-11-09-169">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -4025,6 +4025,14 @@
     if(rot.rotate)$('kartMap').classList.add('har-kompass'); // CSS flytter ◎/🛰 ned under kompassknappen
     kartMap.on('rotatestart rotate',function(){kartUserMoved=true;}); // vridd kart = brukeren styrer utsnittet
     kartMap.on('zoomstart',function(){$('kartMap').classList.add('kart-zooming');});kartMap.on('zoomend',function(){$('kartMap').classList.remove('kart-zooming');});
+    // Leaflet svelger zoom som bes om mens forrige zoom-animasjon (250 ms) pågår → raske dobbelttrykk/+-trykk «teller ikke». Her legges ønsket i kø med samme steg
+    // oppå animasjonens mål, og kjøres rett etter zoomend (Christian 09.11.2026: «registrerer ikke hvert zoom»)
+    const tryZ=kartMap._tryAnimatedZoom; // Leaflet starter animasjonen først i neste frame (_kartVenter dekker også det vinduet); _kartMaal = målet vi selv ba om
+    kartMap._tryAnimatedZoom=function(c,z,o){
+      if(this._animatingZoom||this._kartVenter){const d=z-this._zoom,m=this._kartNeste?this._kartNeste.z:this._kartMaal!=null?this._kartMaal:(this._animatingZoom&&this._animateToZoom!=null?this._animateToZoom:this._zoom);this._kartNeste={c:c,z:this._limitZoom(m+d),o:o};return true;} // tredje trykk legges oppå det som alt står i kø
+      const r=tryZ.call(this,c,z,o);if(r){this._kartVenter=true;this._kartMaal=z;}return r;};
+    kartMap.on('zoomstart',function(){kartMap._kartVenter=false;});
+    kartMap.on('zoomend',function(){kartMap._kartVenter=false;kartMap._kartMaal=null;const n=kartMap._kartNeste;if(n){kartMap._kartNeste=null;setTimeout(function(){kartMap.setView(n.c,n.z,n.o);},0);}});
     if(/[?&]karttest=1/.test(location.search))window.__kart={map:kartMap}; // testkrok (Playwright)
     // Kartverkets gråtonekart (gratis, ingen nøkkel, CORS åpen) — snus til mørkt med CSS-filter (#kartMap .leaflet-tile-pane). Flisene finnes til zoom 18; 19–20 forstørres
     kartLagKart=L.tileLayer('https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png',{maxNativeZoom:18,maxZoom:20,attribution:'© <a href="https://www.kartverket.no" target="_blank" rel="noopener">Kartverket</a>'});
@@ -4042,16 +4050,20 @@
     const start=TG.prototype._onTouchStart,move=TG.prototype._onTouchMove;
     // Tilleggets vinkelregning: theta=atan(x/y) pluss 180° naar y<0 (baade ved start, lagt i _startBearing, og underveis). Speiles her for aa faa ekte vridning siden start
     const vinkel=function(t){return Math.atan(t.x/t.y);};
+    // Tillegget kjører en FULL zoom-avslutning (_animateZoomNoDelay → zoomend, flislasting for mellomnivåer, alle lapper på nytt) for HVER fingerbevegelse under
+    // pinch → hakking og tapte zoom på iPad (Christian 09.11.2026). Med this.zoom=false under selve bevegelsen skalerer kartet bare live (som Leaflets egen pinch);
+    // avslutningen kjøres én gang i _onTouchEnd, der this.zoom er satt tilbake.
+    const stille=function(self,e){const z=self.zoom;self.zoom=false;try{move.call(self,e);}finally{self.zoom=z;}};
     TG.prototype._onTouchStart=function(e){start.call(this,e);this._kartLaas=!!this._gesture;
       if(this._gesture&&e.touches&&e.touches.length===2)this._kartStartYNeg=(e.touches[0].clientY-e.touches[1].clientY)<0;};
     TG.prototype._onTouchMove=function(e){
       if(this._rotating&&this._kartLaas&&e.touches&&e.touches.length===2){
         const map=this._map,v=L.point(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
         let d=(vinkel(v)-this._startTheta)*180/Math.PI;if(v.y<0)d+=180;if(this._kartStartYNeg)d-=180;d=((d+540)%360)-180; // vridning siden start, -180..180
-        if(Math.abs(d)<12){this._rotating=false;try{move.call(this,e);}finally{this._rotating=true;}return;} // under terskelen: bare zoom/panorering
+        if(Math.abs(d)<12){this._rotating=false;try{stille(this,e);}finally{this._rotating=true;}return;} // under terskelen: bare zoom/panorering
         this._kartLaas=false;this._startTheta=vinkel(v);this._startBearing=map.getBearing()+(v.y<0?180:0); // vridningen starter her, uten hopp
       }
-      move.call(this,e);
+      stille(this,e);
     };
   }
   function kartSatSet(on){ // bytt grunnkart: flyfoto av/på (prikker, tekster og popup ligger urørt oppå)
