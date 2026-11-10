@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-09-169">
+<meta name="app-build" content="2026-11-10-170">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -4116,10 +4116,14 @@
     Object.keys(kartMarkers).forEach(function(k){const el=kartMarkers[k].getElement();if(el){const d=el.querySelector('.kdot');if(d)d.classList.toggle('sel',k===kartKortId);}});
     if(!kartKortId){box.style.display='none';wrap.classList.remove('har-kort');inner.innerHTML='';return;}
     if(inner.querySelector('.opf-note-edit'))return; // skriver kommentar → ikke tegn på nytt under fingrene
-    inner.innerHTML=cardHTML(it);box.style.display='';wrap.classList.add('har-kort');
+    inner.innerHTML=cardHTML(it);box.style.display='';wrap.classList.add('har-kort');kartKortSkaler();
     const t=inner.querySelector('.opf-thumb');
     if(t&&it.hasImg){t.style.backgroundImage="url('"+THUMB+"')";getCardImg(it.id).then(function(d){const t2=inner.querySelector('.opf-thumb');if(d&&t2&&kartKortId===it.id)t2.style.backgroundImage="url('"+d+"')";});}
   }
+  // Kortet er tegnet for appens 1024 px-stativ (ca. 940 px bredt), og lista skaleres ned av stativet i stående modus. Kartet ligger UTENFOR stativet, så kortet
+  // der fikk ekte 720 px i stående iPad → navnekolonnen krympet til 0 og brikker/initialer la seg oppå kommentaren (Christian 10.11.2026). Samme nedskalering her via zoom.
+  function kartKortSkaler(){const box=$('kartKort'),inner=$('kartKortInner');if(!box||!inner||box.style.display==='none')return;const w=box.clientWidth;inner.style.zoom=w&&w<940?(w/940).toFixed(3):'';}
+  window.addEventListener('resize',kartKortSkaler);
   $('kartKort').addEventListener('click',function(e){if(e.target.closest('#kartKortX')){kartKortSkjul();return;}kortKlikk(e);});
   $('btnKart').addEventListener('click',kartOpen);
   $('kartClose').addEventListener('click',kartClose);
