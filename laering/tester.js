@@ -158,7 +158,11 @@ N('«en annen dag» lørdag → tirsdag 15:00',{dato:null},'kom tilbake en annen
 N('«en annen dag» mandag → onsdag 15:00',{dato:null},'kom tilbake en annen dag','2026-11-09T10:00','2026-11-11T15:00');
 N('«en annen dag» ons 23.12 → man 28.12 (jul = fri)',{dato:null},'kom tilbake en annen dag','2026-12-23T12:00','2026-12-28T15:00');
 N('«en annen dag, helst fredag» → fredag vinner',{dato:'2026-11-06T12:00',eksaktDato:false},'kom tilbake en annen dag, helst fredag','2026-11-05T20:49','2026-11-06T12:00');
-N('«en annen dag etter 18» → om 2 virkedager kl 18',{dato:null},'kom tilbake en annen dag etter 18','2026-11-05T20:49','2026-11-09T18:00');
+// 10.11.2026 (Christian): «en annen dag» MED klokkeslett = som «i morgen» det klokkeslettet; uten klokkeslett fortsatt om 2 virkedager kl 15
+N('«en annen dag etter 18» → i morgen kl 18',{dato:null},'kom tilbake en annen dag etter 18','2026-11-05T20:49','2026-11-06T18:00');
+N('«kom tilbake en annen dag kl 17» tirsdag, AI tom → onsdag 17:00',{dato:null},'kom tilbake en annen dag kl 17','2026-11-10T12:30','2026-11-11T17:00');
+N('«kom tilbake en annen dag kl 17», AI om 2 dager 15 → i morgen 17:00',{dato:'2026-11-12T15:00',eksaktDato:false},'kom tilbake en annen dag kl 17','2026-11-10T12:30','2026-11-11T17:00');
+N('«en annen dag 17.30» fredag → lørdag 17:30 (som «i morgen»)',{dato:null},'Telia. Komme tilbake en annen dag 17.30','2026-11-13T19:00','2026-11-14T17:30');
 N('«Komme tilbake» uten «annen dag», AI i dag → urørt (som før)',{dato:'2026-11-05T21:00',eksaktDato:false},'Komme tilbake','2026-11-05T19:00','2026-11-05T21:00');
 N('«Ring på fredag kl 11:00» onsdag → fredag 11:00',{dato:'2026-10-23T11:00',eksaktDato:false},'Ring på fredag kl 11:00','2026-10-21T11:40','2026-10-23T11:00');
 N('«mandag 1600» torsdag, AI tom → mandag 16:00 («var ikke hjemme» etter ukedagen er ikke fortid)',{dato:null},'Komme tilbake mandag 1600. Mannen var ikke hjemme.','2026-10-22T19:28','2026-10-26T16:00');
