@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-10-170">
+<meta name="app-build" content="2026-11-10-171">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -603,6 +603,9 @@
   .kdot b{position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--c);opacity:0;animation:kpulse 2.2s cubic-bezier(.2,.6,.3,1) infinite;pointer-events:none} /* ringen skal ikke fange trykk ment for naboprikken */
   .kdot.forfalt{--c:var(--red)} .kdot.idag{--c:var(--mint)} .kdot.snart{--c:var(--gold)} .kdot.uten{--c:#8b93a8} .kdot.meg{--c:#4aa3ff}
   .kdot.meg b{animation-duration:1.6s}
+  /* trykkflate: ikonet er 40×40 (usynlig), selve prikken fortsatt 14 px i midten og pulsringen 24 px – «for vanskelig å treffe pinnen» (Christian 10.11.2026). Lappen over kan også trykkes. */
+  .kdot.stor i{inset:13px} .kdot.stor b{inset:8px}
+  .leaflet-tooltip.ktip.leaflet-interactive{cursor:pointer}
   @keyframes kpulse{0%{transform:scale(.6);opacity:.9}70%{transform:scale(2.1);opacity:0}100%{transform:scale(2.1);opacity:0}}
   @media (prefers-reduced-motion:reduce){.kdot b{animation:none;opacity:.35}}
   /* Leaflet i appens mørke stil (Leaflet-CSS-en legges FØR denne style-blokka, så disse vinner) */
@@ -3976,11 +3979,12 @@
     if(force||sig!==kartSig){kartSig=sig;
       const keep={};
       med.forEach(function(x){const it=x[0],g=x[1],kl=kartKlasse(it,n),z=kl==='forfalt'?300:kl==='idag'?200:0;keep[it.id]=1;
-        const icon=L.divIcon({className:'kdot-wrap',html:'<div class="kdot '+kl+(it.id===kartKortId?' sel':'')+'" style="animation-delay:-'+(kartHash(it.id)%2200)+'ms"><b></b><i></i></div>',iconSize:[14,14],iconAnchor:[7,7]});
+        const icon=L.divIcon({className:'kdot-wrap',html:'<div class="kdot stor '+kl+(it.id===kartKortId?' sel':'')+'" style="animation-delay:-'+(kartHash(it.id)%2200)+'ms"><b></b><i></i></div>',iconSize:[40,40],iconAnchor:[20,20]}); // 40×40 trykkflate, prikken tegnes 14 px i midten (CSS .kdot.stor)
         let mk=kartMarkers[it.id];
         if(!mk){mk=L.marker([g.lat,g.lon],{icon:icon,zIndexOffset:z,keyboard:false});mk.__id=it.id;mk.on('click',function(){kartVisKort(mk.__id);});mk.addTo(kartLayer);kartMarkers[it.id]=mk;} // trykk → det vanlige kortet nederst
         else{mk.setLatLng([g.lat,g.lon]);mk.setIcon(icon);mk.setZIndexOffset(z);}
-        mk.unbindTooltip();mk.bindTooltip(kartTipTekst(it,n),{permanent:true,direction:'top',className:'ktip '+kl,opacity:1,offset:[0,-8]}); // ny klasse hver gang (farge på klokkeslettet)
+        mk.unbindTooltip();mk.bindTooltip(kartTipTekst(it,n),{permanent:true,direction:'top',className:'ktip '+kl,opacity:1,offset:[0,-8],interactive:true}); // ny klasse hver gang (farge på klokkeslettet)
+        mk.getTooltip().on('click',function(e){if(e.originalEvent)L.DomEvent.stop(e.originalEvent);kartVisKort(mk.__id);}); // trykk på lappen = trykk på prikken (større mål, Christian 10.11.2026)
       });
       Object.keys(kartMarkers).forEach(function(k){if(!keep[k]){kartLayer.removeLayer(kartMarkers[k]);delete kartMarkers[k];}});
       // zoom til prikkene: ved åpning/filterbytte, og mens de første oppslagene tikker inn (til brukeren selv har flyttet kartet)
