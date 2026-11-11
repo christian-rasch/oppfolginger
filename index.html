@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-11-179">
+<meta name="app-build" content="2026-11-11-181">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -576,7 +576,8 @@
   .kart-kort .opf-card{background:rgba(13,16,25,.97);backdrop-filter:none;box-shadow:0 24px 60px -20px rgba(0,0,0,.95)}
   .kart-kort .kk-x{position:absolute;top:-12px;right:-6px;z-index:2;width:28px;height:28px;border-radius:50%;border:1px solid var(--hair);background:#0d1019;color:var(--ink-dim);cursor:pointer;font-size:13px;line-height:1}
   .kart-kort .kk-x:hover{color:var(--ink);background:#171b28}
-  .kart-wrap.har-kort .kart-legend,.kart-wrap.har-kort .kart-info-btn,.kart-wrap.har-kort .kart-uten-btn,.kart-wrap.har-kort .kart-uten{display:none!important} /* kortet dekker hjørnet */
+  .kart-wrap.har-kort .kart-legend,.kart-wrap.har-kort .kart-info-btn,.kart-wrap.har-kort .kart-uten-btn,.kart-wrap.har-kort .kart-uten{bottom:calc(24px + var(--kort-h,0px))} /* kortet er oppe: boksene flytter seg opp rett over kortet (Christian 11.11.2026) */
+  .kart-legend,.kart-info-btn,.kart-uten-btn,.kart-uten{transition:bottom .18s}
   .kdot.sel i{transform:scale(1.7);box-shadow:0 0 0 2px rgba(6,7,11,.85),0 0 22px var(--c)} /* valgt prikk: bare større, ingen hvit ring (Christian 11.11.2026) */
   .kdot i{transition:transform .15s}
   .kart-wrap{flex:1;min-height:0;position:relative;margin-top:10px;border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:#0a0c16}
@@ -871,12 +872,11 @@
         <div class="kart-msg" id="kartMsg">Laster kart …</div>
         <div class="kart-legend" id="kartLegend">
           <button type="button" class="kl-x" id="kartLegendX" title="Skjul forklaringen">✕</button>
-          <div class="kl-row"><span class="kl-dot" style="--c:var(--red)"></span>Forfalt (fra tidligere dager)</div>
+          <div class="kl-row"><span class="kl-dot" style="--c:var(--red)"></span>Forfalt</div>
           <div class="kl-row"><span class="kl-dot" style="--c:var(--mint)"></span>I dag</div>
           <div class="kl-row"><span class="kl-dot" style="--c:var(--gold)"></span>Kommende</div>
           <div class="kl-row"><span class="kl-dot" style="--c:#8b93a8"></span>Uten tidspunkt</div>
           <div class="kl-row"><span class="kl-dot kl-meg" style="--c:#2f8cff"></span>Deg</div>
-          <div class="kl-hint">Trykk på en prikk for mer. Kommentaren står over prikken når du er zoomet inn.</div>
         </div>
         <button type="button" class="kart-info-btn" id="kartInfo" style="display:none">ⓘ Vis forklaring</button>
         <button type="button" class="kart-uten-btn" id="kartUtenBtn" style="display:none"></button>
@@ -3982,7 +3982,7 @@
   }
   function kartStatus(med,uten){
     const el=$('kartStatus');if(!el)return;const venter=kartBusy+kartQ.length;
-    el.textContent=(med==null?'':med+' på kartet'+(uten?' · '+uten+' uten plassering':''))+(venter?(med==null?'':' · ')+'slår opp '+venter+' adresser …':'')+(kartNett?' · nettfeil ved oppslag':'');
+    el.textContent=(med==null?'':med+' på kartet')+(venter?(med==null?'':' · ')+'slår opp '+venter+' adresser …':'')+(kartNett?' · nettfeil ved oppslag':''); // «uten plassering» står bare på knappen nede til høyre (Christian 11.11.2026)
   }
   function kartScheduleDraw(){if(!kartOpenFlag)return;clearTimeout(kartDrawT);kartDrawT=setTimeout(function(){kartDraw();},120);}
   function kartDraw(force){
@@ -4153,7 +4153,8 @@
   }
   // Kortet er tegnet for appens 1024 px-stativ (ca. 940 px bredt), og lista skaleres ned av stativet i stående modus. Kartet ligger UTENFOR stativet, så kortet
   // der fikk ekte 720 px i stående iPad → navnekolonnen krympet til 0 og brikker/initialer la seg oppå kommentaren (Christian 10.11.2026). Samme nedskalering her via zoom.
-  function kartKortSkaler(){const box=$('kartKort'),inner=$('kartKortInner');if(!box||!inner||box.style.display==='none')return;const w=box.clientWidth;inner.style.zoom=w&&w<940?(w/940).toFixed(3):'';}
+  function kartKortSkaler(){const box=$('kartKort'),inner=$('kartKortInner');if(!box||!inner||box.style.display==='none')return;const w=box.clientWidth;inner.style.zoom=w&&w<940?(w/940).toFixed(3):'';
+    requestAnimationFrame(function(){if(box.style.display!=='none')box.parentNode.style.setProperty('--kort-h',box.offsetHeight+'px');});} // korthøyde → boksene nede i hjørnene legger seg rett over kortet
   window.addEventListener('resize',kartKortSkaler);
   $('kartKort').addEventListener('click',kortKlikk); // ingen ✕ lenger: kortet lukkes med et raskt trykk på kartet (kartMap 'click' – dra/knip utløser ikke click), Christian 11.11.2026
   $('btnKart').addEventListener('click',kartOpen);
