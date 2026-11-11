@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-11-186">
+<meta name="app-build" content="2026-11-12-187">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -87,8 +87,10 @@
   .grp.forfalt{color:#ff7b80} /* forfalt-overskrift: tydelig (litt sterkere) rød tekst; skillelinje arves nøytral fra .grp (som «Alle») */
   .grp.forfalt .gcnt{color:var(--red)}
   /* liten handlingsknapp ved gruppeoverskrift (f.eks. «Fjern alle eldre») */
-  .grp .grp-action{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--red);background:rgba(255,90,95,.06);border:1px solid rgba(255,90,95,.35);border-radius:7px;padding:3px 9px;cursor:pointer;transition:.15s}
-  .grp .grp-action:hover{border-color:rgba(255,90,95,.6);background:rgba(255,90,95,.14)}
+  .list-tools{display:flex;justify-content:flex-end;margin:4px 0 -12px}
+  .list-tools .grp-action{font-size:10.5px;padding:6px 11px}
+  .grp .grp-action,.list-tools .grp-action{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--red);background:rgba(255,90,95,.06);border:1px solid rgba(255,90,95,.35);border-radius:7px;padding:3px 9px;cursor:pointer;transition:.15s}
+  .grp .grp-action:hover,.list-tools .grp-action:hover{border-color:rgba(255,90,95,.6);background:rgba(255,90,95,.14)}
   /* underseksjon (f.eks. i «Uten tidspunkt» under hver salgsrunde) — mindre, dempet */
   .grp.sub{font-size:11px;letter-spacing:.12em;color:var(--ink-faint);margin:10px 0 7px;border-bottom-color:rgba(255,255,255,.035)}
   /* salgsrunde-boks i «Uten tidspunkt»: subtil kant, kompakt, alt på samme venstremarg */
@@ -556,7 +558,7 @@
   .kart-head-row2{align-items:center;padding-left:66px} /* 58 px tittel + 8 px gap = på linje med «I dag +/- 1d» */
   .kart-head #kartStatus{margin-bottom:0}
   .kart-head .seg{flex:none;padding:2px;gap:2px} .kart-head .seg button{padding:7px 7px;letter-spacing:.02em}
-  .kart-head .cnt{margin-left:5px;font-weight:800;color:var(--gold)} .kart-head .seg button.on .cnt{color:#1a1407} .kart-head .cnt:empty{display:none} /* antall pr. knapp i gult (Christian 09.11), skjult ved 0 */
+  .kart-head .cnt{margin-left:5px;font-weight:800;color:var(--gold)} .kart-head .seg button.on .cnt{color:var(--gold);background:rgba(6,18,14,.6);padding:1px 5px;border-radius:6px} .kart-head .cnt:empty{display:none} /* gult også på valgt knapp (Christian 11.11) */ /* antall pr. knapp i gult (Christian 09.11), skjult ved 0 */
   /* rad 2: samme ett-valg-gruppe som rad 1 (Uten tidspunkt / Venter på svar / Send tilbud), status til høyre */
   .kart-head-row2{flex:1 0 100%;display:flex;align-items:center;gap:8px;min-width:0}
   .kart-head .seg button[data-v="idag"]{color:var(--mint)} .kart-head .seg button.on{color:#06120e} /* «I dag» = ett trykk, derfor uthevet */
@@ -600,6 +602,9 @@
   .kart-info-btn{position:absolute;left:12px;bottom:28px;z-index:6;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;color:var(--ink-dim);background:rgba(10,12,22,.9);border:1px solid var(--hair);border-radius:9px;padding:6px 10px;cursor:pointer}
   /* «uten plassering»: adresser Kartverket ikke fant */
   .kart-uten-btn{position:absolute;right:12px;bottom:28px;z-index:6;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;color:var(--gold);background:rgba(10,12,22,.92);border:1px solid rgba(232,194,107,.4);border-radius:9px;padding:7px 11px;cursor:pointer}
+  /* «Fjern forfalte (14+ dager)» oppe til høyre ved siden av ◎ – vises bare under «Alle» når slike kort finnes (Christian 11.11.2026) */
+  .kart-rydd-btn{position:absolute;right:58px;top:15px;z-index:6;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--red);background:rgba(10,12,22,.92);border:1px solid rgba(255,90,95,.45);border-radius:9px;padding:7px 11px;cursor:pointer}
+  .kart-rydd-btn:hover{background:rgba(255,90,95,.14);border-color:rgba(255,90,95,.7)}
   .kart-uten{position:absolute;right:12px;bottom:28px;z-index:6;width:min(320px,80%);max-height:55%;overflow:auto;background:rgba(10,12,22,.95);border:1px solid var(--hair);border-radius:12px;padding:10px 12px;font-size:12.5px;box-shadow:0 14px 40px -20px rgba(0,0,0,.9)}
   .kart-uten .ku-head{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;padding-right:24px}
   .kart-uten .ku-row{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--hair-2);padding:7px 2px;color:var(--ink);cursor:pointer;font-family:inherit}
@@ -855,30 +860,33 @@
   <div class="modal" id="kartModal">
     <div class="m-card kart-card">
       <div class="kart-head"><span class="m-title" style="margin:0">Kart</span>
-        <!-- ETT valg om gangen på tvers av alle gruppene (Christian 09.11). Fire bokser uten overskrifter (Christian 11.11 kveld): [I dag +/- 1d] [I dag · I går · I morgen · Neste 7 d. · Siste 7 d.] [Alle] / [Send tilbud · Venter på svar · Uten tidspunkt] rett under den første. Tallene fylles av kartTell() -->
+        <!-- ETT valg om gangen på tvers av alle gruppene (Christian 09.11). Tre rader (Christian 11.11 natt): [I dag · I går · I morgen] alene øverst (uten antall) /
+             [I dag · I går · I morgen · Neste 7 d. · Siste 7 d.] [Alle] med gule antall / [Send tilbud · Venter på svar · Uten tidspunkt] uten antall. Tallene fylles av kartTell() -->
         <div class="kart-grp">
           <div class="seg kart-filt" id="kartFilt">
-            <button type="button" data-v="rundt" class="on" title="I går (det ugjorte), i dag og i morgen">I dag +/- 1d<span class="cnt"></span></button>
+            <button type="button" data-v="rundt" class="on" title="I går (det ugjorte), i dag og i morgen">I dag · I går · I morgen</button>
           </div></div>
-        <div class="kart-grp">
-          <div class="seg kart-filt" id="kartFiltTid">
-            <button type="button" data-v="idag" title="Dagens avtaler, også de som alt er forfalt i dag">I dag<span class="cnt"></span></button>
-            <button type="button" data-v="igar">I går<span class="cnt"></span></button>
-            <button type="button" data-v="imorgen">I morgen<span class="cnt"></span></button>
-            <button type="button" data-v="neste7" title="I dag + 7 dager fram">Neste 7 d.<span class="cnt"></span></button>
-            <button type="button" data-v="siste7" title="7 dager bakover + i dag">Siste 7 d.<span class="cnt"></span></button>
-          </div></div>
-        <div class="kart-grp">
-          <div class="seg kart-filt" id="kartFiltAlle">
-            <button type="button" data-v="alle" title="Alle oppfølginger med adresse, uansett dato">Alle<span class="cnt"></span></button>
-          </div></div>
-        <button class="btn" id="kartClose" style="margin-left:auto;flex:none">✕</button>
+        <button class="btn" id="kartClose" style="flex:none">✕</button>
+        <div class="kart-head-row2" id="kartRow1b">
+          <div class="kart-grp">
+            <div class="seg kart-filt" id="kartFiltTid">
+              <button type="button" data-v="idag" title="Dagens avtaler, også de som alt er forfalt i dag">I dag<span class="cnt"></span></button>
+              <button type="button" data-v="igar">I går<span class="cnt"></span></button>
+              <button type="button" data-v="imorgen">I morgen<span class="cnt"></span></button>
+              <button type="button" data-v="neste7" title="I dag + 7 dager fram">Neste 7 d.<span class="cnt"></span></button>
+              <button type="button" data-v="siste7" title="7 dager bakover + i dag">Siste 7 d.<span class="cnt"></span></button>
+            </div></div>
+          <div class="kart-grp">
+            <div class="seg kart-filt" id="kartFiltAlle">
+              <button type="button" data-v="alle" title="Alle oppfølginger med adresse, uansett dato">Alle<span class="cnt"></span></button>
+            </div></div>
+        </div>
         <div class="kart-head-row2" id="kartRow2">
           <div class="kart-grp">
             <div class="seg kart-filt" id="kartFilt2">
-              <button type="button" data-v="tilbud" title="Husk å send tilbud">Send tilbud<span class="cnt"></span></button>
-              <button type="button" data-v="venter" title="Tilbud sendt – venter på svar">Venter på svar<span class="cnt"></span></button>
-              <button type="button" data-v="uten" title="Kunder uten tidspunkt (grå prikker)">Uten tidspunkt<span class="cnt"></span></button>
+              <button type="button" data-v="tilbud" title="Husk å send tilbud">Send tilbud</button>
+              <button type="button" data-v="venter" title="Tilbud sendt – venter på svar">Venter på svar</button>
+              <button type="button" data-v="uten" title="Kunder uten tidspunkt (grå prikker)">Uten tidspunkt</button>
             </div></div>
           <span id="kartStatus" class="feed-status"></span>
         </div>
@@ -898,6 +906,7 @@
         </div>
         <button type="button" class="kart-info-btn" id="kartInfo" style="display:none">ⓘ Vis forklaring</button>
         <button type="button" class="kart-uten-btn" id="kartUtenBtn" style="display:none"></button>
+        <button type="button" class="kart-rydd-btn" id="kartRydd" style="display:none" title="Fjerner alle oppfølginger som forfalt for 14 dager eller mer siden – kan angres i 10 sekunder">Fjern forfalte (14+ dager)</button>
         <div class="kart-uten" id="kartUten" style="display:none"></div>
         <!-- trykk på en prikk → det vanlige kortet (cardHTML) nederst i kartet, med bilde, Salesforce, Fjern osv. (Christian 09.11) -->
         <div class="kart-kort" id="kartKort" style="display:none"><div id="kartKortInner"></div></div>
@@ -2546,10 +2555,10 @@
         od.forEach(function(i){const d=+startOfDay(P(i));
           fb.get(d===+td0?'idag':d===yd?'igar':d>=+wk0?'denne':d>=lw?'forrige':d>=ww?'ukenfor':'eldre').push(i);});
         fb.get('idag').sort(function(a,b){return (+P(a))-(+P(b));}); // «Forfalt i dag»: tidligst på dagen øverst (resten uendret)
+        if(od.some(function(i){return daysSince(P(i))>=14;}))G('<div class="list-tools"><button class="grp-action" data-act="purge-eldre">Fjern forfalte (14+ dager)</button></div>',[],'raw'); // øverst til høyre i Forfalte-lista (Christian 11.11.2026), kun når det finnes noe å fjerne
         [['idag','Forfalt i dag'],['igar','Forfalt i går'],['denne','Forfalt denne uken'],['forrige','Forfalt forrige uke'],['ukenfor','Forfalt uken før'],['eldre','Forfalt eldre']]
           .forEach(function(p){const a=fb.get(p[0]);if(!a.length)return;
-            const lab=p[0]==='eldre'?'Forfalt eldre<button class="grp-action" data-act="purge-eldre">Fjern eldre enn 2 uker</button>':p[1];
-            G(lab,a,'forfalt');});
+            G(p[1],a,'forfalt');});
       } else { // alle (avtaler-subfane): I dag (inkl. forfalt i dag) / I morgen / Resten av uken / Neste uke / Resten av måneden / måned for måned (eldre forfalte vises kun under Forfalte)
         const wk1=new Date(+startOfWeek(n)+7*864e5),wk2=new Date(+startOfWeek(n)+14*864e5);
         const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
@@ -2871,14 +2880,14 @@
     toastUndo('Tilbud sendt → i dag — '+(it.navn||''),function(){it.waitingSince=prev;save();render();});
   }
   // fjern forfalte kort som forfalt for 14 dager eller mer siden (uavhengig av kalenderuke)
-  function purgeEldre(){
+  // ett trykk, ingen bekreftelsesdialog – angreknappen i 10 s er sikkerheten (Christian 11.11.2026). kilde = 'liste' | 'kart' (feilsøking i feeden)
+  function purgeEldre(kilde){
     const eldre=items.filter(i=>i.state!=='fulgt'&&i.dato&&daysSince(p(i.dato))>=14);
-    if(!eldre.length){toast('Ingen oppfølginger forfalt for 2 uker eller mer siden');return;}
-    if(!confirm('Fjerne '+eldre.length+' oppfølginger som forfalt for 2 uker eller mer siden?')){feed('kort','knapp.rydd',{n:eldre.length,avbrutt:true});return;}
+    if(!eldre.length){toast('Ingen oppfølginger forfalt for 14 dager eller mer siden');return;}
     const ids=eldre.map(i=>i.id);
     ids.forEach(id=>{const it=byId(id);if(it){it.state='fulgt';it.avgjort=Date.now();}});
-    feedMark='rydd';save();feedMark=null;render();
-    toastUndo('Fjernet '+ids.length+' eldre forfalte',function(){
+    feedMark='rydd';save();feedMark=null;render();feed('kort','knapp.rydd',{n:ids.length,fra:kilde||'liste'});
+    toastUndo('Fjernet '+ids.length+' forfalte (14+ dager)',function(){
       ids.forEach(id=>{const it=byId(id);if(it){it.state='aktiv';it.avgjort=null;}});
       save();render();
     },10000);
@@ -4033,6 +4042,7 @@
       g.klynge=g.items.length>1&&z<17;});
     return ut;
   }
+  function kartRyddSync(){const b=$('kartRydd');if(!b)return;const n=kartFilt==='alle'?items.filter(function(i){return i.state!=='fulgt'&&i.dato&&daysSince(p(i.dato))>=14;}).length:0;b.style.display=n?'':'none';} // knappen bare under «Alle» og bare når det finnes noe å fjerne
   function kartStatus(med,uten){
     const el=$('kartStatus');if(!el)return;const venter=kartBusy+kartQ.length;
     el.textContent=(med==null?'':med+' på kartet')+(venter?(med==null?'':' · ')+'slår opp '+venter+' adresser …':'')+(kartNett?' · nettfeil ved oppslag':''); // «uten plassering» står bare på knappen nede til høyre (Christian 11.11.2026)
@@ -4083,7 +4093,7 @@
         kartProg=true;if(med.length===1&&!kartMe)kartMap.setView(b.getCenter(),16);else kartMap.fitBounds(b,{padding:[48,48],maxZoom:16});setTimeout(function(){kartProg=false;},700);
       }
     }
-    kartTell();kartUtenRender(uten);kartKortRender();kartStatus(med.length,uten.filter(function(x){return !kartTrenger(x[0].adresse);}).length);
+    kartTell();kartUtenRender(uten);kartKortRender();kartRyddSync();kartStatus(med.length,uten.filter(function(x){return !kartTrenger(x[0].adresse);}).length);
   }
   function kartUtenRender(uten){ // adresser Kartverket ikke fant (eller uten husnummer) — de som ligger i køen telles ikke ennå
     const ferdige=uten.filter(function(x){return !kartTrenger(x[0].adresse);}),btn=$('kartUtenBtn'),box=$('kartUten');
@@ -4233,6 +4243,7 @@
   $('btnKart').addEventListener('click',kartOpen);
   $('kartClose').addEventListener('click',kartClose);
   $('kartMeg').addEventListener('click',function(){kartUserMoved=true;kartVisMeg(true);});
+  $('kartRydd').addEventListener('click',function(){purgeEldre('kart');}); // render() → kartScheduleDraw → knappen forsvinner når ingenting er igjen; Angre i toasten som vanlig
   $('kartSat').addEventListener('click',function(){kartSatSet(!kartSatOn);feed('kort','knapp.kart-filter',{satellitt:kartSatOn?'på':'av'});});
   // Filterbytte: kartutsnittet BEHOLDES (Christian 09.11: «jeg skal alltid være der jeg har zoomet inn») — ingen ny tilpasning, og vinduet
   // for automatisk tilpasning mens de første oppslagene tikker inn lukkes (kartOpenedAt=0). Bare første tilpasning etter åpning skjer uansett filter.
