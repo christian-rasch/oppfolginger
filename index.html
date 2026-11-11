@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-11-181">
+<meta name="app-build" content="2026-11-11-182">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -602,6 +602,9 @@
   .kart-uten .ku-foot{margin-top:8px;color:var(--ink-faint);font-size:11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .kart-uten .ku-retry{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;color:var(--ink-dim);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:7px;padding:4px 8px;cursor:pointer}
   /* prikkene: kjerne + pulserende ring i kortets farge (rød = forfalt, mint = i dag, gull = kommende, grå = uten tidspunkt, blå = deg) */
+  /* ingen tekstmarkering/«Kopier»-meny ved langt trykk på iPad (Christian 11.11.2026) – skrivefelt kan fortsatt markeres */
+  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  input,textarea,[contenteditable],[contenteditable] *{-webkit-user-select:text;user-select:text}
   .kdot-wrap{background:none!important;border:0!important;pointer-events:none!important} .kdot-wrap .kdot{pointer-events:auto} /* bare selve (evt. forskjøvede) prikken fanger trykk – ikke ikonboksen som blir stående på adressen */
   .kdot{position:relative;width:100%;height:100%;--c:var(--gold)}
   .kdot i{position:absolute;inset:0;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px rgba(6,7,11,.85),0 0 14px var(--c)}
