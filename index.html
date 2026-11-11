@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-11-177">
+<meta name="app-build" content="2026-11-11-179">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -577,7 +577,8 @@
   .kart-kort .kk-x{position:absolute;top:-12px;right:-6px;z-index:2;width:28px;height:28px;border-radius:50%;border:1px solid var(--hair);background:#0d1019;color:var(--ink-dim);cursor:pointer;font-size:13px;line-height:1}
   .kart-kort .kk-x:hover{color:var(--ink);background:#171b28}
   .kart-wrap.har-kort .kart-legend,.kart-wrap.har-kort .kart-info-btn,.kart-wrap.har-kort .kart-uten-btn,.kart-wrap.har-kort .kart-uten{display:none!important} /* kortet dekker hjørnet */
-  .kdot.sel i{box-shadow:0 0 0 3px #fff,0 0 18px var(--c)} /* valgt prikk */
+  .kdot.sel i{transform:scale(1.7);box-shadow:0 0 0 2px rgba(6,7,11,.85),0 0 22px var(--c)} /* valgt prikk: bare større, ingen hvit ring (Christian 11.11.2026) */
+  .kdot i{transition:transform .15s}
   .kart-wrap{flex:1;min-height:0;position:relative;margin-top:10px;border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:#0a0c16}
   #kartMap{position:absolute;inset:0;z-index:1;background:#0a0c16;font-family:"Schibsted Grotesk",sans-serif} /* z-index:1 = eget stablingsnivå, så boksene (z 6) ligger over Leaflets lag (z 400+) */
   .kart-msg{position:absolute;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--ink-dim);pointer-events:none}
@@ -585,6 +586,7 @@
   .kart-legend{position:absolute;left:12px;bottom:28px;z-index:6;background:rgba(10,12,22,.92);border:1px solid var(--hair);border-radius:12px;padding:10px 30px 9px 12px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-dim);box-shadow:0 14px 40px -20px rgba(0,0,0,.9)}
   .kart-legend .kl-row{display:flex;align-items:center;gap:8px;margin:3px 0}
   .kart-legend .kl-dot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c)}
+  .kart-legend .kl-dot.kl-meg{width:11px;height:11px;border:2px solid #fff;box-shadow:0 0 0 2px rgba(47,140,255,.5)}
   .kart-legend .kl-hint{margin-top:7px;color:var(--ink-faint);font-size:10px;max-width:190px;line-height:1.4}
   .kart-legend .kl-x,.kart-uten .ku-x{position:absolute;top:4px;right:5px;width:22px;height:22px;border:0;border-radius:6px;background:none;color:var(--ink-faint);font-size:12px;cursor:pointer}
   .kart-legend .kl-x:hover,.kart-uten .ku-x:hover{background:rgba(255,255,255,.08);color:var(--ink)}
@@ -604,7 +606,10 @@
   .kdot i{position:absolute;inset:0;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px rgba(6,7,11,.85),0 0 14px var(--c)}
   .kdot b{position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--c);opacity:0;animation:kpulse 2.2s cubic-bezier(.2,.6,.3,1) infinite;pointer-events:none} /* ringen skal ikke fange trykk ment for naboprikken */
   .kdot.forfalt{--c:var(--red)} .kdot.idag{--c:var(--mint)} .kdot.snart{--c:var(--gold)} .kdot.uten{--c:#8b93a8} .kdot.meg{--c:#4aa3ff}
-  .kdot.meg b{animation-duration:1.6s}
+  /* «deg»: tydelig annerledes enn oppfølgingsprikkene – blå kjerne med hvit kant og bred, svak blå glorie (som en posisjonsprikk), ingen pulsring i prikkfarge (Christian 11.11.2026) */
+  .kdot.meg i{background:#2f8cff;border:3px solid #fff;box-shadow:0 0 0 2px rgba(47,140,255,.55),0 2px 10px rgba(0,0,0,.6)}
+  .kdot.meg b{inset:-12px;border:0;background:rgba(47,140,255,.28);animation:kmeg 2.4s ease-out infinite}
+  @keyframes kmeg{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.5);opacity:0}}
   /* trykkflate: ikonet er 40×40 (usynlig), selve prikken fortsatt 14 px i midten og pulsringen 24 px – «for vanskelig å treffe pinnen» (Christian 10.11.2026). Lappen over kan også trykkes. */
   .kdot.stor i{inset:13px} .kdot.stor b{inset:8px}
   .leaflet-tooltip.ktip.leaflet-interactive{cursor:pointer}
@@ -870,7 +875,7 @@
           <div class="kl-row"><span class="kl-dot" style="--c:var(--mint)"></span>I dag</div>
           <div class="kl-row"><span class="kl-dot" style="--c:var(--gold)"></span>Kommende</div>
           <div class="kl-row"><span class="kl-dot" style="--c:#8b93a8"></span>Uten tidspunkt</div>
-          <div class="kl-row"><span class="kl-dot" style="--c:#4aa3ff"></span>Deg</div>
+          <div class="kl-row"><span class="kl-dot kl-meg" style="--c:#2f8cff"></span>Deg</div>
           <div class="kl-hint">Trykk på en prikk for mer. Kommentaren står over prikken når du er zoomet inn.</div>
         </div>
         <button type="button" class="kart-info-btn" id="kartInfo" style="display:none">ⓘ Vis forklaring</button>
@@ -3972,7 +3977,7 @@
   }
   function kartTipTekst(it,n){ // tekst over prikken: relativ dag + klokkeslett + besøkskommentaren (ellers navn/adresse)
     const d=it.dato?p(it.dato):null,t=d?kartRelDag(d,n)+' '+hhmm(d):'';
-    let k=String(it.kommentar||'').replace(/\s+/g,' ').trim();if(!k)k=it.navn||addrShort(it.adresse);if(k.length>46)k=k.slice(0,44)+'…';
+    let k=String(it.kommentar||'').replace(/\s+/g,' ').trim();if(k.length>46)k=k.slice(0,44)+'…'; // uten kommentar: bare tidspunktet, ikke navnet (Christian 11.11.2026); uten begge → tom = ingen lapp
     return (t?'<span class="kt-t">'+esc(t)+'</span>':'')+esc(k);
   }
   function kartStatus(med,uten){
@@ -3995,8 +4000,8 @@
         let mk=kartMarkers[it.id];
         if(!mk){mk=L.marker([g.lat,g.lon],{icon:icon,zIndexOffset:z,keyboard:false});mk.__id=it.id;mk.on('click',function(){kartVisKort(mk.__id);});mk.addTo(kartLayer);kartMarkers[it.id]=mk;} // trykk → det vanlige kortet nederst
         else{mk.setLatLng([g.lat,g.lon]);mk.setIcon(icon);mk.setZIndexOffset(z);}
-        mk.unbindTooltip();mk.bindTooltip(kartTipTekst(it,n),{permanent:true,direction:'top',className:'ktip '+kl,opacity:1,offset:[dx,dy-8],interactive:true}); // ny klasse hver gang (farge på klokkeslettet)
-        mk.getTooltip().on('click',function(e){if(e.originalEvent){L.DomEvent.stop(e.originalEvent);e.originalEvent._stopped=true;}kartVisKort(mk.__id);}); // _stopped: Leaflet sjekker dette flagget før kartets eget click (som ellers lukker kortet) // trykk på lappen = trykk på prikken (større mål, Christian 10.11.2026)
+        mk.unbindTooltip();const tip=kartTipTekst(it,n);if(tip){mk.bindTooltip(tip,{permanent:true,direction:'top',className:'ktip '+kl,opacity:1,offset:[dx,dy-8],interactive:true}); // ny klasse hver gang (farge på klokkeslettet)
+        mk.getTooltip().on('click',function(e){if(e.originalEvent){L.DomEvent.stop(e.originalEvent);e.originalEvent._stopped=true;}kartVisKort(mk.__id);});} // trykk på lappen = trykk på prikken (større mål, Christian 10.11.2026); _stopped: Leaflet sjekker dette flagget før kartets eget click (som ellers lukker kortet)
       });
       Object.keys(kartMarkers).forEach(function(k){if(!keep[k]){kartLayer.removeLayer(kartMarkers[k]);delete kartMarkers[k];}});
       // zoom til prikkene: ved åpning/filterbytte, og mens de første oppslagene tikker inn (til brukeren selv har flyttet kartet)
@@ -4060,6 +4065,10 @@
     kartMap.on('dragstart',function(){kartUserMoved=true;});kartMap.on('zoomstart',function(){if(!kartProg)kartUserMoved=true;});
     kartMap.on('moveend zoomend rotateend rotate',kartUtsnittLagre); // husk utsnittet
     kartMap.on('click',function(){if(kartKortId)kartKortSkjul();}); // raskt trykk på kartet lukker kortet; prikk/lapp stopper hendelsen selv
+    // Leaflets drag nekter å starte mens zoom-animasjonen pågår (Draggable._onDown: hasClass 'leaflet-zoom-anim' → return), så en flytting som begynner rett etter et knip
+    // går tapt («lag sidelengs etter zoom», Christian 11.11.2026). Fange-fase: avslutt animasjonen før Leaflet ser trykket.
+    const ferdigZoom=function(){if(kartMap._animatingZoom&&kartMap._onZoomTransitionEnd){try{kartMap._onZoomTransitionEnd();}catch(_){}}};
+    ['pointerdown','touchstart','mousedown'].forEach(function(t){kartMap.getContainer().addEventListener(t,ferdigZoom,true);});
   }
   // To-finger-vridning (leaflet-rotate): ignorer de første 12° så vanlig pinch-zoom ikke vrir kartet, og følg deretter fingrene uten hopp.
   // Selve dreiepunktet er alt midt mellom fingrene (tillegget flytter sentrum etter hver vridning når zoom er på). Christian 09.11.2026: «rotasjonen er rar»
@@ -4097,7 +4106,7 @@
   function kartVisMeg(fokus){ // blå pulserende prikk der du er; følger med mens kartet er åpent
     if(!navigator.geolocation){$('kartStatus').textContent='Posisjon støttes ikke her';return;}
     const vis=function(pos){const ll=[pos.coords.latitude,pos.coords.longitude];
-      if(!kartMe){kartMe=L.marker(ll,{icon:L.divIcon({className:'kdot-wrap',html:'<div class="kdot meg"><b></b><i></i></div>',iconSize:[16,16],iconAnchor:[8,8]}),interactive:false,zIndexOffset:900,keyboard:false}).addTo(kartMap);}
+      if(!kartMe){kartMe=L.marker(ll,{icon:L.divIcon({className:'kdot-wrap',html:'<div class="kdot meg"><b></b><i></i></div>',iconSize:[22,22],iconAnchor:[11,11]}),interactive:false,zIndexOffset:900,keyboard:false}).addTo(kartMap);}
       else kartMe.setLatLng(ll);
       if(fokus){fokus=false;kartProg=true;kartMap.setView(ll,Math.max(kartMap.getZoom(),15));setTimeout(function(){kartProg=false;},700);}};
     const feil=function(e){$('kartStatus').textContent=(e&&e.code===1)?'Posisjon er sperret — tillat «Sted» for appen i innstillingene':'Fant ikke posisjonen din';};
