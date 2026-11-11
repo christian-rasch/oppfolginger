@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-11-185">
+<meta name="app-build" content="2026-11-11-186">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -548,14 +548,13 @@
   .kart-btn:hover{background:rgba(61,245,197,.16);border-color:rgba(61,245,197,.5)}
   #kartModal{z-index:175} /* under de andre modalene (180): «Åpne kortet» fra kartet legger redigeringsskjemaet OVER kartet */
   .kart-card{width:min(1280px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px}
-  .kart-head{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;padding:0 46px 10px 0;border-bottom:1px solid var(--hair);position:relative} /* plass til ✕ oppe til høyre */
-  .kart-head .m-title{align-self:flex-end;margin-bottom:3px!important;margin-right:4px!important}
-  .kart-head #kartClose{position:absolute;right:0;top:0}
-  /* fire grupper med små overskrifter: Standard · Periode · Uansett dato · Type (Christian 11.11.2026 – «ryddig og intuitivt ved første øyekast») */
-  .kart-grp{display:flex;flex-direction:column;gap:4px;flex:none}
-  .kart-grp .kg-lbl{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);padding-left:5px;line-height:1;white-space:nowrap}
-  .kart-head-row2{align-items:flex-end}
-  .kart-head #kartStatus{margin-bottom:9px}
+  .kart-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 46px 10px 0;border-bottom:1px solid var(--hair);position:relative} /* plass til ✕ oppe til høyre */
+  .kart-head .m-title{flex:0 0 58px;align-self:center;margin:0!important} /* fast bredde → rad 2 starter rett under første boks */
+  .kart-head #kartClose{position:absolute;right:0;top:-3px}
+  /* fire bokser uten overskrifter (Christian 11.11.2026 kveld): standard · periode · alle / type */
+  .kart-grp{display:flex;flex-direction:column;flex:none}
+  .kart-head-row2{align-items:center;padding-left:66px} /* 58 px tittel + 8 px gap = på linje med «I dag +/- 1d» */
+  .kart-head #kartStatus{margin-bottom:0}
   .kart-head .seg{flex:none;padding:2px;gap:2px} .kart-head .seg button{padding:7px 7px;letter-spacing:.02em}
   .kart-head .cnt{margin-left:5px;font-weight:800;color:var(--gold)} .kart-head .seg button.on .cnt{color:#1a1407} .kart-head .cnt:empty{display:none} /* antall pr. knapp i gult (Christian 09.11), skjult ved 0 */
   /* rad 2: samme ett-valg-gruppe som rad 1 (Uten tidspunkt / Venter på svar / Send tilbud), status til høyre */
@@ -856,26 +855,26 @@
   <div class="modal" id="kartModal">
     <div class="m-card kart-card">
       <div class="kart-head"><span class="m-title" style="margin:0">Kart</span>
-        <!-- ETT valg om gangen på tvers av alle gruppene (Christian 09.11). Fire tydelige grupper med små overskrifter (Christian 11.11): Standard · Periode · Uansett dato · Type. Tallene fylles av kartTell() -->
-        <div class="kart-grp"><span class="kg-lbl">Standard</span>
+        <!-- ETT valg om gangen på tvers av alle gruppene (Christian 09.11). Fire bokser uten overskrifter (Christian 11.11 kveld): [I dag +/- 1d] [I dag · I går · I morgen · Neste 7 d. · Siste 7 d.] [Alle] / [Send tilbud · Venter på svar · Uten tidspunkt] rett under den første. Tallene fylles av kartTell() -->
+        <div class="kart-grp">
           <div class="seg kart-filt" id="kartFilt">
-            <button type="button" data-v="rundt" class="on" title="I går (det ugjorte), i dag og i morgen">I går–i morgen<span class="cnt"></span></button>
+            <button type="button" data-v="rundt" class="on" title="I går (det ugjorte), i dag og i morgen">I dag +/- 1d<span class="cnt"></span></button>
           </div></div>
-        <div class="kart-grp"><span class="kg-lbl">Periode</span>
+        <div class="kart-grp">
           <div class="seg kart-filt" id="kartFiltTid">
-            <button type="button" data-v="siste7" title="7 dager bakover + i dag">Siste 7 dager<span class="cnt"></span></button>
-            <button type="button" data-v="igar">I går<span class="cnt"></span></button>
             <button type="button" data-v="idag" title="Dagens avtaler, også de som alt er forfalt i dag">I dag<span class="cnt"></span></button>
+            <button type="button" data-v="igar">I går<span class="cnt"></span></button>
             <button type="button" data-v="imorgen">I morgen<span class="cnt"></span></button>
-            <button type="button" data-v="neste7" title="I dag + 7 dager fram">Neste 7 dager<span class="cnt"></span></button>
+            <button type="button" data-v="neste7" title="I dag + 7 dager fram">Neste 7 d.<span class="cnt"></span></button>
+            <button type="button" data-v="siste7" title="7 dager bakover + i dag">Siste 7 d.<span class="cnt"></span></button>
           </div></div>
-        <div class="kart-grp"><span class="kg-lbl">Uansett dato</span>
+        <div class="kart-grp">
           <div class="seg kart-filt" id="kartFiltAlle">
             <button type="button" data-v="alle" title="Alle oppfølginger med adresse, uansett dato">Alle<span class="cnt"></span></button>
           </div></div>
         <button class="btn" id="kartClose" style="margin-left:auto;flex:none">✕</button>
         <div class="kart-head-row2" id="kartRow2">
-          <div class="kart-grp"><span class="kg-lbl">Type · uansett dato</span>
+          <div class="kart-grp">
             <div class="seg kart-filt" id="kartFilt2">
               <button type="button" data-v="tilbud" title="Husk å send tilbud">Send tilbud<span class="cnt"></span></button>
               <button type="button" data-v="venter" title="Tilbud sendt – venter på svar">Venter på svar<span class="cnt"></span></button>
@@ -895,7 +894,7 @@
           <div class="kl-row"><span class="kl-dot" style="--c:var(--mint)"></span>I dag</div>
           <div class="kl-row"><span class="kl-dot" style="--c:var(--gold)"></span>Kommende</div>
           <div class="kl-row"><span class="kl-dot" style="--c:#8b93a8"></span>Uten tidspunkt</div>
-          <div class="kl-row"><span class="kl-dot kl-meg" style="--c:#2f8cff"></span>Deg</div>
+          <div class="kl-row"><span class="kl-dot kl-meg" style="--c:#2f8cff"></span>Min posisjon</div>
         </div>
         <button type="button" class="kart-info-btn" id="kartInfo" style="display:none">ⓘ Vis forklaring</button>
         <button type="button" class="kart-uten-btn" id="kartUtenBtn" style="display:none"></button>
