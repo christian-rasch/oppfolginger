@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-12-191">
+<meta name="app-build" content="2026-11-12-192">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -550,7 +550,7 @@
   .kart-btn:hover{background:rgba(61,245,197,.16);border-color:rgba(61,245,197,.5)}
   #kartModal{z-index:175} /* under de andre modalene (180): «Åpne kortet» fra kartet legger redigeringsskjemaet OVER kartet */
   .kart-card{width:min(1280px,98vw);height:94vh;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px}
-  .kart-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 46px 10px 0;border-bottom:1px solid var(--hair);position:relative} /* plass til ✕ oppe til høyre */
+  .kart-head{display:flex;align-items:center;gap:16px 8px;flex-wrap:wrap;padding:0 46px 10px 0;border-bottom:1px solid var(--hair);position:relative} /* plass til ✕ oppe til høyre */
   .kart-head .m-title{flex:0 0 58px;align-self:center;margin:0!important} /* fast bredde → rad 2 starter rett under første boks */
   .kart-head #kartClose{position:absolute;right:0;top:-3px}
   /* fire bokser uten overskrifter (Christian 11.11.2026 kveld): standard · periode · alle / type */
@@ -1676,7 +1676,7 @@
     'profil.apnet':'åpnet Min profil','profil.lukket':'lukket Min profil','profil.varsel':'varselinnstilling','profil.passord':'endret passord','profil.glemt':'ba om passord-nullstilling (e-post)','profil.login':'logget inn','profil.logout':'logget ut','profil.push':'varsler','profil.pushgate':'varsel-sperre','profil.nokkel':'API-nøkkel',
     'synk.konflikt':'synk-konflikt','synk.flettet':'slo sammen endringer fra to enheter','synk.na':'trykket Synk nå'};
   const FEED_VIEW={avtaler:'Avtaler',uten:'Uten tidspunkt',gjore:'Må gjøres',alle:'Alle',forfalte:'Forfalte',send_offer:'Må gjøres',waiting_reply:'Tilbud sendt'};
-  const FEED_VS={min:'Varsel (min før)',ekstra:'Ekstra varsel',ekstraMin:'Ekstra varsel (min før)',dagOn:'Dagsoversikt',dagTid:'Dagsoversikt kl.',gjoreOn:'Ugjorte fra i går',gjoreTid:'Ugjorte fra i går kl.'};
+  const FEED_VS={min:'Varsel (min før)',ekstra:'Ekstra varsel',ekstraMin:'Ekstra varsel (min før)',dagOn:'Dagsoversikt',dagTid:'Dagsoversikt kl.',gjoreOn:'Tilbud fra i går',gjoreTid:'Tilbud fra i går kl.'};
   function feedVal(f,v,max){ // verdi → lesbar tekst
     max=max||80;
     if(v==null||v==='')return '–';
@@ -1930,9 +1930,9 @@
       +'<div class="cloud-row vs-row"><span>Dagsoversikt</span><span class="vs-right"><div class="seg"><button type="button" data-vs="dag" data-v="0"'+(v.dagOn?'':' class="on"')+'>Av</button><button type="button" data-vs="dag" data-v="1"'+(v.dagOn?' class="on"':'')+'>På</button></div>'
       +(v.dagOn?'<button type="button" class="vs-val" data-vs="dagTid">kl. '+esc(v.dagTid)+'</button>':'')+'</span></div>'
       +(v.dagOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 Avtaler i dag: 4</span> én gang om dagen, til klokkeslettet du velger. Ikke på dager med 0.</div>') // forklaring kun når den er av; selve varselet vises som brikke (Christian 28.10)
-      +'<div class="cloud-row vs-row"><span>Ugjorte fra i går</span><span class="vs-right"><div class="seg"><button type="button" data-vs="gjore" data-v="0"'+(v.gjoreOn?'':' class="on"')+'>Av</button><button type="button" data-vs="gjore" data-v="1"'+(v.gjoreOn?' class="on"':'')+'>På</button></div>'
+      +'<div class="cloud-row vs-row"><span>Tilbud fra i går</span><span class="vs-right"><div class="seg"><button type="button" data-vs="gjore" data-v="0"'+(v.gjoreOn?'':' class="on"')+'>Av</button><button type="button" data-vs="gjore" data-v="1"'+(v.gjoreOn?' class="on"':'')+'>På</button></div>'
       +(v.gjoreOn?'<button type="button" class="vs-val" data-vs="gjoreTid">kl. '+esc(v.gjoreTid)+'</button>':'')+'</span></div>'
-      +(v.gjoreOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 Ugjorte fra i går: 2</span> «Må gjøres»-kort som ikke ble gjort i går, til klokkeslettet du velger. Ikke når det er 0.</div>')
+      +(v.gjoreOn?'':'<div class="cloud-row cloud-muted vs-help"><span class="vs-eks">🔔 Husk å send tilbud fra i går: 2</span> Sett tid for påminnelse om tilbud du skulle sendt ut fra i går.</div>') // ny tekst (Christian 12.11.2026) – het «Ugjorte fra i går»
       +'</div>';
   }
   function varslerRerender(){const el=$('pfVarsler');if(el)el.outerHTML=varslerRowsHtml();}
@@ -1944,7 +1944,7 @@
     else if(k==='ekstra')varslerSet({ekstra:vs.getAttribute('data-v')==='1'});
     else if(k==='dag')varslerSet({dagOn:vs.getAttribute('data-v')==='1'});
     else if(k==='gjore')varslerSet({gjoreOn:vs.getAttribute('data-v')==='1'});
-    else if(k==='gjoreTid')openNumPad({mode:'tid',value:varsler.gjoreTid,title:'Ugjorte fra i går kl.',onDone:function(v){varslerSet({gjoreTid:v});}});
+    else if(k==='gjoreTid')openNumPad({mode:'tid',value:varsler.gjoreTid,title:'Tilbud fra i går kl.',onDone:function(v){varslerSet({gjoreTid:v});}});
   }
   /* ---- PUSH-VARSLER (påminnelse X min før avtale — X fra VARSEL-INNSTILLINGER over) ---- */
   const VAPID_PUBLIC='BNqXFxMvX7bEAp6Pj0OwVrT-U_uTpaCTUO2gKwG9QX0RddehoWmreLDnvx46pI6pFUJulkPVqvyE11sbBSoJ97Y';
