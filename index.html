@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-12-193">
+<meta name="app-build" content="2026-11-12-194">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -4123,7 +4123,7 @@
     kartLagKart=L.tileLayer('https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png',{maxNativeZoom:18,maxZoom:20,attribution:'© <a href="https://www.kartverket.no" target="_blank" rel="noopener">Kartverket</a>'});
     // flyfoto (gratis, ingen nøkkel) — slås på med 🛰-knappen
     kartLagSat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:19,maxZoom:20,attribution:'© Esri, Maxar, Earthstar Geographics'});
-    let sat=false;try{sat=localStorage.getItem(KART_SAT_KEY)==='1';}catch(e){}kartSatSet(sat);
+    kartSatSet(true); // flyfoto er standard (Christian 12.11.2026); 🛰 kan slå av i økten, men neste åpning starter med flyfoto igjen (se kartOpen)
     kartLayer=L.layerGroup().addTo(kartMap);
     const lab=function(){$('kartMap').classList.toggle('kart-nolabels',kartMap.getZoom()<12);};kartMap.on('zoomend',lab);lab();
     kartMap.on('dragstart',function(){kartUserMoved=true;});kartMap.on('zoomstart',function(){if(!kartProg)kartUserMoved=true;});
@@ -4186,6 +4186,7 @@
     try{await kartLoadLib();}catch(e){$('kartMsg').textContent='Kartet trenger nettilgang — fikk ikke lastet kartbiblioteket. Prøv igjen når du har dekning.';return;}
     if(!kartOpenFlag)return; // lukket mens vi ventet
     kartInit();$('kartMsg').style.display='none';
+    if(!kartSatOn)kartSatSet(true); // alltid flyfoto ved åpning (Christian 12.11.2026)
     const u=kartUtsnittLes();if(u){kartUserMoved=true;kartFirstFit=false;} // husket utsnitt → ingen auto-tilpasning til prikkene
     setTimeout(function(){if(!kartMap)return;kartMap.invalidateSize();if(u&&kartOpenFlag){kartProg=true;try{kartMap.setView([u.lat,u.lng],u.z,{animate:false});if(kartMap.setBearing)kartMap.setBearing(u.b||0);}catch(e){}setTimeout(function(){kartProg=false;},300);}},60);
     kartEnqueue(kartFilterItems(),true);kartEnqueue(kartAktive()); // filtrerte først, resten i bakgrunnen (så filterbytte går fort)
