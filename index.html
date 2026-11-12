@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-12-189">
+<meta name="app-build" content="2026-11-12-191">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -561,11 +561,11 @@
   .kart-head .cnt{margin-left:5px;font-weight:800;color:var(--gold)} .kart-head .cnt:empty{display:none} /* tallet er ALLTID gult, også på valgt knapp (Christian 11.11/12.11) */ /* antall pr. knapp i gult (Christian 09.11), skjult ved 0 */
   /* rad 2: samme ett-valg-gruppe som rad 1 (Uten tidspunkt / Venter på svar / Send tilbud), status til høyre */
   .kart-head-row2{flex:1 0 100%;display:flex;align-items:center;gap:8px;min-width:0}
-  /* valgt filter = gull ramme + lys skrift, ingen grønn fylling; knappene har egen svak ramme og luft imellom så de skilles (Christian 12.11.2026) */
-  .kart-head .seg{gap:6px;padding:3px}
+  /* hovedboksen (kategorien) har tydelig ramme; valgt filter = GRØNN ramme + lys skrift, ingen fylling; knappene har egen svak ramme og luft imellom (Christian 12.11.2026) */
+  .kart-head .seg{gap:6px;padding:4px;border:1px solid rgba(167,176,196,.45);background:rgba(255,255,255,.035);border-radius:12px}
   .kart-head .seg .ld{text-transform:none} /* «7d.» med liten d (Christian 12.11.2026) – resten av knappen er i store bokstaver */
   .kart-head .seg button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:var(--ink-dim)}
-  .kart-head .seg button.on{border-color:var(--gold);color:var(--ink);background:rgba(232,194,107,.09);box-shadow:0 0 0 1px rgba(232,194,107,.25)}
+  .kart-head .seg button.on{border-color:var(--mint);color:var(--ink);background:rgba(61,245,197,.08);box-shadow:0 0 0 1px rgba(61,245,197,.25)}
   .kart-head #kartStatus{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
   .kart-meg-btn{position:absolute;left:12px;top:82px;z-index:6;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#4aa3ff;background:#0d1019;border:1px solid var(--hair);border-radius:4px;cursor:pointer;box-shadow:0 10px 30px -14px rgba(0,0,0,.9)}
   .kart-meg-btn:hover{background:#171b28}
@@ -848,7 +848,7 @@
   <div class="modal" id="feedModal">
     <div class="m-card feed-card">
       <div class="feed-head"><span class="m-title" style="margin:0">Live feed</span>
-        <div class="seg" id="feedKind"><button type="button" data-v="" class="on">Alle</button><button type="button" data-v="kort">Kort</button><button type="button" data-v="innstilling">Innstillinger</button></div>
+        <div class="seg" id="feedKind"><button type="button" data-v="" class="on">Alle</button><button type="button" data-v="kort">Kort</button><button type="button" data-v="kart">Kart</button><button type="button" data-v="innstilling">Innstillinger</button></div>
         <select id="feedSeller" class="feed-sel"><option value="">Alle selgere</option></select>
         <span class="feed-status" title="Av: dine egne handlinger logges ikke og vises ikke. På: de logges og vises som for selgerne.">Mine egne</span><div class="seg" id="feedEgne"><button type="button" data-v="0" class="on">Av</button><button type="button" data-v="1">På</button></div>
         <button class="btn" id="feedRefresh">Oppdater</button>
@@ -1586,6 +1586,7 @@
     try{
       if(adminView)return; // admin inne i en selgers liste: ingenting logges (Christian 28.10: ingen spor av admin-tilgang)
       if(isAdmin()&&!feedEgneOn())return; // admins egne handlinger logges bare når «Mine egne» er på
+      if(/^knapp\.kart/.test(type))kind='kart'; // kart-hendelser får egen fane i live feeden (Christian 12.11.2026)
       data=data||{};
       let js=JSON.stringify(data);
       if(js.length>4000){delete data.kort;js=JSON.stringify(data);if(js.length>4000){data={avkortet:true};js=JSON.stringify(data);}}
@@ -1787,7 +1788,7 @@
       else if(ty==='kort.fjernet'||ty==='kort.slettet'||ty==='lim-inn.feil')tc=' t-bort';
       html+='<div class="feed-row'+tc+(r._ny&&Date.now()-r._ny<10000?' ny':'')+(harKort?' har-kort':'')+(open?' open':'')+'" data-fid="'+r.id+'">'
         +'<span class="feed-tid">'+hhmm(d)+'</span><span class="feed-who">'+feedWhoRow(r)+'</span>'
-        +'<span class="feed-txt"><span class="feed-ic">'+(r.kind==='innstilling'?'⚙️':'🗂')+'</span>'+feedTekst(r)+'</span>';
+        +'<span class="feed-txt"><span class="feed-ic">'+(r.kind==='innstilling'?'⚙️':r.kind==='kart'?'🗺':'🗂')+'</span>'+feedTekst(r)+'</span>';
       if(dd.diff&&(ty==='kort.ai-skjema'||ty==='kort.endret'||ty==='kort.angret'))html+=feedDiffHtml(dd.diff); // én retting per linje
       if(open&&harKort)html+=feedQvHtml(r);
       html+='</div>';
