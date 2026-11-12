@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-12-187">
+<meta name="app-build" content="2026-11-12-189">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -557,11 +557,15 @@
   .kart-grp{display:flex;flex-direction:column;flex:none}
   .kart-head-row2{align-items:center;padding-left:66px} /* 58 px tittel + 8 px gap = på linje med «I dag +/- 1d» */
   .kart-head #kartStatus{margin-bottom:0}
-  .kart-head .seg{flex:none;padding:2px;gap:2px} .kart-head .seg button{padding:7px 7px;letter-spacing:.02em}
-  .kart-head .cnt{margin-left:5px;font-weight:800;color:var(--gold)} .kart-head .seg button.on .cnt{color:var(--gold);background:rgba(6,18,14,.6);padding:1px 5px;border-radius:6px} .kart-head .cnt:empty{display:none} /* gult også på valgt knapp (Christian 11.11) */ /* antall pr. knapp i gult (Christian 09.11), skjult ved 0 */
+  .kart-head .seg{flex:none} .kart-head .seg button{padding:6px 8px;letter-spacing:.02em}
+  .kart-head .cnt{margin-left:5px;font-weight:800;color:var(--gold)} .kart-head .cnt:empty{display:none} /* tallet er ALLTID gult, også på valgt knapp (Christian 11.11/12.11) */ /* antall pr. knapp i gult (Christian 09.11), skjult ved 0 */
   /* rad 2: samme ett-valg-gruppe som rad 1 (Uten tidspunkt / Venter på svar / Send tilbud), status til høyre */
   .kart-head-row2{flex:1 0 100%;display:flex;align-items:center;gap:8px;min-width:0}
-  .kart-head .seg button[data-v="idag"]{color:var(--mint)} .kart-head .seg button.on{color:#06120e} /* «I dag» = ett trykk, derfor uthevet */
+  /* valgt filter = gull ramme + lys skrift, ingen grønn fylling; knappene har egen svak ramme og luft imellom så de skilles (Christian 12.11.2026) */
+  .kart-head .seg{gap:6px;padding:3px}
+  .kart-head .seg .ld{text-transform:none} /* «7d.» med liten d (Christian 12.11.2026) – resten av knappen er i store bokstaver */
+  .kart-head .seg button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:var(--ink-dim)}
+  .kart-head .seg button.on{border-color:var(--gold);color:var(--ink);background:rgba(232,194,107,.09);box-shadow:0 0 0 1px rgba(232,194,107,.25)}
   .kart-head #kartStatus{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
   .kart-meg-btn{position:absolute;left:12px;top:82px;z-index:6;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#4aa3ff;background:#0d1019;border:1px solid var(--hair);border-radius:4px;cursor:pointer;box-shadow:0 10px 30px -14px rgba(0,0,0,.9)}
   .kart-meg-btn:hover{background:#171b28}
@@ -627,7 +631,6 @@
   @keyframes kmeg{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.5);opacity:0}}
   /* trykkflate: ikonet er 40×40 (usynlig), selve prikken fortsatt 14 px i midten og pulsringen 24 px – «for vanskelig å treffe pinnen» (Christian 10.11.2026). Lappen over kan også trykkes. */
   .kdot.stor i{inset:13px} .kdot.stor b{inset:8px}
-  .kdot.klynge i{inset:7px;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:800;color:#06120e;font-style:normal;line-height:1} .kdot.klynge.uten i{color:#fff} /* klynge: 26 px prikk med antall */
   .leaflet-tooltip.ktip.leaflet-interactive{cursor:pointer}
   @keyframes kpulse{0%{transform:scale(.6);opacity:.9}70%{transform:scale(2.1);opacity:0}100%{transform:scale(2.1);opacity:0}}
   @media (prefers-reduced-motion:reduce){.kdot b{animation:none;opacity:.35}}
@@ -873,8 +876,8 @@
               <button type="button" data-v="idag" title="Dagens avtaler, også de som alt er forfalt i dag">I dag<span class="cnt"></span></button>
               <button type="button" data-v="igar">I går<span class="cnt"></span></button>
               <button type="button" data-v="imorgen">I morgen<span class="cnt"></span></button>
-              <button type="button" data-v="neste7" title="I dag + 7 dager fram">Neste 7 d.<span class="cnt"></span></button>
-              <button type="button" data-v="siste7" title="7 dager bakover + i dag">Siste 7 d.<span class="cnt"></span></button>
+              <button type="button" data-v="neste7" title="I dag + 7 dager fram">Neste 7<span class="ld">d.</span><span class="cnt"></span></button>
+              <button type="button" data-v="siste7" title="7 dager bakover + i dag">Siste 7<span class="ld">d.</span><span class="cnt"></span></button>
             </div></div>
           <div class="kart-grp">
             <div class="seg kart-filt" id="kartFiltAlle">
@@ -3931,7 +3934,6 @@
   // Filteret (begge radene i hodet) er ETT valg om gangen og starter alltid på «rundt» (± 1 dag) ved åpning (Christian 09.11.2026)
   const KART_LIB='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min';
   const KART_ROTATE='https://cdn.jsdelivr.net/npm/leaflet-rotate@0.5.3/dist/leaflet-rotate.js'; // rotasjon: to fingre vrir kartet, kompassknapp = nord (Christian 09.11.2026)
-  var kartKlynger={}; // klyngeprikker (nøkkel = sorterte kort-id-er)
   var kartOpenFlag=false; // var (ikke let): render() spør etter denne og kan kjøre før blokka her er nådd
   let kartMap=null,kartLayer=null,kartMe=null,kartFilt='rundt',kartLibP=null,kartGeo=null,kartQ=[],kartInFlight={},kartBusy=0,kartWatch=null,kartSig='',kartDrawT=null,
       kartUserMoved=false,kartProg=false,kartFirstFit=true,kartOpenedAt=0,kartNett=false,kartMarkers={},kartUtenOpen=false,kartGeoT=null;
@@ -4031,15 +4033,10 @@
     let k=String(it.kommentar||'').replace(/\s+/g,' ').trim();if(k.length>46)k=k.slice(0,44)+'…'; // uten kommentar: bare tidspunktet, ikke navnet (Christian 11.11.2026); uten begge → tom = ingen lapp
     return (t?'<span class="kt-t">'+esc(t)+'</span>':'')+esc(k);
   }
-  // grupperer prikkene etter avstand i piksler på gjeldende zoom (grådig: nærmere enn 36 px fra gruppas første prikk). klynge = flere kort og zoom < 17; samme = alle på nøyaktig samme punkt
+  // grupperer kort som står på NØYAKTIG samme punkt (stables loddrett i kartDraw). Klynger for nære adresser ble prøvd i build 183–187 og droppet (Christian 12.11.2026: «en og en pin»)
   function kartGrupper(med){
-    const z=kartMap.getZoom(),ut=[];
-    med.forEach(function(x){const pt=kartMap.project([x[1].lat,x[1].lon],z);
-      for(let i=0;i<ut.length;i++){if(ut[i].pt.distanceTo(pt)<36){ut[i].items.push(x);return;}}
-      ut.push({pt:pt,items:[x]});});
-    ut.forEach(function(g){const f=g.items[0][1];g.samme=g.items.every(function(x){return x[1].lat.toFixed(5)===f.lat.toFixed(5)&&x[1].lon.toFixed(5)===f.lon.toFixed(5);});
-      g.lat=g.items.reduce(function(a,x){return a+x[1].lat;},0)/g.items.length;g.lon=g.items.reduce(function(a,x){return a+x[1].lon;},0)/g.items.length;
-      g.klynge=g.items.length>1&&z<17;});
+    const ut=[],idx={};
+    med.forEach(function(x){const k=x[1].lat.toFixed(5)+','+x[1].lon.toFixed(5);if(idx[k]==null){idx[k]=ut.length;ut.push({items:[],lat:x[1].lat,lon:x[1].lon});}ut[idx[k]].items.push(x);});
     return ut;
   }
   function kartRyddSync(){const b=$('kartRydd');if(!b)return;const n=kartFilt==='alle'?items.filter(function(i){return i.state!=='fulgt'&&i.dato&&daysSince(p(i.dato))>=14;}).length:0;b.style.display=n?'':'none';} // knappen bare under «Alle» og bare når det finnes noe å fjerne
@@ -4052,27 +4049,12 @@
     if(!kartMap||!kartOpenFlag||!window.L)return;
     const n=now(),list=kartFilterItems(),geo=kartGeoLoad(),med=[],uten=[];
     list.forEach(function(it){const g=geo[kartNorm(it.adresse)];if(g&&!g.miss&&isFinite(g.lat))med.push([it,g]);else uten.push([it,g]);});
-    // KLYNGER (Christian 11.11.2026: «kaos» når adresser nær hverandre legger prikkene oppå hverandre): prikker nærmere enn 36 px slås sammen til én prikk med antall
-    // mens man er zoomet ut (< 17); trykk zoomer inn på dem. Fra zoom 17 vises hver prikk, og kort på samme punkt stables loddrett med 46 px mellom.
+    // én prikk pr. kort; kort på nøyaktig samme punkt stables loddrett med 46 px mellom (kartGrupper)
     const grupper=kartGrupper(med);
-    const sig=kartFilt+'|'+grupper.map(function(g){return (g.klynge?'K':'')+g.items.map(function(x){return x[0].id+':'+x[1].lat+','+x[1].lon+':'+kartKlasse(x[0],n)+':'+(x[0].dato||'')+':'+kartHash(x[0].kommentar||'')+':'+(x[0].nextAction||'')+':'+(x[0].status||'');}).join(',');}).join(';');
+    const sig=kartFilt+'|'+grupper.map(function(g){return g.items.map(function(x){return x[0].id+':'+x[1].lat+','+x[1].lon+':'+kartKlasse(x[0],n)+':'+(x[0].dato||'')+':'+kartHash(x[0].kommentar||'')+':'+(x[0].nextAction||'')+':'+(x[0].status||'');}).join(',');}).join(';');
     if(force||sig!==kartSig){kartSig=sig;
-      const keep={},keepK={};
+      const keep={};
       grupper.forEach(function(gr){
-        if(gr.klynge){ // én prikk med antall, farget etter det mest presserende kortet i gruppa
-          const kls=gr.items.map(function(x){return kartKlasse(x[0],n);}),kl=kls.indexOf('forfalt')>=0?'forfalt':kls.indexOf('idag')>=0?'idag':kls.indexOf('snart')>=0?'snart':'uten';
-          const key=gr.items.map(function(x){return x[0].id;}).sort().join('|');keepK[key]=1;
-          const icon=L.divIcon({className:'kdot-wrap',html:'<div class="kdot stor klynge '+kl+'"><i>'+gr.items.length+'</i></div>',iconSize:[40,40],iconAnchor:[20,20]});
-          let mk=kartKlynger[key];
-          if(!mk){mk=L.marker([gr.lat,gr.lon],{icon:icon,zIndexOffset:kl==='forfalt'?300:kl==='idag'?200:0,keyboard:false});mk.__gr=gr;
-            mk.on('click',function(){const g2=mk.__gr;kartUserMoved=true;kartProg=true;
-              if(g2.samme){kartMap.setView([g2.lat,g2.lon],Math.max(17,kartMap.getZoom()+2));} // samme punkt: zoom inn så stabelen vises
-              else kartMap.fitBounds(L.latLngBounds(g2.items.map(function(x){return [x[1].lat,x[1].lon];})),{padding:[70,70],maxZoom:18});
-              setTimeout(function(){kartProg=false;},700);});
-            mk.addTo(kartLayer);kartKlynger[key]=mk;}
-          else{mk.__gr=gr;mk.setLatLng([gr.lat,gr.lon]);mk.setIcon(icon);}
-          return;
-        }
         const ant=gr.items.length;
         gr.items.forEach(function(x,idx){const it=x[0],g=x[1],kl=kartKlasse(it,n),z=kl==='forfalt'?300:kl==='idag'?200:0;keep[it.id]=1;
           let dx=0,dy=0;if(ant>1)dy=Math.round((idx-(ant-1)/2)*46); // loddrett stabel – hver prikk får sin egen lapp over seg uten at lappene overlapper
@@ -4085,7 +4067,6 @@
         });
       });
       Object.keys(kartMarkers).forEach(function(k){if(!keep[k]){kartLayer.removeLayer(kartMarkers[k]);delete kartMarkers[k];}});
-      Object.keys(kartKlynger).forEach(function(k){if(!keepK[k]){kartLayer.removeLayer(kartKlynger[k]);delete kartKlynger[k];}});
       // zoom til prikkene: ved åpning/filterbytte, og mens de første oppslagene tikker inn (til brukeren selv har flyttet kartet)
       if(med.length&&!kartUserMoved&&(kartFirstFit||Date.now()-kartOpenedAt<12000)){
         kartFirstFit=false;const b=L.latLngBounds(med.map(function(x){return [x[1].lat,x[1].lon];}));
@@ -4146,7 +4127,6 @@
     const lab=function(){$('kartMap').classList.toggle('kart-nolabels',kartMap.getZoom()<12);};kartMap.on('zoomend',lab);lab();
     kartMap.on('dragstart',function(){kartUserMoved=true;});kartMap.on('zoomstart',function(){if(!kartProg)kartUserMoved=true;});
     kartMap.on('moveend zoomend rotateend rotate',kartUtsnittLagre); // husk utsnittet
-    kartMap.on('zoomend',function(){kartDraw();}); // klyngene avhenger av zoom (tegnes bare på nytt når grupperingen faktisk endres – sig)
     kartMap.on('click',function(){if(kartKortId)kartKortSkjul();}); // raskt trykk på kartet lukker kortet; prikk/lapp stopper hendelsen selv
     // Leaflets drag nekter å starte mens zoom-animasjonen pågår (Draggable._onDown: hasClass 'leaflet-zoom-anim' → return), så en flytting som begynner rett etter et knip
     // går tapt («lag sidelengs etter zoom», Christian 11.11.2026). Fange-fase: avslutt animasjonen før Leaflet ser trykket.
