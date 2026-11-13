@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0a0c16">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-13-200">
+<meta name="app-build" content="2026-11-13-201">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -3503,8 +3503,16 @@
       pendingCardImg=null;formFromPaste=false;closeForm();render();
     }
   });
-  $('formModal').addEventListener('click',function(e){ // klikk på mørk overlay = lagre; tomt nytt skjema = lukk uten å lagre
+  // trykk på mørk overlay = lagre; tomt nytt skjema = lukk uten å lagre. Skjer idet fingeren TREFFER (pointerdown) – man trenger ikke slippe.
+  // Klikket som kommer når fingeren slippes, svelges, ellers ville det truffet kortet/knappen som ligger under der skjemaet var.
+  let slukKlikk=false;
+  document.addEventListener('click',function(e){if(slukKlikk){slukKlikk=false;e.stopPropagation();e.preventDefault();}},true);
+  $('formModal').addEventListener('pointerdown',function(e){
     if(e.target!==$('formModal')||savingLock||Date.now()-formOpenedAt<450)return; // rask dobbelttrykk på kortet traff overlayet → ikke lukk
+    if(e.button>0)return; // bare vanlig trykk / venstre museknapp
+    slukKlikk=true;
+    const slipp=function(){window.removeEventListener('pointerup',slipp,true);window.removeEventListener('pointercancel',slipp,true);setTimeout(function(){slukKlikk=false;},400);};
+    window.addEventListener('pointerup',slipp,true);window.addEventListener('pointercancel',slipp,true);
     const navn=$('fNavn').value.trim(),adr=$('fAdr').value.trim();
     if(!editId&&!navn&&!adr){pendingCardImg=null;formFromPaste=false;closeForm();render();}
     else doSave();
