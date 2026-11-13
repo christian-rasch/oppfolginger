@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0a0c16">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-13-201">
+<meta name="app-build" content="2026-11-13-202">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -167,9 +167,11 @@
   @keyframes zoneFlash{0%,35%{background:rgba(61,245,197,.30)}100%{background:rgba(61,245,197,0)}}
   /* nyopprettet kort: grønn lysende ytterkant ~1s, deretter ~1s fade */
   .opf-card.justadded{animation:justAdded 3s ease forwards}
-  /* kort man nettopp har vært inne på i «Rediger oppfølging»: samme glød (grønn ytterkant + gul dag-tekst), men bare 1 s (Christian 13.11.2026) */
-  .opf-card.redigert{animation:justAdded 1s ease forwards}
-  .opf-card.redigert .rail-day,.opf-card.redigert .rail-weekday,.opf-card.redigert .r-date{animation:dayGlow 1s ease}
+  /* kort man nettopp har vært inne på i «Rediger oppfølging»: GUL glød som når man trykker på et varsel (var grønn i build 200), full styrke ca. 0,6 s og
+     så rolig ned over ca. 1 s (Christian 13.11.2026: «litt saktere ned») */
+  .opf-card.redigert{animation:redigertGlow 1.6s ease forwards}
+  @keyframes redigertGlow{0%{box-shadow:0 0 0 0 rgba(216,169,58,0);border-color:#d8a93a}3%{box-shadow:0 0 26px 3px rgba(216,169,58,.9);border-color:#d8a93a}38%{box-shadow:0 0 26px 3px rgba(216,169,58,.9);border-color:#d8a93a}100%{box-shadow:0 0 0 0 rgba(216,169,58,0);border-color:var(--hair)}}
+  .opf-card.redigert .rail-day,.opf-card.redigert .rail-weekday,.opf-card.redigert .r-date{animation:dayGlow 1.6s ease}
   @keyframes justAdded{0%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--mint)}2%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}68%{box-shadow:0 0 26px 3px rgba(61,245,197,.9);border-color:var(--mint)}100%{box-shadow:0 0 0 0 rgba(61,245,197,0);border-color:var(--hair)}}
   /* varsel trykket: gull ytterkant rundt kortet (grønn = nytt/endret kort beholdes) */
   .opf-card.notified{animation:notifGlow 3s ease forwards}
@@ -2725,13 +2727,13 @@
     el.classList.remove('justadded');void el.offsetWidth;el.classList.add('justadded');
     setTimeout(function(){el.classList.remove('justadded');},3100);
   }
-  // Kort man nettopp har vært inne på i «Rediger oppfølging»: samme glød som et nytt kort, men bare 1 s, uten rulling og fane-blink (Christian 13.11.2026).
+  // Kort man nettopp har vært inne på i «Rediger oppfølging»: gul glød som ved varsel-trykk, ca. 1,6 s (CSS .opf-card.redigert), uten rulling og fane-blink (Christian 13.11.2026).
   // Gjelder kortet i lista og kortet nederst i kartet. Kartkortet tegnes på nytt like etter lagring → kartKortRender kaller kortGlodPaa igjen innenfor samme sekund.
   let kortGlod=null; // {id,til}
   function kortGlodPaa(el){
     if(!el||!kortGlod||el.dataset.id!==kortGlod.id||Date.now()>kortGlod.til)return;
     el.classList.remove('justadded','notified','redigert');void el.offsetWidth;el.classList.add('redigert');
-    setTimeout(function(){el.classList.remove('redigert');},1100);
+    setTimeout(function(){el.classList.remove('redigert');},1700);
   }
   function kortGlodStart(id){kortGlod={id:id,til:Date.now()+1000};document.querySelectorAll('.opf-card[data-id="'+id+'"]').forEach(kortGlodPaa);}
   // ---- glow fra varsel: lys opp kort som varselet gjelder for ----
@@ -3467,7 +3469,7 @@
       Object.assign(it,f);
       if(fHandling)applyNA(it,fHandling); // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       aiTrack(it);
-      if(JSON.stringify([formGather(),fHandling])!==formSnap)toast('Lagret'); // bare når noe faktisk er endret (Christian 28.10)
+      if(JSON.stringify([formGather(),fHandling])!==formSnap)toast('Lagret ✅'); // bare når noe faktisk er endret (Christian 28.10)
       if(editId===aiRevealId){ // AI-import: alltid fane-bytte + grønt blink som manuell
         if(it.ai&&it.ai.ms&&it.ai.ms.skjema==null)it.ai.ms.skjema=Date.now()-formOpenedAt; // ms fra AI-skjemaet åpnet til selgeren lagret (28.10)
         feedAiSkjema(it); // live feed: hva selgeren rettet etter AI-lesingen
@@ -3492,7 +3494,7 @@
     }else{
       render();
       if(revealId)revealCard(revealId,revealFlashTab,revealFrom,revealTo);
-      else if(redigertId)kortGlodStart(redigertId); // bare vært inne på kortet (ingen flytting/ny-kort-markering) → 1 s glød
+      else if(redigertId)kortGlodStart(redigertId); // bare vært inne på kortet (ingen flytting/ny-kort-markering) → kort gul glød
     }
     setTimeout(function(){savingLock=false;},600);
   }
