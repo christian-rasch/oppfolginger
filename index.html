@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0a0c16">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-13-204">
+<meta name="app-build" content="2026-11-13-205">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -462,7 +462,8 @@
   .chips-break{flex-basis:100%;height:0} /* tvinger «i morgen»/«ingen» til egen linje */
   #fKanal{flex-wrap:wrap} /* plass til 4 knapper (Mail/Ring/Besøk/Få tak i) */
   #formModal .m-card{position:relative}
-  .f-ramme{position:fixed;pointer-events:none;box-sizing:border-box;border:2px solid #d8a93a;border-radius:14px;box-shadow:0 0 14px 2px rgba(216,169,58,.35)} /* rolig gul ramme rundt kortet man redigerer, mens skjemaet er åpent (Christian 13.11.2026) */
+  .f-ramme{position:fixed;pointer-events:none;box-sizing:border-box;border:1.5px solid rgba(216,169,58,0);border-radius:14px;box-shadow:0 0 2px 2px rgba(216,169,58,.05)} /* kortet man redigerer, mens skjemaet er åpent – Christians egne tall fra justeringssiden 13.11.2026: ingen strek, 2 px lys i 5 % styrke, de andre kortene dempet 30 % */
+  body.red-aapen #list .opf-card:not(.red-kort){filter:brightness(.7)}
   .f-ramme[hidden]{display:none}
   .f-del{position:absolute;top:18px;right:20px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#ff8a8e;background:rgba(255,90,95,.08);border:1px solid rgba(255,90,95,.4);border-radius:8px;padding:6px 11px;cursor:pointer;transition:.12s}
   .f-del:hover{background:rgba(255,90,95,.18);color:#fff}
@@ -3413,10 +3414,13 @@
       else el=document.querySelector('#list .opf-card[data-id="'+editId+'"]');
     }
     const b=el?el.getBoundingClientRect():null;
+    const liste=el&&el.classList.contains('opf-card'); // kort i lista → de andre kortene dempes (lista kan tegnes på nytt, derfor settes merket hver runde)
+    document.body.classList.toggle('red-aapen',!!liste);
+    if(liste&&!el.classList.contains('red-kort')){document.querySelectorAll('#list .opf-card.red-kort').forEach(function(k){k.classList.remove('red-kort');});el.classList.add('red-kort');}
     if(!b||!b.width||!b.height||b.bottom<0||b.top>window.innerHeight){r.hidden=true;return;}
     r.style.left=(b.left-3)+'px';r.style.top=(b.top-3)+'px';r.style.width=(b.width+6)+'px';r.style.height=(b.height+6)+'px';r.hidden=false;
   }
-  function closeForm(){$('formModal').classList.remove('open');clearInterval(rammeTimer);rammeTimer=null;$('fRamme').hidden=true;}
+  function closeForm(){$('formModal').classList.remove('open');clearInterval(rammeTimer);rammeTimer=null;$('fRamme').hidden=true;document.body.classList.remove('red-aapen');document.querySelectorAll('.opf-card.red-kort').forEach(function(k){k.classList.remove('red-kort');});}
   // live-lagring: når en lagret oppfølging redigeres, skriv endringer fortløpende (Lagre/klikk-utenfor blir overflødig)
   function formGather(){return {navn:$('fNavn').value.trim(),alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
     salgsrunde:$('fRunde').value.trim(),adresse:$('fAdr').value.trim(),status:fStatusV,dato:fDatoVal,kommentar:$('fKom').value.trim(),varsel:fVarsel};}
