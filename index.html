@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0a0c16">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-13-203">
+<meta name="app-build" content="2026-11-13-204">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -462,6 +462,8 @@
   .chips-break{flex-basis:100%;height:0} /* tvinger «i morgen»/«ingen» til egen linje */
   #fKanal{flex-wrap:wrap} /* plass til 4 knapper (Mail/Ring/Besøk/Få tak i) */
   #formModal .m-card{position:relative}
+  .f-ramme{position:fixed;pointer-events:none;box-sizing:border-box;border:2px solid #d8a93a;border-radius:14px;box-shadow:0 0 14px 2px rgba(216,169,58,.35)} /* rolig gul ramme rundt kortet man redigerer, mens skjemaet er åpent (Christian 13.11.2026) */
+  .f-ramme[hidden]{display:none}
   .f-del{position:absolute;top:18px;right:20px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#ff8a8e;background:rgba(255,90,95,.08);border:1px solid rgba(255,90,95,.4);border-radius:8px;padding:6px 11px;cursor:pointer;transition:.12s}
   .f-del:hover{background:rgba(255,90,95,.18);color:#fff}
   .chip{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--ink-dim);background:rgba(255,255,255,.04);border:1px solid var(--hair-2);border-radius:9px;padding:8px 11px;cursor:pointer;transition:.15s}
@@ -747,6 +749,7 @@
   <div class="lightbox" id="mapLightbox"><button class="lb-close" id="lbClose">✕</button><img id="lbImg" alt="Adresse i kart"><a class="btn lb-driv" id="lbDriv" target="_blank" rel="noopener">Vis i Driv.app</a></div>
 
   <div class="modal" id="formModal">
+    <div class="f-ramme" id="fRamme" hidden></div>
     <div class="m-card">
       <div class="f-head"><div><div class="m-title" id="fTitle">Ny oppfølging</div><div class="f-sub" id="fSub"></div></div><button class="btn f-del-btn" id="fDelete" type="button" title="Slett / forkast denne oppfølgingen">Slett</button></div>
       <div class="ai-note" id="fAiNote" style="display:none"></div>
@@ -3397,8 +3400,23 @@
     formSnap=JSON.stringify([formGather(),fHandling]); // utgangspunkt → «Lagret» vises bare når noe faktisk er endret
     formOpenedAt=Date.now(); // trykk på overlayet rett etter åpning (rask dobbelttrykk) skal ikke lukke skjemaet
     $('formModal').classList.add('open');
+    clearInterval(rammeTimer);rammeOppdater();rammeTimer=setInterval(rammeOppdater,250);
   }
-  function closeForm(){$('formModal').classList.remove('open');}
+  // Gul ramme rundt kortet som skjemaet hører til, så lenge skjemaet er åpent. Ligger i selve overlayet (over mørkleggingen, under skjemaet)
+  // og følger kortet hvis lista tegnes på nytt. Bare for eksisterende kort – ikke nytt kort / AI-import.
+  let rammeTimer=null;
+  function rammeOppdater(){
+    const r=$('fRamme');let el=null;
+    if(editId&&editId!==aiRevealId&&$('formModal').classList.contains('open')){
+      const kk=$('kartKort');
+      if(kk&&kk.style.display!=='none'&&kk.offsetWidth&&kk.querySelector('.opf-card[data-id="'+editId+'"]'))el=kk; // kortet nederst i kartet (ytterboksen – innsiden har zoom)
+      else el=document.querySelector('#list .opf-card[data-id="'+editId+'"]');
+    }
+    const b=el?el.getBoundingClientRect():null;
+    if(!b||!b.width||!b.height||b.bottom<0||b.top>window.innerHeight){r.hidden=true;return;}
+    r.style.left=(b.left-3)+'px';r.style.top=(b.top-3)+'px';r.style.width=(b.width+6)+'px';r.style.height=(b.height+6)+'px';r.hidden=false;
+  }
+  function closeForm(){$('formModal').classList.remove('open');clearInterval(rammeTimer);rammeTimer=null;$('fRamme').hidden=true;}
   // live-lagring: når en lagret oppfølging redigeres, skriv endringer fortløpende (Lagre/klikk-utenfor blir overflødig)
   function formGather(){return {navn:$('fNavn').value.trim(),alder:+$('fAlder').value||null,telefon:$('fTel').value.trim(),
     salgsrunde:$('fRunde').value.trim(),adresse:$('fAdr').value.trim(),status:fStatusV,dato:fDatoVal,kommentar:$('fKom').value.trim(),varsel:fVarsel};}
@@ -3463,14 +3481,15 @@
       salgsrunde:$('fRunde').value.trim(),adresse:adr,status:fStatusV,
       dato:fDatoVal,kommentar:$('fKom').value.trim(),varsel:fVarsel};
     let revealId=null,revealFlashTab=true,revealFrom=null,revealTo;
-    const redigertId=editId||null; // eksisterende kort → kort glød når skjemaet lukkes (se kortGlodStart)
+    const redigertId=editId||null; // eksisterende kort → kort glød når skjemaet lukkes, men BARE hvis noe faktisk ble endret (se kortGlodStart)
+    let harEndret=false;
     if(editId){
       const it=byId(editId);
       if(f.dato!==it.dato)it.datoTs=Date.now(); // tidspunkt endret → stempel
       Object.assign(it,f);
       if(fHandling)applyNA(it,fHandling); // Mail/Ring/Besøk → send_offer/call/visit (kun når valgt)
       aiTrack(it);
-      if(JSON.stringify([formGather(),fHandling])!==formSnap)toast('Lagret ✅'); // bare når noe faktisk er endret (Christian 28.10)
+      if(JSON.stringify([formGather(),fHandling])!==formSnap){toast('Lagret ✅');harEndret=true;} // bare når noe faktisk er endret (Christian 28.10)
       if(editId===aiRevealId){ // AI-import: alltid fane-bytte + grønt blink som manuell
         if(it.ai&&it.ai.ms&&it.ai.ms.skjema==null)it.ai.ms.skjema=Date.now()-formOpenedAt; // ms fra AI-skjemaet åpnet til selgeren lagret (28.10)
         feedAiSkjema(it); // live feed: hva selgeren rettet etter AI-lesingen
@@ -3495,7 +3514,7 @@
     }else{
       render();
       if(revealId)revealCard(revealId,revealFlashTab,revealFrom,revealTo);
-      else if(redigertId)kortGlodStart(redigertId); // bare vært inne på kortet (ingen flytting/ny-kort-markering) → kort gul glød
+      else if(redigertId&&harEndret)kortGlodStart(redigertId); // noe ble endret (ingen flytting/ny-kort-markering) → kort gul glød; bare inn og ut → ingenting (Christian 13.11.2026)
     }
     setTimeout(function(){savingLock=false;},600);
   }
