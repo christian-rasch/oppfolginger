@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-13-196">
+<meta name="app-build" content="2026-11-13-197">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -395,6 +395,7 @@
   .t-mins{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 4px}
   .m-foot.dtpop-foot{justify-content:space-between;align-items:center}
   .dtpop-foot-right{display:flex;gap:9px}
+  .dtpop-datefield .dtg.glow{animation:dayGlow 1s ease} /* delen som nettopp ble endret (dato / time / minutt) gløder gult – samme gull-glød som dag-teksten på kortene (Christian 13.11.2026) */
   .dtpop-datefield{flex:1;text-align:left;font-family:inherit;font-size:15px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;cursor:pointer}
   /* egen kalender / tid-velger — legges (via JS) over Tid-rutenettet, lukkes ved valg eller klikk utenfor */
   .dtmini{position:absolute;z-index:10;background:#11141f;border:1px solid var(--hair);border-radius:12px;padding:12px;box-shadow:0 24px 70px -16px rgba(0,0,0,.9)}
@@ -607,8 +608,8 @@
   .kart-info-btn{position:absolute;left:12px;bottom:28px;z-index:6;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;color:var(--ink-dim);background:rgba(10,12,22,.9);border:1px solid var(--hair);border-radius:9px;padding:6px 10px;cursor:pointer}
   /* «uten plassering»: adresser Kartverket ikke fant */
   .kart-uten-btn{position:absolute;right:12px;bottom:28px;z-index:6;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;color:var(--gold);background:rgba(10,12,22,.92);border:1px solid rgba(232,194,107,.4);border-radius:9px;padding:7px 11px;cursor:pointer}
-  /* «Fjern forfalte (14+ dager)» oppe til høyre ved siden av ◎ – vises bare under «Alle» når slike kort finnes (Christian 11.11.2026) */
-  .kart-rydd-btn{position:absolute;right:58px;top:15px;z-index:6;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--red);background:rgba(10,12,22,.92);border:1px solid rgba(255,90,95,.45);border-radius:9px;padding:7px 11px;cursor:pointer}
+  /* «Slett forfalte (14+ dager)» (het «Fjern …» til 13.11.2026) oppe til høyre ved siden av ◎ – vises bare under «Alle» når slike kort finnes (Christian 11.11.2026) */
+  .kart-rydd-btn{position:absolute;right:58px;top:19px;z-index:6;font-family:"JetBrains Mono",monospace;font-size:8.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--red);background:rgba(10,12,22,.92);border:1px solid rgba(255,90,95,.45);border-radius:7px;padding:4px 8px;cursor:pointer} /* mindre boks (Christian 13.11.2026): 8,5 px skrift, strammere luft, fortsatt midtstilt mot ◎ */
   .kart-rydd-btn:hover{background:rgba(255,90,95,.14);border-color:rgba(255,90,95,.7)}
   .kart-uten{position:absolute;right:12px;bottom:28px;z-index:6;width:min(320px,80%);max-height:55%;overflow:auto;background:rgba(10,12,22,.95);border:1px solid var(--hair);border-radius:12px;padding:10px 12px;font-size:12.5px;box-shadow:0 14px 40px -20px rgba(0,0,0,.9)}
   .kart-uten .ku-head{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;padding-right:24px}
@@ -765,7 +766,7 @@
   <div class="modal dtpop-modal" id="fDtPop">
     <div class="m-card dtpop-card">
       <div class="m-title">Dato og tid</div>
-      <div class="dtpop-lbl dtpop-sec">Tid</div>
+      <div class="dtpop-lbl dtpop-sec">Time</div>
       <div class="t-grid" id="fHours"></div>
       <div class="dtpop-lbl dtpop-sec">Minutt</div>
       <div class="t-mins" id="fMins"></div>
@@ -910,7 +911,7 @@
         </div>
         <button type="button" class="kart-info-btn" id="kartInfo" style="display:none">ⓘ Vis forklaring</button>
         <button type="button" class="kart-uten-btn" id="kartUtenBtn" style="display:none"></button>
-        <button type="button" class="kart-rydd-btn" id="kartRydd" style="display:none" title="Fjerner alle oppfølginger som forfalt for 14 dager eller mer siden – kan angres i 10 sekunder">Fjern forfalte (14+ dager)</button>
+        <button type="button" class="kart-rydd-btn" id="kartRydd" style="display:none" title="Sletter alle oppfølginger som forfalt for 14 dager eller mer siden – kan angres i 10 sekunder">Slett forfalte (14+ dager)</button>
         <div class="kart-uten" id="kartUten" style="display:none"></div>
         <!-- trykk på en prikk → det vanlige kortet (cardHTML) nederst i kartet, med bilde, Salesforce, Fjern osv. (Christian 09.11) -->
         <div class="kart-kort" id="kartKort" style="display:none"><div id="kartKortInner"></div></div>
@@ -1677,7 +1678,7 @@
   }
   // ---- admin-vinduet (#feedModal): filtre Alle/Kort/Innstillinger, selger, polling hvert 10. s, hurtigvisning av kortet, bilde, «Slik kortet er nå». KUN LESING ----
   const feedSt={rows:[],kind:'',uid:'',sellers:[],timer:null,busy:false,open:null,imgs:new Map()};
-  const FEED_TYPE={'kort.ny':'la til kort manuelt','kort.ai':'leste kort med AI','kort.ai-skjema':'AI-skjema','kort.endret':'endret','kort.fjernet':'fjernet kort','kort.angret':'angret','kort.slettet':'slettet kort',
+  const FEED_TYPE={'kort.ny':'la til kort manuelt','kort.ai':'leste kort med AI','kort.ai-skjema':'AI-skjema','kort.endret':'endret','kort.fjernet':'slettet kort','kort.angret':'angret','kort.slettet':'slettet kort for godt',
     'knapp.salesforce':'kopierte besøksnr (Salesforce)','knapp.naviger':'trykket Naviger','knapp.bilde':'åpnet kartbildet','knapp.demp':'demp 2. varsel','knapp.ny':'trykket + Ny manuell','knapp.oppdater':'lastet appen på nytt','knapp.rydd':'Rydd eldre forfalte','knapp.kart':'åpnet kartet','knapp.kart-filter':'byttet kartfilter','knapp.kart-kort':'åpnet kort fra kartet',
     'lim-inn.start':'trykket Lim inn','lim-inn.feil':'AI-lesing feilet','sok':'søkte','fane':'byttet fane',
     'profil.apnet':'åpnet Min profil','profil.lukket':'lukket Min profil','profil.varsel':'varselinnstilling','profil.passord':'endret passord','profil.glemt':'ba om passord-nullstilling (e-post)','profil.login':'logget inn','profil.logout':'logget ut','profil.push':'varsler','profil.pushgate':'varsel-sperre','profil.nokkel':'API-nøkkel',
@@ -1691,7 +1692,7 @@
     if(f==='dato')return friendlyDate(v)||String(v);
     if(f==='nextAction')return (NA_META[v]&&NA_META[v].label)||String(v);
     if(f==='hasImg')return v?'ja':'nei';
-    if(f==='state')return v==='fulgt'?'fjernet':'aktiv';
+    if(f==='state')return v==='fulgt'?'slettet':'aktiv';
     if(typeof v==='object')return JSON.stringify(v).slice(0,max);
     return String(v).slice(0,max);
   }
@@ -1716,7 +1717,7 @@
       case 'kort.endret':{const n=Object.keys(d.diff||{}).length;t=(navn?'<b>'+navn+'</b> — ':'')+'endret '+n+(n===1?' felt':' felt');break;}
       case 'kort.fjernet':case 'kort.angret':case 'kort.slettet':t=lbl+(d.n>1?' ('+d.n+' kort: '+esc((d.navn||[]).join(', '))+')':(navn?' <b>'+navn+'</b>':''))+(d.rydd?' · via Rydd':'')+(d.angre&&ty!=='kort.angret'?' · angre':'');break;
       case 'knapp.demp':t=(d.til==='på'?'dempet 2. varsel':'skrudde 2. varsel på igjen')+(navn?' «'+navn+'»':'');break;
-      case 'knapp.rydd':t=lbl+': '+(d.avbrutt?'avbrutt':'fjernet')+' '+(d.n||0)+' kort';break;
+      case 'knapp.rydd':t=lbl+': '+(d.avbrutt?'avbrutt':'slettet')+' '+(d.n||0)+' kort';break;
       case 'sok':t='søkte «'+esc(d.tekst||'')+'»'+(d.treff!=null?' ('+d.treff+' treff)':'');break;
       case 'fane':t='byttet til '+(FEED_VIEW[d.view]||d.view||'')+(d.sub&&d.sub!=='alle'?' › '+(FEED_VIEW[d.sub]||d.sub):'');break;
       case 'profil.varsel':t=(FEED_VS[d.felt]||d.felt)+': '+esc(feedVal('',d.fra))+' → '+esc(feedVal('',d.til))+(d.min!=null?' ('+esc(d.min)+' min før)':'')+(d.tid?' (kl. '+esc(d.tid)+')':'');break; // påslaget: hva bryteren gjelder (Christian 09.11)
@@ -1776,7 +1777,7 @@
       +'<div class="fq-line">'+esc(k.adresse||'Ingen adresse')+'</div>'
       +'<div class="fq-line">'+(k.dato?'🕒 '+esc(friendlyDate(k.dato)||k.dato):'Uten tidspunkt')+(k.nextAction?' · '+esc((NA_META[k.nextAction]&&NA_META[k.nextAction].label)||k.nextAction):'')+'</div>'
       +'<div class="fq-kom">'+(k.kommentar?'«'+esc(k.kommentar)+'»':'<span style="color:var(--ink-faint)">Ingen kommentar</span>')+(k.quickComment?' <span class="fq-qc">'+esc(k.quickComment)+'</span>':'')+'</div>'
-      +'<div class="fq-line fq-meta">'+(k.sfNr?'Besøksnr '+esc(k.sfNr)+' · ':'')+'Eier: '+feedWho(ei.em)+(k.opprettet?' · lagt til '+esc(fmtRel(k.opprettet)):'')+(naa?' · slik kortet er NÅ'+(naa.borte?' (finnes ikke lenger hos selgeren)':(naa.fulgt?' (fjernet, i arkivet)':''))+', hentet '+hhmm(new Date(naa.t)):' · slik kortet var da')+'</div>'
+      +'<div class="fq-line fq-meta">'+(k.sfNr?'Besøksnr '+esc(k.sfNr)+' · ':'')+'Eier: '+feedWho(ei.em)+(k.opprettet?' · lagt til '+esc(fmtRel(k.opprettet)):'')+(naa?' · slik kortet er NÅ'+(naa.borte?' (finnes ikke lenger hos selgeren)':(naa.fulgt?' (slettet, i arkivet)':''))+', hentet '+hhmm(new Date(naa.t)):' · slik kortet var da')+'</div>'
       +'<div class="fq-btns"><button class="btn" data-fnaa="'+r.id+'">'+(naa?'Slik det var da':'Slik kortet er nå')+'</button></div>' // bare lesing — ingen redigering av selgerens kort herfra (Christian 28.10)
       +'</div></div>';
   }
@@ -2454,7 +2455,7 @@
       +'<div class="opf-note" title="Trykk for å skrive kommentar">'+qc+'<span class="opf-note-text">'+kom+'</span><button class="qc-add" type="button" title="Hurtigvalg">+</button></div>'
       +'</div>'
       +'<div class="opf-side">'+(it.hasImg?'<a class="opf-thumb" href="#" title="Se kartbilde"><span class="thumb-lbl">Kart</span></a>':'<span class="opf-thumb no-img" title="Ingen kartbilde lastet opp"><span class="ni-box"></span><span class="thumb-lbl">Ingen bilde</span></span>')
-      +'<div class="side-btns">'+muteBtn+sfBtn+navBtn+'<button class="btn act-done">Fjern</button></div></div>' // demp øverst (Christian 28.10)
+      +'<div class="side-btns">'+muteBtn+sfBtn+navBtn+'<button class="btn act-done">Slett</button></div></div>' // demp øverst (Christian 28.10)
       +'</div>';
   }
 
@@ -2566,7 +2567,7 @@
         od.forEach(function(i){const d=+startOfDay(P(i));
           fb.get(d===+td0?'idag':d===yd?'igar':d>=+wk0?'denne':d>=lw?'forrige':d>=ww?'ukenfor':'eldre').push(i);});
         fb.get('idag').sort(function(a,b){return (+P(a))-(+P(b));}); // «Forfalt i dag»: tidligst på dagen øverst (resten uendret)
-        if(od.some(function(i){return daysSince(P(i))>=14;}))G('<div class="list-tools"><button class="grp-action" data-act="purge-eldre">Fjern forfalte (14+ dager)</button></div>',[],'raw'); // øverst til høyre i Forfalte-lista (Christian 11.11.2026), kun når det finnes noe å fjerne
+        if(od.some(function(i){return daysSince(P(i))>=14;}))G('<div class="list-tools"><button class="grp-action" data-act="purge-eldre">Slett forfalte (14+ dager)</button></div>',[],'raw'); // øverst til høyre i Forfalte-lista (Christian 11.11.2026), kun når det finnes noe å fjerne
         [['idag','Forfalt i dag'],['igar','Forfalt i går'],['denne','Forfalt denne uken'],['forrige','Forfalt forrige uke'],['ukenfor','Forfalt uken før'],['eldre','Forfalt eldre']]
           .forEach(function(p){const a=fb.get(p[0]);if(!a.length)return;
             G(p[1],a,'forfalt');});
@@ -2865,13 +2866,13 @@
     el.addEventListener('animationend',fin,{once:true});
     setTimeout(fin,560); // failsafe hvis animationend ikke fyrer
   }
-  function fullfor(it){ // «Fjern»: arkiver straks (skjul fra lista), 10s angrevindu. Auto-slettes permanent etter 48t.
+  function fullfor(it){ // «Slett» på kortet (het «Fjern» til 13.11.2026): arkiver straks (skjul fra lista), 10s angrevindu. Auto-slettes permanent etter 48t.
     if(!it||it.state==='fulgt')return;
     const id=it.id;
     animateRemoveCard(id,function(){
       const x=byId(id);if(!x||x.state==='fulgt')return;
       x.state='fulgt';x.avgjort=Date.now();save();render();
-      toastUndo('Fjernet — '+(x.navn||''),function(){
+      toastUndo('Slettet — '+(x.navn||''),function(){
         const y=byId(id);if(y){y.state='aktiv';y.avgjort=null;save();render();}
       },10000);
     });
@@ -2896,7 +2897,7 @@
     const ids=eldre.map(i=>i.id);
     ids.forEach(id=>{const it=byId(id);if(it){it.state='fulgt';it.avgjort=Date.now();}});
     feedMark='rydd';save();feedMark=null;render();feed('kort','knapp.rydd',{n:ids.length,fra:kilde||'liste'});
-    toastUndo('Fjernet '+ids.length+' forfalte (14+ dager)',function(){
+    toastUndo('Slettet '+ids.length+' forfalte (14+ dager)',function(){
       ids.forEach(id=>{const it=byId(id);if(it){it.state='aktiv';it.avgjort=null;}});
       save();render();
     },10000);
@@ -3150,7 +3151,7 @@
   });
   document.addEventListener('click',function(e){
     if(!$('qpop').classList.contains('open'))return;
-    if(e.target.closest('#qpop')||e.target.closest('.opf-note'))return;
+    if(e.target.closest('#qpop')||e.target.closest('.qc-add'))return; // bare selve «+» holder menyen oppe – et trykk i kommentarfeltet lukker den (Christian 13.11.2026; før: hele kommentarboksen)
     closeQpop();
   });
   $('list').addEventListener('scroll',closeQpop);
@@ -3259,8 +3260,22 @@
     const hh=d?d.getHours():null,mm=d?d.getMinutes():null;
     const hg=$('fHours');if(hg)Array.from(hg.children).forEach(b=>b.classList.toggle('on',+b.dataset.h===hh));
     const mg=$('fMins');if(mg)Array.from(mg.children).forEach(b=>b.classList.toggle('on',+b.dataset.m===mm));
-    const db=$('fDateBtn');if(db)db.textContent=d?friendlyDate(fDatoVal):'—'; // samme vennlige format som skjemaet («I morgen, 21:00»)
+    dtDatoFelt(d); // samme vennlige format som skjemaet («I morgen, 21:00»), delt i dato / time / minutt
     syncTimePop();
+  }
+  // Datofeltet i «Dato og tid»: delen som nettopp ble endret (dato, time eller minutt) gløder gult i 1 s (Christian 13.11.2026).
+  // dtDel = sist viste verdier (null rett etter åpning → ingen glød ved åpning). dtGlod = når hver del sist ble endret, så en glød som alt går
+  // fortsetter der den var (negativ animation-delay) når feltet tegnes på nytt fordi en ANNEN del endres.
+  let dtDel=null;const dtGlod={d:0,h:0,m:0},DT_GLOD_MS=1000;
+  function dtDatoFelt(d){
+    const db=$('fDateBtn');if(!db)return;
+    const naa=d?{d:fDatoVal.slice(0,10),h:pad(d.getHours()),m:pad(d.getMinutes())}:{d:'',h:'',m:''},ts=Date.now();
+    if(dtDel)['d','h','m'].forEach(function(x){if(naa[x]!==dtDel[x])dtGlod[x]=ts;});
+    dtDel=naa;
+    if(!d){db.textContent='—';return;}
+    const t=friendlyDate(fDatoVal),k=t.lastIndexOf(', ');
+    const del=function(x,txt){const g=ts-dtGlod[x];return '<span class="dtg'+(g<DT_GLOD_MS?' glow" style="animation-delay:-'+g+'ms':'')+'">'+esc(txt)+'</span>';};
+    db.innerHTML=del('d',k>0?t.slice(0,k):t)+', '+del('h',naa.h)+':'+del('m',naa.m);
   }
   function dtComposeDate(){ // gjeldende dato-del (YYYY-MM-DD), ellers i dag
     if(fDatoVal)return fDatoVal.slice(0,10);
@@ -3325,7 +3340,7 @@
     if(!keep){fDatoVal=timeSnapshot;fChipSel=null;chipSync();}
     $('fTimePop').hidden=true;dtMainFoot(true); // tilbake til rutenettet med hoved-knappene
   }
-  function openDtPop(){dtSnapshot=fDatoVal;buildDtPicker();closeMinis();syncDtPicker();$('fDtPop').classList.add('open');} // husk verdi ved åpning → «Tilbake» kan angre
+  function openDtPop(){dtSnapshot=fDatoVal;buildDtPicker();closeMinis();dtDel=null;dtGlod.d=dtGlod.h=dtGlod.m=0;syncDtPicker();$('fDtPop').classList.add('open');} // husk verdi ved åpning → «Tilbake» kan angre
   function closeDtPop(){closeMinis();$('fDtPop').classList.remove('open');}
   function cancelDtPop(){fDatoVal=dtSnapshot;fChipSel=null;chipSync();closeDtPop();} // «Tilbake»/klikk utenfor: forkast endring (ingen lagring)
   function openForm(it){
@@ -4055,6 +4070,7 @@
     return (t?'<span class="kt-t">'+esc(t)+'</span>':'')+esc(k);
   }
   // grupperer kort som står på NØYAKTIG samme punkt (stables loddrett i kartDraw). Klynger for nære adresser ble prøvd i build 183–187 og droppet (Christian 12.11.2026: «en og en pin»)
+  const KART_STABEL_ZOOM=14;let kartSamlet=null; // fra zoom 14 (nabolag) og innover vises bunken som loddrett stabel; lenger ute ligger kortene samlet på adressen
   function kartGrupper(med){
     const ut=[],idx={};
     med.forEach(function(x){const k=x[1].lat.toFixed(5)+','+x[1].lon.toFixed(5);if(idx[k]==null){idx[k]=ut.length;ut.push({items:[],lat:x[1].lat,lon:x[1].lon});}ut[idx[k]].items.push(x);});
@@ -4070,20 +4086,22 @@
     if(!kartMap||!kartOpenFlag||!window.L)return;
     const n=now(),list=kartFilterItems(),geo=kartGeoLoad(),med=[],uten=[];
     list.forEach(function(it){const g=geo[kartNorm(it.adresse)];if(g&&!g.miss&&isFinite(g.lat))med.push([it,g]);else uten.push([it,g]);});
-    // én prikk pr. kort; kort på nøyaktig samme punkt stables loddrett med 46 px mellom (kartGrupper)
-    const grupper=kartGrupper(med);
-    const sig=kartFilt+'|'+grupper.map(function(g){return g.items.map(function(x){return x[0].id+':'+x[1].lat+','+x[1].lon+':'+kartKlasse(x[0],n)+':'+(x[0].dato||'')+':'+kartHash(x[0].kommentar||'')+':'+(x[0].nextAction||'')+':'+(x[0].status||'');}).join(',');}).join(';');
+    // én prikk pr. kort; kort på nøyaktig samme punkt stables loddrett med 46 px mellom (kartGrupper) – men BARE når man er zoomet inn (KART_STABEL_ZOOM).
+    // 46 px er fast avstand på skjermen: utzoomet tilsvarer det flere mil, så prikkene havnet i havet/feil by (Christian 13.11.2026). Utzoomet ligger de derfor
+    // samlet på adressen som en liten vifte (6 px), og bare den første i bunken har lapp. Bytte av modus tegner prikkene på nytt (zoomend i kartInit).
+    const grupper=kartGrupper(med),samlet=kartMap.getZoom()<KART_STABEL_ZOOM;kartSamlet=samlet;
+    const sig=kartFilt+'|'+(samlet?'samlet':'stabel')+'|'+grupper.map(function(g){return g.items.map(function(x){return x[0].id+':'+x[1].lat+','+x[1].lon+':'+kartKlasse(x[0],n)+':'+(x[0].dato||'')+':'+kartHash(x[0].kommentar||'')+':'+(x[0].nextAction||'')+':'+(x[0].status||'');}).join(',');}).join(';');
     if(force||sig!==kartSig){kartSig=sig;
       const keep={};
       grupper.forEach(function(gr){
         const ant=gr.items.length;
         gr.items.forEach(function(x,idx){const it=x[0],g=x[1],kl=kartKlasse(it,n),z=kl==='forfalt'?300:kl==='idag'?200:0;keep[it.id]=1;
-          let dx=0,dy=0;if(ant>1)dy=Math.round((idx-(ant-1)/2)*46); // loddrett stabel – hver prikk får sin egen lapp over seg uten at lappene overlapper
+          let dx=0,dy=0;if(ant>1)dy=Math.round((idx-(ant-1)/2)*(samlet?6:46)); // loddrett stabel – hver prikk får sin egen lapp over seg uten at lappene overlapper
           const icon=L.divIcon({className:'kdot-wrap',html:'<div class="kdot stor '+kl+(it.id===kartKortId?' sel':'')+'" style="animation-delay:-'+(kartHash(it.id)%2200)+'ms'+(dx||dy?';transform:translate('+dx+'px,'+dy+'px)':'')+'"><b></b><i></i></div>',iconSize:[40,40],iconAnchor:[20,20]}); // 40×40 trykkflate, prikken tegnes 14 px i midten (CSS .kdot.stor)
           let mk=kartMarkers[it.id];
           if(!mk){mk=L.marker([g.lat,g.lon],{icon:icon,zIndexOffset:z,keyboard:false});mk.__id=it.id;mk.on('click',function(){kartVisKort(mk.__id);});mk.addTo(kartLayer);kartMarkers[it.id]=mk;} // trykk → det vanlige kortet nederst
           else{mk.setLatLng([g.lat,g.lon]);mk.setIcon(icon);mk.setZIndexOffset(z);}
-          mk.unbindTooltip();const tip=kartTipTekst(it,n);if(tip){mk.bindTooltip(tip,{permanent:true,direction:'top',className:'ktip '+kl,opacity:1,offset:[dx,dy-8],interactive:true}); // ny klasse hver gang (farge på klokkeslettet)
+          mk.unbindTooltip();const tip=(samlet&&idx>0)?'':kartTipTekst(it,n);if(tip){mk.bindTooltip(tip,{permanent:true,direction:'top',className:'ktip '+kl,opacity:1,offset:[dx,dy-8],interactive:true}); // ny klasse hver gang (farge på klokkeslettet)
           mk.getTooltip().on('click',function(e){if(e.originalEvent){L.DomEvent.stop(e.originalEvent);e.originalEvent._stopped=true;}kartVisKort(mk.__id);});} // trykk på lappen = trykk på prikken; _stopped: Leaflet sjekker dette flagget før kartets eget click (som ellers lukker kortet)
         });
       });
@@ -4146,6 +4164,7 @@
     kartSatSet(true); // flyfoto er standard (Christian 12.11.2026); 🛰 kan slå av i økten, men neste åpning starter med flyfoto igjen (se kartOpen)
     kartLayer=L.layerGroup().addTo(kartMap);
     const lab=function(){$('kartMap').classList.toggle('kart-nolabels',kartMap.getZoom()<12);};kartMap.on('zoomend',lab);lab();
+    kartMap.on('zoomend',function(){if((kartMap.getZoom()<KART_STABEL_ZOOM)!==kartSamlet)kartScheduleDraw();}); // krysset grensen for stabel/samlet → tegn prikkene på nytt (ellers ingen omtegning ved zoom)
     kartMap.on('dragstart',function(){kartUserMoved=true;});kartMap.on('zoomstart',function(){if(!kartProg)kartUserMoved=true;});
     kartMap.on('moveend zoomend rotateend rotate',kartUtsnittLagre); // husk utsnittet
     kartMap.on('click',function(){if($('napop').classList.contains('open')){closeNapop();return;}if(kartKortId)kartKortSkjul();}); // raskt trykk på kartet lukker kortet; prikk/lapp stopper hendelsen selv
