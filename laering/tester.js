@@ -8,7 +8,7 @@ function laerApi(){
   const block=html.slice(html.indexOf('// [[LAER-START]]'),html.indexOf('// [[LAER-END]]'));
   const helpers=['const pad=','const p=s=>','const dKey=','const sameDay=','const startOfDay=','const startOfWeek=','const toLocal=','const MO=']
     .map(pre=>{const i=html.indexOf('\n  '+pre);if(i<0)throw new Error('fant ikke '+pre);return html.slice(i+1,html.indexOf('\n',i+1));}).join('\n');
-  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,nextWeekWeekday,normaliserDato,sisteJsonObjekt,salgsrundeFraLinje,foersteVirkedag,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
+  return new Function(helpers+'\n'+block+'\nreturn {timeFromText,timeWordFromText,daysAheadFromText,nextWeekWeekday,normaliserDato,sisteJsonObjekt,salgsrundeFraLinje,tlfFraNotat,foersteVirkedag,WDRE,WNUM,MONTH_RE,TOMORROW_RE,TODAY_RE};')();
 }
 const api=laerApi();
 module.exports={laerApi};
@@ -219,4 +219,10 @@ J('ett objekt',' {"a":1,"b":{"c":"}"}}',{a:1,b:{c:'}'}});
 J('avkuttet svar → null','{"a":1,"b":',null);
 J('streng med escapet anførselstegn','{"k":"si \\"hei\\" {"}',{k:'si "hei" {'});
 J('ingen json','bare tekst',null);
+// --- 13.11.2026: telefonnummer skrevet i notatet → Telefon-feltet (oppdiktede numre) ---
+const TLF=(inn,want)=>ok('tlf i notat: '+JSON.stringify(inn),api.tlfFraNotat(inn),want);
+TLF('91234567. Ola. Finne ut av binding. Snakket med kone. Intressert','91234567');TLF('41234567 snakke med kone. Er Intressert. Bruker ikke tv','41234567');TLF('Ring 912 34 567 i morgen','91234567');TLF('tlf 91 23 45 67','91234567');
+TLF('+47 912 34 567','+4791234567');TLF('+4791234567 ring etter 17','+4791234567');TLF('0047 41234567','+4741234567');TLF('38051234 fasttelefon','38051234');TLF('91234567 2 barn','91234567');TLF('Kona: 98765432, han: 91234567','98765432');
+TLF('tlf 47 91 23 45 67','91234567');TLF('4123456 ma','');TLF('Ringe imorgen 1430','');TLF('Sendt 1497, bør svare ja','');TLF('binding til 31.12.2027','');TLF('Besøksnr 10949082','');TLF('org 987654321','');TLF('Betaler 599 49 399','');
+TLF('Ring opp mandag, Altibox, 3 ice en voksen Netflix, en 12 og en 14','');TLF('Telenor 1000 og T-We','');TLF('Cancelled 2026-08-22. Within','');TLF('Interessert betaler 1149 + Viaplay og tv2','');TLF('','');TLF(null,'');TLF('Telenor\n4791234567\nSend tilbud på melding','+4791234567');TLF('47123456 ring i morgen','47123456');TLF('479123456789','');
 console.log(fail?('\n'+fail+' FEIL'):'\nAlle tester OK');process.exit(fail?1:0);

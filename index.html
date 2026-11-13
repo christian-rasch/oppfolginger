@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-12-195">
+<meta name="app-build" content="2026-11-13-196">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1190,6 +1190,12 @@
     if(i<0)return '';
     return tok[i]+(num?' '+bok+num:'');
   }
+  // Telefonnummer selgeren har skrevet i selve notatet («91234567. Ola. Finne ut av binding») → brukes i Telefon-feltet og vinner over nummeret AI-en fant i panelet
+  // (Christian 13.11.2026; kommentaren beholdes ordrett). Norsk nummer = 8 sifre: skrevet samlet (foerste siffer 2–9) eller gruppert 3-2-3 / 2-2-2-2 med mellomrom
+  // (da bare mobil, foerste siffer 4 eller 9 – ellers ligner prisrekker som «599 49 399»); med +47/0047 foran godtas alle, og «47» rett foran et mobilnummer (10 sifre i ett) regnes som landskode. Aldri del av en lengre sifferrekke
+  // (besoeksnr starter paa 1, org.nr har 9 sifre), aldri 7 sifre. Foerste treff vinner. Gir bare sifrene (med +47 hvis det sto der), ellers ''.
+  const TLF_NOTAT_RE=/(?:^|[^\d+])(?:((?:\+47|0047) ?|47(?=[49]\d{7}(?!\d)))([2-9]\d{7}(?!\d)|(?:[2-9]\d{2} \d{2} \d{3}|[2-9]\d \d{2} \d{2} \d{2})(?! ?\d))|([2-9]\d{7}(?!\d)|(?:[49]\d{2} \d{2} \d{3}|[49]\d \d{2} \d{2} \d{2})(?! ?\d)))/;
+  function tlfFraNotat(s){const m=TLF_NOTAT_RE.exec(String(s||''));return m?(m[1]?'+47'+m[2]:m[3]).replace(/[^\d+]/g,''):'';}
   // Foerste virkedag i maaneden kl 12 (man–fre; ikke 1.1, 1.5, 17.5, 25.12, 26.12): «januar» alene = 4. jan 2027 (Christian 28.10.2026). Bevegelige helligdager er ikke med
   function erFridag(x){const k=(x.getMonth()+1)+'.'+x.getDate();return x.getDay()===0||x.getDay()===6||['1.1','5.1','5.17','12.25','12.26'].indexOf(k)>=0;}
   function foersteVirkedag(y,m){const d=new Date(y,m,1,12,0,0,0);while(erFridag(d))d.setDate(d.getDate()+1);return d;}
@@ -3734,6 +3740,8 @@
     o.hastighet=hm?hm[1]+' mbits':'';
     {const k0=o.kommentar,k1=k0.replace(/[ \t]*\(\s*\d{1,4}\s*mbits?\s*\)/ig,''); // fjern ev. «(N mbits)» modellen likevel tok med — linjeskift i notatet beholdes
       if(k1!==k0)o.kommentar=k1.replace(/[ \t]+\n/g,'\n').replace(/\n{2,}/g,'\n').trim();}
+    {const tn=tlfFraNotat(o.kommentar); // nummer skrevet i notatet («ring mann paa 91234567») VINNER over nummeret i panelet – det er det selgeren vil ringe (Christian 13.11.2026). Kommentaren roeres ikke.
+      if(tn&&tn.replace(/\D/g,'').slice(-8)!==o.telefon.replace(/\D/g,'').slice(-8))o.telefon=tn;} // samme nummer i begge → behold panelets skrivemaate (+47…)
     o.alder=+o.alder||null;
     // type: Roll (R1–R5) vinner; ellers KUN det som faktisk staar i INFRASTRUCTURE (raa felt fra AI), «false» + PRODUCTS-tekst = MOB; ellers tom
     const st=String(o.status||'').toUpperCase(),infra=String(o.infra||'').trim(),prod=String(o.produkter||'').trim();
