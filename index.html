@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-13-197">
+<meta name="app-build" content="2026-11-13-198">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -247,8 +247,8 @@
   .opf-note{position:relative;background:rgba(255,255,255,.03);border:1px solid var(--hair-2);border-left:3px solid rgba(255,255,255,.14);border-radius:0 11px 11px 0;padding:8px 30px 8px 13px;height:84px;overflow:hidden;cursor:text;transition:border-color .15s} /* høyde for 3 synlige linjer */
   .opf-note .qc-add{position:absolute;top:0;right:0;z-index:3;width:26px;height:26px;display:grid;place-items:center;padding:0 0 3px 3px;font-size:16px;line-height:1;color:var(--ink-faint);background:rgba(255,255,255,.05);border:0;border-left:1px solid var(--hair-2);border-bottom:1px solid var(--hair-2);border-radius:0 11px 0 14px;cursor:pointer;transition:.12s} /* hjørneflik (kvart sirkel) klistret til øvre høyre hjørne */
   .opf-note .qc-add:hover,.opf-note .qc-add:active{color:var(--mint);border-color:var(--mint);background:rgba(61,245,197,.13);box-shadow:0 0 14px -4px rgba(61,245,197,.7)} /* neon-grønn glød på kant + kryss */
-  .opf-note:hover{border-left-color:rgba(61,245,197,.5)}
-  .opf-note.editing{overflow:auto;border-color:var(--mint);border-left-color:var(--mint)} /* direkte redigering; scroller ved >3 linjer, kortet vokser ikke */
+  .opf-note:hover{border-left-color:rgba(232,194,107,.5)}
+  .opf-note.editing{overflow:auto;border-color:var(--gold);border-left-color:var(--gold)} /* kanten lyser GULT når man skriver (var grønn til 13.11.2026, Christian) · direkte redigering; scroller ved >3 linjer, kortet vokser ikke */
   .opf-note .qc-tag{float:left;margin:0 7px 0 0;max-width:100%;font-size:11px;font-weight:600;line-height:15px;color:var(--ink);background:rgba(255,255,255,.11);border:1px solid var(--hair);border-radius:7px;padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} /* lav chip (kun linje 1); fritekst flyter rundt: linje 1 rett etter chip, linje 2+ full bredde under */
   .opf-note .qc-tag .qc-age{color:var(--ink-faint);font-weight:500}
   .opf-note-text{font-size:12.5px;font-weight:500;color:var(--ink);line-height:1.5}
@@ -2916,6 +2916,9 @@
   // Unntak: «Neste handling» åpner den vanlige handlingsmenyen også i kartet (openNapop løfter den over kartvinduet, Christian 12.11.2026).
   function kortKlikk(e){
     const card=e.target.closest('.opf-card'),iKart=!!e.target.closest('#kartKort');
+    // hurtigvalg-menyen er oppe: et trykk på et kort (kommentarfeltet, kortflaten, knappene) lukker BARE menyen – man går ikke inn i kommentaren eller noe annet
+    // (Christian 13.11.2026). Selve «+» virker som før. preventDefault: «Naviger» er en lenke og ville ellers åpnet seg.
+    if($('qpop').classList.contains('open')&&!e.target.closest('.qc-add')){e.preventDefault();closeQpop();return;}
     if(e.target.closest('[data-act="purge-eldre"]')){e.stopPropagation();purgeEldre();return;} // gruppeknapp (ikke i kort)
     if(e.target.closest('.tilbud-logged')&&card){bumpWaiting(byId(card.dataset.id));return;}
     const we=e.target.closest('.when-edit');
