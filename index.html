@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-12-194">
+<meta name="app-build" content="2026-11-12-195">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -332,6 +332,7 @@
   /* neste-handling-popover */
   .napop{position:absolute;z-index:60;min-width:204px;background:#0f1320;border:1px solid var(--hair);border-radius:13px;padding:7px;display:none;flex-direction:column;gap:3px;box-shadow:0 24px 60px -18px rgba(0,0,0,.9)}
   .napop.open{display:flex}
+  .napop.fri{position:fixed;z-index:178} /* åpnet fra kortet i kartet: ligger rett i <body>, over kartvinduet (175), under de andre modalene (180) */
   .napop button{text-align:left;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);background:none;border:0;border-radius:8px;padding:9px 11px;cursor:pointer;display:flex;align-items:center;gap:8px}
   .napop button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
   .sf-pop{position:absolute;z-index:70;display:none;align-items:center;gap:7px;white-space:nowrap;background:#0f1320;border:1px solid rgba(61,245,197,.32);border-radius:10px;padding:8px 11px;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;color:var(--ink);box-shadow:0 18px 44px -14px rgba(0,0,0,.85);pointer-events:none}
@@ -2808,14 +2809,13 @@
   // Velg handling fra popup
   function setAction(it,na){
     if(!NA_KEYS.includes(na))return;
-    const prev=it.nextAction,prevWS=it.waitingSince,prevOS=it.offerSince;
+    const prev=it.nextAction;
     if(na==='send_offer'&&prev!=='send_offer')it.offerSince=Date.now(); // stempel når «Husk å send tilbud» settes → styrer kategori i «Må gjøres»
     it.nextAction=na;
     if(na==='waiting_reply'){if(!it.waitingSince)it.waitingSince=Date.now();} // sett hvis mangler
     else it.waitingSince=null;
-    save();render();
-    toastUndo((na==='waiting_reply'?'Tilbud sendt ✅':NA_META[na].label)+' — '+(it.navn||''),
-      function(){it.nextAction=prev;it.waitingSince=prevWS;it.offerSince=prevOS;save();render();});
+    save();render();toastSkjul(); // ingen melding og ingen Angre når en handling SETTES – brikken på kortet er kvitteringen. Angre bare når «Tilbud sendt» fjernes (checkOffAction), Christian 13.11.2026.
+    // toastSkjul: en eldre Angre-melding som står oppe forsvinner (som før, da ny melding erstattet den) – ellers kunne et sent trykk på Angre overskrive det nye valget
   }
   // Huk av valgt handling: send_offer → waiting_reply, alle andre → null
   function checkOffAction(it){
@@ -2824,17 +2824,16 @@
       const destTab=it.dato?'avtaler':'uten',fromV=view; // kortet forlater «Må gjøres» → pil mot fanen der duplikatet fortsatt står
       const commit=function(){
         it.nextAction='waiting_reply';it.waitingSince=Date.now(); // tilbud sendt nå
-        save();render();
-        toastUndo('Tilbud sendt → Venter på svar — '+(it.navn||''),
-          function(){it.nextAction='send_offer';it.waitingSince=prevWS;save();render();});
+        save();render();toastSkjul(); // settes → ingen melding/Angre (13.11.2026)
       };
       // glir ut når kortet forlater fanen (f.eks. «Må gjøres»); pila (uten fane-blink) fyres når kortet er halvveis ute
       if(destTab!==view)animateRemoveCard(it.id,commit,function(){flashAndArrow(fromV,destTab,false);});else commit();
     }else{
       it.nextAction=null;if(prev==='waiting_reply')it.waitingSince=null; // nullstill ved avsluttet venting
       save();render();
-      toastUndo((NA_META[prev].label)+' fullført — '+(it.navn||''),
+      if(prev==='waiting_reply')toastUndo((NA_META[prev].label)+' fullført — '+(it.navn||''), // Angre KUN når «Tilbud sendt» fjernes (Christian 13.11.2026)
         function(){it.nextAction=prev;it.waitingSince=prevWS;save();render();});
+      else toastSkjul();
     }
   }
   // permanent sletting (kort + kartbilde) — felles hjelpefunksjon
@@ -2905,8 +2904,9 @@
 
   // ---------- liste-interaksjoner (delegasjon) ----------
   // Klikk på et oppfølgingskort — brukes av lista (#list) OG kortet som vises i kartet (#kartKort, Christian 09.11.2026).
-  // I kartet ligger kortet i en modal over .stage, så småmenyene som posisjoneres i .stage (dato-velger, handlingsmeny, hurtigvalg, «Kopiert»-boble)
+  // I kartet ligger kortet i en modal over .stage, så småmenyene som posisjoneres i .stage (dato-velger, hurtigvalg, «Kopiert»-boble)
   // ville havnet bak kartet → der åpnes redigeringsskjemaet / inline-redigering / toast i stedet. Bilde, Salesforce-kopiering, Naviger, Fjern (med Angre) og demp virker likt.
+  // Unntak: «Neste handling» åpner den vanlige handlingsmenyen også i kartet (openNapop løfter den over kartvinduet, Christian 12.11.2026).
   function kortKlikk(e){
     const card=e.target.closest('.opf-card'),iKart=!!e.target.closest('#kartKort');
     if(e.target.closest('[data-act="purge-eldre"]')){e.stopPropagation();purgeEldre();return;} // gruppeknapp (ikke i kort)
@@ -2923,7 +2923,7 @@
     const ez=e.target.closest('.opf-ident');
     if(ez&&card){ez.classList.remove('flash');void ez.offsetWidth;ez.classList.add('flash');setTimeout(function(){ez.classList.remove('flash');},520);openForm(byId(card.dataset.id));return;} // hele navn→adresse-boksen åpner redigering + grønt blink
     const an=e.target.closest('.act-next');
-    if(an&&card){e.stopPropagation();if(iKart){openForm(byId(card.dataset.id));return;}openNapop(byId(card.dataset.id),an);return;}
+    if(an&&card){e.stopPropagation();openNapop(byId(card.dataset.id),an,iKart?e:null);return;} // i kartet: samme meny, lagt over kartvinduet (12.11.2026)
     const ac=e.target.closest('.actchip');
     if(ac&&card){checkOffAction(byId(card.dataset.id));return;}
     if(e.target.closest('.act-navedit')&&card){openForm(byId(card.dataset.id));return;}
@@ -3071,10 +3071,21 @@
   })();
 
   // ---------- neste-handling-popover ----------
-  let naItem=null;
-  function openNapop(it,anchor){
+  // Fra kortet i kartet (ev = selve trykket): menyen flyttes rett i <body> som fixed over kartvinduet og legges rett over fingeren – inne i .stage havnet den bak kartet.
+  // Plasseres etter trykkpunktet, ikke knappens rektangel (kortet i kartet er zoomet, og Safari regner da rektangelet annerledes). closeNapop flytter den hjem igjen (Christian 12.11.2026)
+  let naItem=null;const naHjem=$('napop').parentNode,naEtter=$('napop').nextSibling;
+  function openNapop(it,anchor,ev){
     naItem=it;
     const dp=$('napop'),st=document.querySelector('.stage');
+    if(ev){
+      document.body.appendChild(dp);dp.classList.add('fri','open');
+      const w=dp.offsetWidth,h=dp.offsetHeight;
+      let fx=ev.clientX-30,fy=ev.clientY-h-16;
+      if(fx>window.innerWidth-w-8)fx=window.innerWidth-w-8;if(fx<8)fx=8;
+      if(fy<8)fy=ev.clientY+16;
+      dp.style.left=fx+'px';dp.style.top=fy+'px';
+      return;
+    }
     const sr=st.getBoundingClientRect(),ar=anchor.getBoundingClientRect();
     const sc=sr.width/1024;
     let x=(ar.left-sr.left)/sc;
@@ -3084,7 +3095,7 @@
     dp.style.left=x+'px';dp.style.top=y+'px';
     dp.classList.add('open');
   }
-  function closeNapop(){$('napop').classList.remove('open');naItem=null;}
+  function closeNapop(){const dp=$('napop');dp.classList.remove('open');if(dp.classList.contains('fri')){dp.classList.remove('fri');naHjem.insertBefore(dp,naEtter);}naItem=null;}
   $('napop').addEventListener('click',function(e){
     e.stopPropagation();
     const b=e.target.closest('button');if(!b||!naItem)return;
@@ -3492,6 +3503,7 @@
     clearTimeout(toastTimer);
     toastTimer=setTimeout(function(){$('toast').classList.remove('show');},2500);
   }
+  function toastSkjul(){clearTimeout(toastTimer);$('toast').classList.remove('show');$('toastUndo').style.display='none';} // tar bort en melding som står oppe (og dens Angre), uten å vise ny
   let sfPopT=null;
   function sfPop(anchor){ // «Kopiert ✓ Lim inn i Salesforce» rett over Salesforce-knappen
     const el=$('sfPop'),st=document.querySelector('.stage');
@@ -4128,7 +4140,7 @@
     const lab=function(){$('kartMap').classList.toggle('kart-nolabels',kartMap.getZoom()<12);};kartMap.on('zoomend',lab);lab();
     kartMap.on('dragstart',function(){kartUserMoved=true;});kartMap.on('zoomstart',function(){if(!kartProg)kartUserMoved=true;});
     kartMap.on('moveend zoomend rotateend rotate',kartUtsnittLagre); // husk utsnittet
-    kartMap.on('click',function(){if(kartKortId)kartKortSkjul();}); // raskt trykk på kartet lukker kortet; prikk/lapp stopper hendelsen selv
+    kartMap.on('click',function(){if($('napop').classList.contains('open')){closeNapop();return;}if(kartKortId)kartKortSkjul();}); // raskt trykk på kartet lukker kortet; prikk/lapp stopper hendelsen selv
     // Leaflets drag nekter å starte mens zoom-animasjonen pågår (Draggable._onDown: hasClass 'leaflet-zoom-anim' → return), så en flytting som begynner rett etter et knip
     // går tapt («lag sidelengs etter zoom», Christian 11.11.2026). Fange-fase: avslutt animasjonen før Leaflet ser trykket.
     const ferdigZoom=function(){if(kartMap._animatingZoom&&kartMap._onZoomTransitionEnd){try{kartMap._onZoomTransitionEnd();}catch(_){}}};
@@ -4210,7 +4222,7 @@
     const it=kartKortId?byId(kartKortId):null;
     if(!it||it.state==='fulgt'){kartKortId=null;}
     Object.keys(kartMarkers).forEach(function(k){const el=kartMarkers[k].getElement();if(el){const d=el.querySelector('.kdot');if(d)d.classList.toggle('sel',k===kartKortId);}});
-    if(!kartKortId){box.style.display='none';wrap.classList.remove('har-kort');inner.innerHTML='';return;}
+    if(!kartKortId){if($('napop').classList.contains('fri'))closeNapop();box.style.display='none';wrap.classList.remove('har-kort');inner.innerHTML='';return;}
     if(inner.querySelector('.opf-note-edit'))return; // skriver kommentar → ikke tegn på nytt under fingrene
     inner.innerHTML=cardHTML(it);box.style.display='';wrap.classList.add('har-kort');kartKortSkaler();
     const t=inner.querySelector('.opf-thumb');
