@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0a0c16">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-14-208">
+<meta name="app-build" content="2026-11-14-209">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -1488,7 +1488,7 @@
       if(logLast[k]&&t-logLast[k]<60000)return; // samme feil innen ett minutt → én rad
       logLast[k]=t;
       const a=JSON.parse(localStorage.getItem(LOGK)||'[]')||[];
-      if(a.filter(function(r){return t-r.t<60000;}).length>=5)return; // maks 5 rader pr. minutt pr. enhet
+      if(kind!=='glow'&&a.filter(function(r){return t-r.t<60000;}).length>=5)return; // maks 5 rader pr. minutt pr. enhet
       a.push({t:t,kind:String(kind||'app').slice(0,40),msg:msg,build:(document.querySelector('meta[name="app-build"]')||{}).content||null});
       while(a.length>20)a.shift();
       localStorage.setItem(LOGK,JSON.stringify(a));
@@ -2781,8 +2781,12 @@
   }
   async function applyNotifGlow(glow,src){ // naviger til lista og riktig fane + glow kortene. src = melding/url/lager (feilsøking)
     if(!glow||!glow.ids)return;
+    const kl=new Date().toLocaleTimeString('nb-NO'),skjult=document.hidden;
+    // Appen ligger fortsatt i bakgrunnen når trykket kommer fram → vent til den faktisk vises, ellers brenner gløden opp før brukeren ser lista (14.11.2026)
+    if(skjult)await new Promise(function(ok){let ferdig=false;const f=function(){if(ferdig||document.hidden)return;ferdig=true;document.removeEventListener('visibilitychange',f);ok();};
+      document.addEventListener('visibilitychange',f);setTimeout(function(){if(!ferdig){ferdig=true;document.removeEventListener('visibilitychange',f);ok();}},10000);});
     const aapne=tilLista();
-    logEvent('glow','mottatt '+glow.ids.length+' kort via '+(src||'?')+' · lokalt '+glow.ids.filter(byId).length+' · synlig '+!document.hidden+(aapne.length?' · lukket '+aapne.join(','):'')+(adminView?' · admin-visning':''));
+    const logg='trykk '+kl+' via '+(src||'?')+(skjult?' · appen var skjult':'')+(aapne.length?' · lukket '+aapne.join(','):'')+(adminView?' · admin-visning':''); // én linje pr. trykk, med klokkeslett → slås ikke sammen i loggen
     if(adminView){try{await adminExitView();}catch(e){}} // admin sto i en selgers liste → varselet gjelder egne kort
     if(glow.view){view=glow.view;
       if(glow.view==='gjore'&&glow.gsub)gjoreSub=glow.gsub;
@@ -2799,7 +2803,7 @@
       const el=els[0]||null;
       if(el&&el!==glowed){glowCards(glow.ids);glowed=el;glowN=els.length;}
       if(++tries<12)setTimeout(tryGlow,700);
-      else logEvent('glow',(glowed?'lyste '+glowN+' av ':'FANT INGEN av ')+glow.ids.length+' kort · fane '+(glow.view||'?')+'/'+(glow.sub||glow.gsub||'')+' · lokalt '+glow.ids.filter(byId).length+' · sky '+cloudState); // feilsøking: leses i client_log
+      else logEvent('glow',logg+' · '+(function(){try{if(!glowed||!glowed.isConnected)return 'kortet er ikke i lista nå';const a=glowed.getBoundingClientRect(),b=listEl.getBoundingClientRect();return (a.top>=b.top-2&&a.bottom<=b.bottom+2)?'kortet står på skjermen':'kortet står UTENFOR skjermen';}catch(e){return '';}})()+' · '+(glowed?'lyste '+glowN+' av ':'FANT INGEN av ')+glow.ids.length+' kort · fane '+(glow.view||'?')+'/'+(glow.sub||glow.gsub||'')+' · lokalt '+glow.ids.filter(byId).length+' · sky '+cloudState); // feilsøking: leses i client_log
     })();
   }
   function checkNotifGlowURL(){ // kaldstart via openWindow: glow ligger i URL-en
