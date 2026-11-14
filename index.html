@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0a0c16">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-14-207">
+<meta name="app-build" content="2026-11-14-208">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -4183,7 +4183,7 @@
   }
   function kartUtenRender(uten){ // adresser Kartverket ikke fant (eller uten husnummer) — de som ligger i køen telles ikke ennå
     const ferdige=uten.filter(function(x){return !kartTrenger(x[0].adresse);}),btn=$('kartUtenBtn'),box=$('kartUten');
-    if(!ferdige.length){btn.style.display='none';box.style.display='none';return;}
+    if(true){btn.style.display='none';box.style.display='none';return;} // knappen «N uten plassering» er fjernet helt fra kartet (Christian 14.11.2026)
     btn.style.display=kartUtenOpen?'none':'';btn.textContent='⚠ '+ferdige.length+' uten plassering';
     box.style.display=kartUtenOpen?'':'none';if(!kartUtenOpen)return;
     box.innerHTML='<div class="ku-head">Fant ikke adressen<button type="button" class="ku-x" data-kart-uten-close="1" title="Skjul">✕</button></div>'
