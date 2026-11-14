@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0a0c16">
 <meta name="apple-mobile-web-app-title" content="Oppfølginger">
-<meta name="app-build" content="2026-11-13-205">
+<meta name="app-build" content="2026-11-14-206">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <title>Oppfølginger</title>
@@ -456,6 +456,8 @@
   .seg{display:inline-flex;gap:3px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:10px;padding:3px}
   .seg button{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-dim);background:none;border:0;padding:7px 12px;border-radius:7px;cursor:pointer}
   .seg button.on{color:#06120e;background:linear-gradient(135deg,var(--mint),#19c79a)}
+  /* «Rediger/Ny oppfølging»: Type, Neste handling og Ekstra varsel Av/På skal ikke rope – valgt knapp er lys grå i stedet for grønn (Christian 14.11.2026) */
+  #fStatus button.on,#fKanal button.on,#fEkstra button.on{color:var(--ink);background:rgba(255,255,255,.13);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
   .seg.seg-col{flex-direction:column;align-items:center;gap:3px}
   .seg.seg-col .seg-row{display:flex;gap:3px;justify-content:center}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
@@ -3417,8 +3419,7 @@
     const liste=el&&el.classList.contains('opf-card'); // kort i lista → de andre kortene dempes (lista kan tegnes på nytt, derfor settes merket hver runde)
     document.body.classList.toggle('red-aapen',!!liste);
     if(liste&&!el.classList.contains('red-kort')){document.querySelectorAll('#list .opf-card.red-kort').forEach(function(k){k.classList.remove('red-kort');});el.classList.add('red-kort');}
-    if(!b||!b.width||!b.height||b.bottom<0||b.top>window.innerHeight){r.hidden=true;return;}
-    r.style.left=(b.left-3)+'px';r.style.top=(b.top-3)+'px';r.style.width=(b.width+6)+'px';r.style.height=(b.height+6)+'px';r.hidden=false;
+    r.hidden=true; // det gule lyset rundt kortet bak skjemaet er fjernet (Christian 14.11.2026) – bare dempingen av de andre kortene er igjen
   }
   function closeForm(){$('formModal').classList.remove('open');clearInterval(rammeTimer);rammeTimer=null;$('fRamme').hidden=true;document.body.classList.remove('red-aapen');document.querySelectorAll('.opf-card.red-kort').forEach(function(k){k.classList.remove('red-kort');});}
   // live-lagring: når en lagret oppfølging redigeres, skriv endringer fortløpende (Lagre/klikk-utenfor blir overflødig)
@@ -3518,7 +3519,7 @@
     }else{
       render();
       if(revealId)revealCard(revealId,revealFlashTab,revealFrom,revealTo);
-      else if(redigertId&&harEndret)kortGlodStart(redigertId); // noe ble endret (ingen flytting/ny-kort-markering) → kort gul glød; bare inn og ut → ingenting (Christian 13.11.2026)
+      else if(redigertId)kortGlodStart(redigertId); // skjemaet lukket → kort gul glød, også når ingenting ble endret (Christian 14.11.2026; 13.11 var det bare ved endring)
     }
     setTimeout(function(){savingLock=false;},600);
   }
